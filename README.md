@@ -12,7 +12,7 @@
   - some variant/plugin
   - other variant/plugin
 - codegen sub-project
-  - generation of code from dsl specifications
+  - generation of code from result data of parsed dsl specifications (subproject `dsl`)
   - main
   - some variantA
   - some variantB
@@ -20,9 +20,9 @@
   - static things that are needed to make generated code work
 - plugins???
 - generated subproject
-  - sub-project(s) where code is generated to see if everything works
+  - subproject(s) where code is generated to, to see if everything works
   - kotlin (don't need this as this is all about kotlin)
-- targetprojects
+- targetProjects
   - projects that actually do something and depend on generated stuff
 
 ## Transformers

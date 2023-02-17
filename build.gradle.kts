@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform") version BuildSrcGlobal.VersionKotlin
+    kotlin("jvm") version BuildSrcGlobal.VersionKotlin
     id("com.github.johnrengelman.shadow") version "shadow".pluginVersion()
     application
 }
@@ -11,6 +11,9 @@ val artifactName: String by extra { "${rootProject.name.toLowerCase()}-${project
 val rootPackage: String by extra { "${rootProject.group}.${rootProject.name.toLowerCase()}" }
 val projectPackage: String by extra { rootPackage }
 val theMainClass: String by extra { "Main" }
+application {
+    mainClass.set(theMainClass)
+}
 
 allprojects {
     repositories {
@@ -22,50 +25,76 @@ allprojects {
     project.plugins.withId("org.jetbrains.kotlin.jvm") {
         println("${project.name}: starting configure for kotlin JVM project ...")
     }
+
+    apply(from ="${rootProject.projectDir}/buildSrc/snippets/printClasspath.gradle.kts")
+    /** task build might be finalizedBy(versionsPrint) */
+    val versionsPrint = tasks.register("versionsPrint") {
+        group = "misc"
+        description = "extract spring boot versions from dependency jars"
+        doLast {
+            val foreground = BuildSrcGlobal.ConsoleColor.YELLOW
+            val background = BuildSrcGlobal.ConsoleColor.DEFAULT
+            val shadowJar by tasks.getting(com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar::class)
+            BuildSrcGlobal.printlnColor(foreground, "Project: ${project.name}", background)
+            BuildSrcGlobal.printlnColor(foreground, "  fat/uber jar: ${shadowJar.archiveFileName.get()}", background)
+            BuildSrcGlobal.printlnColor(foreground, "Gradle version: " + project.gradle.gradleVersion, background)
+            BuildSrcGlobal.printColor(foreground, "Kotlin version: " + kotlin.coreLibrariesVersion) ; if (kotlin.coreLibrariesVersion != BuildSrcGlobal.VersionKotlin) BuildSrcGlobal.printColor(BuildSrcGlobal.ConsoleColor.RED, " ( != ${BuildSrcGlobal.VersionKotlin} )")
+            println()
+            BuildSrcGlobal.printlnColor(foreground, "javac  version: " + org.gradle.internal.jvm.Jvm.current(), background) // + " with compiler args: " + options.compilerArgs, backgroundColor = BuildSrcGlobal.ConsoleColor.DARK_GRAY)
+            BuildSrcGlobal.printlnColor(foreground, "       srcComp: " + java.sourceCompatibility, background)
+            BuildSrcGlobal.printlnColor(foreground, "       tgtComp: " + java.targetCompatibility, background)
+            BuildSrcGlobal.printlnColor(foreground, "versions of core dependencies:", background)
+            val regex = Regex(pattern = "^(spring-cloud-starter|spring-boot-starter|micronaut-core|kotlin-stdlib-jdk[0-9-]+|foundation-desktop)-[0-9].*$")
+            if (subprojects.size > 0) {
+                configurations.compileClasspath.get().map { it.nameWithoutExtension }.filter { it.matches(regex) }
+                    .forEach { BuildSrcGlobal.printlnColor(foreground, String.format("%-25s: %s", project.name, it), background) }
+            } else {
+                configurations.compileClasspath.get().map { it.nameWithoutExtension }.filter { it.matches(regex) }
+                    .forEach { BuildSrcGlobal.printlnColor(foreground, "  $it", background) }
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation("com.github.ajalt.clikt:clikt".depAndVersion())
+    implementation("com.squareup:kotlinpoet".depAndVersion())
 }
 
 kotlin {
-    val nativeTarget = when(BuildSrcGlobal.hostOS) {
-        BuildSrcGlobal.HOSTOS.MACOS -> macosX64("native")
-        BuildSrcGlobal.HOSTOS.LINUX -> linuxX64("native")
-        BuildSrcGlobal.HOSTOS.WINDOWS -> mingwX64("native")
-        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
-    }
+    jvmToolchain(BuildSrcGlobal.jdkVersion)
+}
 
-    nativeTarget.apply {
-        binaries {
-            executable {
-                entryPoint = "main"
-            }
+tasks {
+    val versionsPrint by existing
+    build { finalizedBy(versionsPrint) }
+    named<JavaExec>("run") {
+        // needed if App wants to read from stdin
+        standardInput = System.`in`
+    }
+    withType<Jar> {
+        archiveBaseName.set(artifactName)
+    }
+    shadowJar {
+        manifest { attributes["Main-Class"] = theMainClass }
+        mergeServiceFiles()
+        minimize()
+        doLast {
+            delete(project.tasks.jar.get().outputs)
         }
     }
-    jvm {
-        jvmToolchain(BuildSrcGlobal.jdkVersion)
-        withJava()
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-        }
-    }
-    sourceSets {
-        val nativeMain by getting
-        val nativeTest by getting
-        val commonMain by getting
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-            }
-        }
-        val jvmMain by getting
-        val jvmTest by getting
+    withType<Test> {
+        buildSrcTestConfig()
     }
 }
 
+
 // ==============================================================================
-// ======   Helpers and pure informational stuff not necessary for build ========
+// ======   Helpers, but not necessary for build ================================
 // ==============================================================================
 
 tasks.register("setup") {
-    dependsOn(createIntelllijScopeSentinels, createSrcBasePackages)
+    dependsOn(createIntellijScopeSentinels, createSrcBasePackages)
 }
 /** create package dirs under each subprojects src/module/kotlin
  * based on subproject's extra property: projectPackage
@@ -88,7 +117,7 @@ val createSrcBasePackages = tasks.register("createSrcBasePackages") {
                     }
                 }
                 it.hasPlugin("org.jetbrains.kotlin.multiplatform") -> {
-                    sub.kotlin.sourceSets.forEach { ss: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet ->
+                    sub.kotlin.sourceSets.forEach { ss ->
                         val ssDir = File("${sub.name}/src/${ss.name}/kotlin")
                         if (ssDir.exists()) {
                             mkdir("$ssDir/$projectPackageDirString")
@@ -125,7 +154,7 @@ val createSrcBasePackages = tasks.register("createSrcBasePackages") {
  * If you _then_ add folders / files matching the above scope names
  * you can see more clearly which "area" of code in the folder structure you are just looking at the moment .
  */
-val createIntelllijScopeSentinels = tasks.register("createIntellijScopeSentinels") {
+val createIntellijScopeSentinels = tasks.register("createIntellijScopeSentinels") {
     doLast {
         project.allprojects.forEach { prj ->
             var d: File
@@ -161,7 +190,7 @@ val createIntelllijScopeSentinels = tasks.register("createIntellijScopeSentinels
                         File(d, ".gitkeep").createNewFile()
                         File(prj.name, "ZZ__$suffix").createNewFile()
                     }
-                    prj.kotlin.sourceSets.forEach { ss: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet ->
+                    prj.kotlin.sourceSets.forEach { ss ->
                         val ssDir = if (prj.name == rootProject.name) {
                             File("src/${ss.name}")
                         } else {
@@ -180,4 +209,11 @@ val createIntelllijScopeSentinels = tasks.register("createIntellijScopeSentinels
             }}
         }
     }
+}
+
+// ################################################################################################
+// #####    pure informational stuff on stdout    #################################################
+// ################################################################################################
+tasks.register<CheckVersionsTask>("checkVersions") { // implemented in buildSrc/src/main/kotlin/Deps.kt
+    scope = "USED" // "ALL"
 }

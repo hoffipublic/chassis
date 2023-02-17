@@ -1,7 +1,6 @@
 plugins {
     kotlin("jvm")
     id("com.github.johnrengelman.shadow")
-    application
 }
 
 group = "${rootProject.group}"
@@ -10,10 +9,6 @@ val artifactName: String by extra { "${rootProject.name.toLowerCase()}-${project
 
 val rootPackage: String by rootProject.extra
 val projectPackage: String by extra { "${rootPackage}.${project.name.toLowerCase()}" }
-val theMainClass: String by extra { "Main" }
-application {
-    mainClass.set("${projectPackage}.${theMainClass}" + "Kt") // + "Kt" if fun main is outside a class
-}
 
 
 dependencies {
@@ -26,15 +21,15 @@ kotlin {
 }
 
 tasks {
-    named<JavaExec>("run") {
-        // needed if App wants to read from stdin
-        standardInput = System.`in`
-    }
+    // named<JavaExec>("run") {
+    //     // needed if App wants to read from stdin
+    //     standardInput = System.`in`
+    // }
     withType<Jar> {
         archiveBaseName.set(artifactName)
     }
     shadowJar {
-        manifest { attributes["Main-Class"] = theMainClass }
+        // manifest { attributes["Main-Class"] = theMainClass }
         mergeServiceFiles()
         minimize()
         doLast {

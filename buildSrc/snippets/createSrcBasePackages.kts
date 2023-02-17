@@ -24,7 +24,7 @@
  *     mainClass.set("${projectPackage}.${theMainClass}" + "Kt") // + "Kt" if fun main is outside a class
  * }
  */
-tasks.register("createSrcBasePackages") {
+val createSrcBasePackages = tasks.register("createSrcBasePackages") {
     doLast {
         project.subprojects.forEach { sub ->
             val projectPackage: String by sub.extra
@@ -39,7 +39,7 @@ tasks.register("createSrcBasePackages") {
                     }
                 }
                 it.hasPlugin("org.jetbrains.kotlin.multiplatform") -> {
-                    sub.kotlin.sourceSets.forEach { ss: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet ->
+                    sub.kotlin.sourceSets.forEach { ss ->
                         val ssDir = File("${sub.name}/src/${ss.name}/kotlin")
                         if (ssDir.exists()) {
                             mkdir("$ssDir/$projectPackageDirString")
