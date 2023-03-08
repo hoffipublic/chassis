@@ -37,6 +37,6 @@ tasks {
         }
     }
     withType<Test> {
-        buildSrcTestConfig()
+        buildSrcJvmTestConfig()
     }
 }

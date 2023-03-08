@@ -1,6 +1,8 @@
 
 rootProject.name = "chassis"
 
-include(":dsl")
 include(":chassismodel")
+include(":codegen")
+include(":dsl")
+include(":examples")
 include(":shared")

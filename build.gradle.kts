@@ -1,21 +1,23 @@
 plugins {
     kotlin("jvm") version BuildSrcGlobal.VersionKotlin
+    kotlin("plugin.serialization") version BuildSrcGlobal.VersionKotlin apply false
     id("com.github.johnrengelman.shadow") version "shadow".pluginVersion()
     application
 }
 
 group = "com.hoffi"
 version = "1.0-SNAPSHOT"
-val artifactName: String by extra { "${rootProject.name.toLowerCase()}-${project.name.toLowerCase()}" }
+val artifactName: String by extra { "${rootProject.name.toLowerCase()}-${project.name.replace("[-_]".toRegex(), "").toLowerCase()}" }
 
 val rootPackage: String by extra { "${rootProject.group}.${rootProject.name.toLowerCase()}" }
 val projectPackage: String by extra { rootPackage }
 val theMainClass: String by extra { "Main" }
 application {
-    mainClass.set(theMainClass)
+    mainClass.set("${rootPackage}.${theMainClass}" + "Kt") // + "Kt" if fun main is outside a class
 }
 
 allprojects {
+    //println("> root/build.gradle.kts allprojects: $project")
     repositories {
         mavenCentral()
     }
@@ -24,6 +26,24 @@ allprojects {
     }
     project.plugins.withId("org.jetbrains.kotlin.jvm") {
         println("${project.name}: starting configure for kotlin JVM project ...")
+    }
+
+    afterEvaluate { // needed so that plugins already have been applied to subprojects
+        dependencies {
+            implementation("org.slf4j:slf4j-api".depAndVersion())
+            runtimeOnly("ch.qos.logback:logback-classic".depAndVersion())
+            implementation("com.squareup.okio:okio".depAndVersion())
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core".depAndVersion())
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime".depAndVersion())
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json".depAndVersion())
+
+            testImplementation("io.kotest:kotest-framework-engine".depButVersionOf("io.kotest:kotest-runner-junit5"))
+            testImplementation("io.kotest:kotest-framework-datatest".depButVersionOf("io.kotest:kotest-runner-junit5"))
+            testImplementation("io.kotest:kotest-assertions-core".depButVersionOf("io.kotest:kotest-runner-junit5"))
+            testImplementation(kotlin("test-common"))
+            testImplementation(kotlin("test-annotations-common"))
+            testRuntimeOnly("io.kotest:kotest-runner-junit5".depAndVersion()) // depends on jvm { useJUnitPlatform() } // Platform!!! nd not only useJUnit()            testImplementation("io.kotest:kotest-assertions-core".depButVersionOf("io.kotest:kotest-runner-junit5"))
+        }
     }
 
     apply(from ="${rootProject.projectDir}/buildSrc/snippets/printClasspath.gradle.kts")
@@ -56,6 +76,16 @@ allprojects {
     }
 }
 
+subprojects {
+    //println("> root/build.gradle.kts subprojects for: sub$project")
+    pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+        println("root/build.gradle.kts subprojects { configuring sub$project as kotlin(\"jvm\") project }")
+    }
+    pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
+        println("root/build.gradle.kts subprojects { configuring sub$project as kotlin(\"multiplatform\") project }")
+    }
+}
+
 dependencies {
     implementation("com.github.ajalt.clikt:clikt".depAndVersion())
     implementation("com.squareup:kotlinpoet".depAndVersion())
@@ -84,80 +114,64 @@ tasks {
         }
     }
     withType<Test> {
-        buildSrcTestConfig()
+        buildSrcJvmTestConfig()
     }
 }
 
 
 // ==============================================================================
-// ======   Helpers, but not necessary for build ================================
+// ======   Helpers and pure informational stuff not necessary for build ========
 // ==============================================================================
+tasks.register<CheckVersionsTask>("checkVersions") { // implemented in buildSrc/src/main/kotlin/CheckVersionsTask.kt
+    //scope = "ALL"
+}
 
 tasks.register("setup") {
     dependsOn(createIntellijScopeSentinels, createSrcBasePackages)
 }
-/** create package dirs under each subprojects src/module/kotlin
- * based on subproject's extra property: projectPackage
- *
- * val rootPackage: String by rootProject.extra
- * val projectPackage by extra { "${rootPackage}.${project.name.toLowerCase()}" }
- */
+// from ./buildSrc/snippets/createSrcBasePackages.kts
 val createSrcBasePackages = tasks.register("createSrcBasePackages") {
     doLast {
-        project.subprojects.forEach { sub ->
-            val projectPackage: String by sub.extra
+        project.subprojects.forEach { prj ->
+            var relProjectDirString = prj.projectDir.toString().removePrefix(rootProject.projectDir.toString())
+            if (relProjectDirString.isBlank()) { relProjectDirString = "ROOT" } else { relProjectDirString = relProjectDirString.removePrefix("/") }
+            println("  in project: $relProjectDirString ...")
+            val projectPackage: String by prj.extra
             val projectPackageDirString = projectPackage.split('.').joinToString("/")
-            sub.pluginManager.let() { when {
+            prj.pluginManager.let() { when {
                 it.hasPlugin("org.jetbrains.kotlin.jvm") -> {
-                    sub.sourceSets.forEach { ss: SourceSet ->
-                        val ssDir = File("${sub.name}/src/${ss.name}/kotlin")
+                    prj.sourceSets.forEach { sourceSet ->
+                        val ssDir = File("${prj.projectDir}/src/${sourceSet.name}/kotlin")
                         if (ssDir.exists()) {
                             mkdir("$ssDir/$projectPackageDirString")
                         }
                     }
                 }
                 it.hasPlugin("org.jetbrains.kotlin.multiplatform") -> {
-                    sub.kotlin.sourceSets.forEach { ss ->
-                        val ssDir = File("${sub.name}/src/${ss.name}/kotlin")
-                        if (ssDir.exists()) {
-                            mkdir("$ssDir/$projectPackageDirString")
+                    val kotlinMultiplatformExtension = prj.extensions.findByType(org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java)
+                    val kotlinProjectExtension = kotlinMultiplatformExtension as org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
+                    //prj.kotlin.sourceSets.forEach {
+                    kotlinProjectExtension.sourceSets.forEach { topKotlinSourceSet ->
+                        kotlin.sourceSets.forEach { kotlinSourceSet ->
+                            val ssDir = File("${prj.projectDir}/src/${topKotlinSourceSet.name}/kotlin")
+                            if (ssDir.exists()) {
+                                mkdir("$ssDir/$projectPackageDirString")
+                            }
                         }
                     }
                 }
-            }}
+            } }
+            println("  in project: $relProjectDirString ok.")
         }
     }
 }
-/** creating `01__PRJNAME/.gitkeep` and `ZZ__PRJNAME` files in each kotlin mpp project
- * as well as `_srcModule_PRJNAME/.gitkeep` and `ZZsrcModule_PRJNAME` files in each main sourceSets of these
- *
- * .gitignore:
- * <block>
- *  .idea/
- *  !.idea/scopes/
- *  !.idea/fileColors.xml
- * </block>
- *
- * if you had .idea/ ignored before, try
- * <block>
- * git rm --cached .idea/filename
- * git add --forced .idea/filename
- * </block>
- *
- * e.g. define scopes (in Settings... `Scopes`):
- * - scope 00__ (scope with all folders where the name starts with: 0[0-3]__, meaning the first folder
- * - scope src with _src.../ or ZZsrc... (scope with all folders where the name starts with _src)
- * - scope buildfiles (e.g. build.gradle.kts)
- *
- * and then in Settings ... `File Colors` add the scope(s) and give them a color .
- *
- * If you _then_ add folders / files matching the above scope names
- * you can see more clearly which "area" of code in the folder structure you are just looking at the moment .
- */
+// from ./buildSrc/snippets/createIntellijScopeSentinels.kts
 val createIntellijScopeSentinels = tasks.register("createIntellijScopeSentinels") {
     doLast {
         project.allprojects.forEach { prj ->
-            var d: File
+            var relProjectDirString = prj.projectDir.toString().removePrefix(rootProject.projectDir.toString())
+            if (relProjectDirString.isBlank()) { relProjectDirString = "ROOT" } else { relProjectDirString = relProjectDirString.removePrefix("/") }
+            println("  in project: $relProjectDirString ...")
             val suffix = if (prj.name == rootProject.name) {
                 "ROOT"
             } else {
@@ -166,54 +180,48 @@ val createIntellijScopeSentinels = tasks.register("createIntellijScopeSentinels"
             prj.pluginManager.let { when {
                 it.hasPlugin("org.jetbrains.kotlin.jvm") -> {
                     if (prj.name != rootProject.name) {
-                        d = mkdir("${prj.name}/01__$suffix")
-                        File(d, ".gitkeep").createNewFile()
-                        File(prj.name, "ZZ__$suffix").createNewFile()
+                        val dir = mkdir("${prj.projectDir}/01__$suffix")
+                        File(dir, ".gitkeep").createNewFile()
+                        File(prj.projectDir, "ZZ__$suffix").createNewFile()
                     }
                     prj.sourceSets.forEach { ss: SourceSet ->
                         val ssDir = if (prj.name == rootProject.name) {
                             File("src/${ss.name}")
                         } else {
-                            File("${prj.name}/src/${ss.name}")
+                            File("${prj.projectDir}/src/${ss.name}")
                         }
                         if (ssDir.exists()) {
                             val mName = ss.name.capitalize()
-                            d = mkdir("$ssDir/_src${mName}_$suffix")
-                            File(d, ".gitkeep").createNewFile()
+                            val dir = mkdir("$ssDir/_src${mName}_$suffix")
+                            File(dir, ".gitkeep").createNewFile()
                             File(ssDir, "ZZsrc${mName}_$suffix").createNewFile()
                         }
                     }
                 }
                 it.hasPlugin("org.jetbrains.kotlin.multiplatform") -> {
                     if (prj.name != rootProject.name) {
-                        d = mkdir("${prj.name}/01__$suffix")
-                        File(d, ".gitkeep").createNewFile()
-                        File(prj.name, "ZZ__$suffix").createNewFile()
+                        val dir = mkdir("${prj.projectDir}/01__$suffix")
+                        File(dir, ".gitkeep").createNewFile()
+                        File(prj.projectDir, "ZZ__$suffix").createNewFile()
                     }
-                    prj.kotlin.sourceSets.forEach { ss ->
+                    prj.kotlin.sourceSets.forEach { sourceSet ->
                         val ssDir = if (prj.name == rootProject.name) {
-                            File("src/${ss.name}")
+                            File("src/${sourceSet.name}")
                         } else {
-                            File("${prj.name}/src/${ss.name}")
+                            File("${prj.projectDir}/src/${sourceSet.name}")
                         }
                         if (ssDir.exists()) {
-                            if (ss.name.endsWith("Main")) {
-                                val mName = ss.name.removeSuffix("Main").capitalize()
-                                d = mkdir("$ssDir/_src${mName}_$suffix")
-                                File(d, ".gitkeep").createNewFile()
+                            if (sourceSet.name.endsWith("Main")) {
+                                val mName = sourceSet.name.removeSuffix("Main").capitalize()
+                                val dir = mkdir("$ssDir/_src${mName}_$suffix")
+                                File(dir, ".gitkeep").createNewFile()
                                 File(ssDir, "ZZsrc${mName}_$suffix").createNewFile()
                             }
                         }
                     }
                 }
             }}
+            println("  in project: $relProjectDirString ok.")
         }
     }
-}
-
-// ################################################################################################
-// #####    pure informational stuff on stdout    #################################################
-// ################################################################################################
-tasks.register<CheckVersionsTask>("checkVersions") { // implemented in buildSrc/src/main/kotlin/Deps.kt
-    scope = "USED" // "ALL"
 }

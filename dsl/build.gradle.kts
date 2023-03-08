@@ -10,13 +10,16 @@ val artifactName: String by extra { "${rootProject.name.toLowerCase()}-${project
 
 val rootPackage: String by rootProject.extra
 val projectPackage: String by extra { "${rootPackage}.${project.name.toLowerCase()}" }
-val theMainClass: String by extra { "Main" }
+val theMainClass: String by extra { "scratch.Main" }
 application {
     mainClass.set("${projectPackage}.${theMainClass}" + "Kt") // + "Kt" if fun main is outside a class
 }
 
 
 dependencies {
+    implementation(project(":chassismodel"))
+    implementation(project(":shared"))
+    implementation(kotlin("reflect"))
     implementation("com.github.ajalt.clikt:clikt".depAndVersion())
     implementation("com.squareup:kotlinpoet".depAndVersion())
 }
@@ -30,6 +33,13 @@ tasks {
         // needed if App wants to read from stdin
         standardInput = System.`in`
     }
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions{
+            //Will retain parameter names for Java reflection
+            javaParameters = true
+            kotlinOptions.freeCompilerArgs = listOf("-Xcontext-receivers")
+        }
+    }
     withType<Jar> {
         archiveBaseName.set(artifactName)
     }
@@ -42,6 +52,6 @@ tasks {
         }
     }
     withType<Test> {
-        buildSrcTestConfig()
+        buildSrcJvmTestConfig()
     }
 }
