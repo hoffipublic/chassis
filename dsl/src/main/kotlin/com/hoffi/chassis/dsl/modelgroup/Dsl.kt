@@ -14,73 +14,74 @@ import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.DslRef.DslGroupRefEither.DslModelgroupRef
 import com.hoffi.chassis.shared.dsl.DslRef.DslGroupRefEither.DslModelgroupRef.DslElementRefEither.DslModelRef.MODELELEMENT
 import com.hoffi.chassis.shared.dsl.IDslClass
-import com.hoffi.chassis.shared.values.gatherFromSuperclasses
 
 @ChassisDslMarker
-interface IDslModelAndElementsCommon : IDslClass {
-    fun propertiesOfSuperclasses()
-    fun propertiesOf(dslModelOrElementRef: String, gatherFromSuperclasses: gatherFromSuperclasses)
-
+interface IDslModelAndElementsCommon
+    // interfaces implemented by Model And Elements
+    :   IDslGatherPropertiesModelAndElementsCommon,
+        IDslGatherPropertiesProp
+{
+    // non direct DSL props
+    override val igatherPropertys: GatherPropertys
+    // DSL props
     var kind: DslClassObjectOrInterface
 }
 @ChassisDslMarker
-interface IDslModelElementsCommon : IDslModelAndElementsCommon, INameAndWheretoWithoutModelSubtypes, IDslGatherProperties {
-    val modelElement: MODELELEMENT
-    fun propertiesOf(modelElement: MODELELEMENT, gatherFromSuperclasses: gatherFromSuperclasses)
-    fun propertiesOfSuperclassesOf(modelElement: MODELELEMENT)
-}
-abstract class DslModelAndElementsCommonImpl(
-    val modelOrDslElementRef: DslModelgroupRef.DslElementRefEither,
-    final override val parent: IDslClass
-) : IDslModelAndElementsCommon
+interface IDslModelOnlyCommon
+    : INameAndWheretoPlusModelSubtypes
+@ChassisDslMarker
+interface IDslModelElementsOnlyCommon
+    :   INameAndWheretoWithoutModelSubtypes,
+        IDslGatherPropertiesModelElementsOnlyCommon
 {
-    override val selfDslRef: DslRef = modelOrDslElementRef
-    override val parentDslRef: DslRef = parent.selfDslRef
-    override val groupDslRef: DslRef.DslGroupRefEither = parent.groupDslRef
+    // non direct DSL props
+    val modelElement: MODELELEMENT
 
-    override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.CLASS
-
-    override fun propertiesOfSuperclasses() {
-        TODO("Not yet implemented")
-    }
-
-    override fun propertiesOf(dslModelOrElementRef: String, gatherFromSuperclasses: gatherFromSuperclasses) {
-        TODO("Not yet implemented")
-    }
+    // DSL props
 }
-@ChassisDslMarker
-interface IDslDtoModel : IDslModelElementsCommon
-@ChassisDslMarker
-interface IDslTableModel : IDslModelElementsCommon
 @ChassisDslMarker
 interface IDslFillerModel
-
-public interface IDslModel : IDslModelAndElementsCommon, INameAndWheretoPlusModelSubtypes, IDslGatherProperties {
+@ChassisDslMarker
+interface IDslDtoModel :   IDslModelElementsOnlyCommon, IDslModelAndElementsCommon
+@ChassisDslMarker
+interface IDslTableModel : IDslModelElementsOnlyCommon, IDslModelAndElementsCommon
+@ChassisDslMarker
+interface IDslModel : IDslModelAndElementsCommon, IDslModelOnlyCommon, INameAndWheretoPlusModelSubtypes {
     @DslBlockOn<DslDtoModel>
     fun dto(simpleName: String = C.DEFAULT, dslBlock: IDslDtoModel.() -> Unit)
     @DslBlockOn<DslTableModel>
     fun table(simpleName: String = C.DEFAULT, dslBlock: IDslTableModel.() -> Unit)
 }
 
+/** abstract parent implementations of functionality that is the same in Model and any of its Elements(Dto/Table/...) */
+abstract class ADslModelAndElementsCommonImpl(
+    val modelOrDslElementRef: DslModelgroupRef.DslElementRefEither,
+    final override val parent: IDslClass,
+    val gatherProperties: IDslGatherPropertiesModelAndElementsCommon
+) : IDslClass,
+    IDslModelAndElementsCommon,
+    IDslGatherPropertiesModelAndElementsCommon by gatherProperties
+{
+    // non direct DSL props
+    override val selfDslRef: DslRef = modelOrDslElementRef
+    override val parentDslRef: DslRef = parent.selfDslRef
+    override val groupDslRef: DslRef.DslGroupRefEither = parent.groupDslRef
 
-internal abstract class DslModelElementCommon(
+    // DSL props
+    override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.CLASS
+}
+/** abstract parent implementations of functionality that is ONLY available in Elements(Dto/Table/...) but NOT in Model itself */
+internal abstract class ADslModelElementsOnlyCommon(
     modelDslElementRef: DslModelgroupRef.DslElementRefEither,
     parent: IDslClass,
     val nameAndWheretoWithoutModelSubtypesImpl: NameAndWheretoWithoutModelSubtypesImpl,
-    val gatherPropertiesImpl: DslGatherPropertiesImpl = DslGatherPropertiesImpl(modelDslElementRef)
+    gatherProperties: DslGatherPropertiesModelAndElementsCommonImpl
 )
-    : DslModelAndElementsCommonImpl(modelDslElementRef, parent),
-    IDslModelElementsCommon,
+    : ADslModelAndElementsCommonImpl(modelDslElementRef, parent, gatherProperties),
+    IDslModelElementsOnlyCommon,
     INameAndWheretoWithoutModelSubtypes by nameAndWheretoWithoutModelSubtypesImpl,
-    IDslGatherProperties by gatherPropertiesImpl
+    IDslGatherPropertiesModelElementsOnlyCommon by gatherProperties
 {
-    override fun propertiesOf(modelElement: MODELELEMENT, gatherFromSuperclasses: gatherFromSuperclasses) {
-        TODO("Not yet implemented")
-    }
-
-    override fun propertiesOfSuperclassesOf(modelElement: MODELELEMENT) {
-        TODO("Not yet implemented")
-    }
 }
 
 @ChassisDslMarker
@@ -88,9 +89,9 @@ internal class DslDtoModel(
     modelDslDtoRef: DslModelgroupRef.DslElementRefEither.DslModelRef.DslSubElementRefEither.DslDtoRef,
     parent: IDslClass,
     nameAndWheretoWithoutModelSubtypesImpl: NameAndWheretoWithoutModelSubtypesImpl = NameAndWheretoWithoutModelSubtypesImpl(parent),
-    gatherPropertiesImpl: DslGatherPropertiesImpl = DslGatherPropertiesImpl(modelDslDtoRef)
+    gatherPropertiesImpl: DslGatherPropertiesModelAndElementsCommonImpl = DslGatherPropertiesModelAndElementsCommonImpl(modelDslDtoRef)
 )
-    : IDslDtoModel, DslModelElementCommon(modelDslDtoRef, parent, nameAndWheretoWithoutModelSubtypesImpl, gatherPropertiesImpl)
+    : ADslModelElementsOnlyCommon(modelDslDtoRef, parent, nameAndWheretoWithoutModelSubtypesImpl, gatherPropertiesImpl), IDslDtoModel
 {
     override val modelElement: MODELELEMENT = MODELELEMENT.DTO
 }
@@ -99,9 +100,9 @@ internal class DslTableModel(
     val modelDslTableRef: DslModelgroupRef.DslElementRefEither.DslModelRef.DslSubElementRefEither.DslTableRef,
     parent: IDslClass,
     nameAndWheretoWithoutModelSubtypesImpl: NameAndWheretoWithoutModelSubtypesImpl = NameAndWheretoWithoutModelSubtypesImpl(parent),
-    gatherPropertiesImpl: DslGatherPropertiesImpl = DslGatherPropertiesImpl(modelDslTableRef)
+    gatherPropertiesImpl: DslGatherPropertiesModelAndElementsCommonImpl = DslGatherPropertiesModelAndElementsCommonImpl(modelDslTableRef)
 )
-    : IDslTableModel, DslModelElementCommon(modelDslTableRef, parent, nameAndWheretoWithoutModelSubtypesImpl, gatherPropertiesImpl)
+    : ADslModelElementsOnlyCommon(modelDslTableRef, parent, nameAndWheretoWithoutModelSubtypesImpl, gatherPropertiesImpl), IDslTableModel
 {
     override val modelElement: MODELELEMENT = MODELELEMENT.TABLE
 }
@@ -110,11 +111,11 @@ internal class DslModel(
     modelRef: DslModelgroupRef.DslElementRefEither.DslModelRef,
     parent: IDslClass,
     val nameAndWheretoPlusModelSubtypesImpl: NameAndWheretoPlusModelSubtypesImpl = NameAndWheretoPlusModelSubtypesImpl(parent),
-    val gatherPropertiesImpl: DslGatherPropertiesImpl = DslGatherPropertiesImpl(modelRef)
+    gatherPropertiesImpl: DslGatherPropertiesModelAndElementsCommonImpl = DslGatherPropertiesModelAndElementsCommonImpl(modelRef)
 )
-    : DslModelAndElementsCommonImpl(modelRef, parent), IDslModel,
+    : ADslModelAndElementsCommonImpl(modelRef, parent, gatherPropertiesImpl), IDslModel,
     INameAndWheretoPlusModelSubtypes by nameAndWheretoPlusModelSubtypesImpl,
-    IDslGatherProperties by gatherPropertiesImpl
+    IDslGatherPropertiesModelElementsOnlyCommon by gatherPropertiesImpl
 {
     @DslInstance
     internal val dslDtoObj = DslDtoModel(modelRef.dtoRef(DslBlockName.MODEL_DTO.name), this)

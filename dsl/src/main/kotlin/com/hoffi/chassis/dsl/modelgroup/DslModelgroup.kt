@@ -20,11 +20,11 @@ class DslModelgroup(
     val modelgroupRef: DslModelgroupRef,
     override val parent: TopLevelDslFunction,
     val nameAndWheretoPlusModelSubtypesImpl: NameAndWheretoPlusModelSubtypesImpl = NameAndWheretoPlusModelSubtypesImpl(parent),
-    val gatherPropertiesImpl: DslGatherPropertiesImpl = DslGatherPropertiesImpl(modelgroupRef)
+    val gatherPropertiesImpl: DslGatherPropertiesModelAndElementsCommonImpl = DslGatherPropertiesModelAndElementsCommonImpl(modelgroupRef)
 )
     : IDslClass,
     INameAndWheretoPlusModelSubtypes by nameAndWheretoPlusModelSubtypesImpl,
-    IDslGatherProperties by gatherPropertiesImpl
+    IDslGatherPropertiesModelAndElementsCommon by gatherPropertiesImpl
 {
     override val selfDslRef: DslRef = modelgroupRef
     override val parentDslRef: DslRef = parent.selfDslRef
@@ -66,7 +66,6 @@ class DslModelgroup(
     context(DslRun, DslDiscriminator)
     @DslBlockOn<DslModel>
     fun model(name: String, dslModelBlock: IDslModel.() -> Unit) {
-        val x = dslDiscriminator
         val modelRef = modelgroupRef.modelRef(name)
         @DslInstance val dslModel: DslModel = dslCtx.createModel(modelRef, this)
         dslModel.apply(dslModelBlock)

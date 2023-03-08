@@ -7,6 +7,7 @@ import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.DslRefString
+import com.hoffi.chassis.shared.dsl.GatherPropertiesEnum
 
 const val COMMON = "CommonModel"
 const val COMMON__INTFC                 = "$COMMON;Intfc"
@@ -31,7 +32,7 @@ fun commonBaseModels(dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEF
         }
         model(COMMON__INTFC) {
             kind = INTERFACE
-            gatherPropertiesOf(DslRefString.modelElementRef(COMMON), true)
+            propertiesOf(DslRefString.modelElementRef(COMMON), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
 //            subPackage("base")
             nameAndWhereto {
                 packageName = dslRun.wheretoImpl.packageName
@@ -53,11 +54,9 @@ fun commonBaseModels(dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEF
             dto("other") {
                 nameAndWhereto {  }
                 kind = INTERFACE
-                gatherPropertiesOf(DslRefString.modelElementRef(COMMON), true)
             }
             table {
                 kind = OBJECT
-                gatherPropertiesOf(DslRefString.modelElementRef(COMMON), true)
             }
         }
 //        modelElement(COMMON__ROOT) {

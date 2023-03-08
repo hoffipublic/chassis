@@ -1,6 +1,7 @@
 package com.hoffi.chassis.shared.dsl
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.dsl.DslException
 
 enum class DslBlockName(name: String) {
     //region dslBlock function names
@@ -73,12 +74,49 @@ sealed class DslRef(val discriminator: String, val dslTopLevelFunctionName: Stri
 
     open val level = 0
     val refList = mutableListOf<DslRefAtom>()
+    fun groupRef(): DslGroupRefEither {
+        return when (this as DslGroupRefEither) {
+            is DslGroupRefEither.NoneRef -> throw DslException("DslRef '${this}' is a NoneRef")
+            is DslGroupRefEither.DslApigroupRef   -> apigroupRef(  discriminator, refList[GROUPLEVEL-1].functionName)
+            is DslGroupRefEither.DslModelgroupRef -> modelgroupRef(discriminator, refList[GROUPLEVEL-1].functionName)
+        }
+    }
+    fun elementRef(): DslGroupRefEither {
+        val groupRef = groupRef()
+         return when(groupRef) {
+            is DslGroupRefEither.NoneRef -> throw DslException("DslRef '${this}' is a NoneRef")
+            is DslGroupRefEither.DslApigroupRef   -> groupRef.apiRef(  refList[ELEMENTLEVEL-1].functionName)
+            is DslGroupRefEither.DslModelgroupRef -> groupRef.modelRef(refList[ELEMENTLEVEL-1].functionName)
+        }
+    }
+    fun subElementRef(): DslGroupRefEither {
+        val elementRef = elementRef()
+        return when(elementRef) {
+            is DslGroupRefEither.NoneRef -> throw DslException("DslRef '${this}' is a NoneRef")
+            is DslGroupRefEither.DslModelgroupRef.DslElementRefEither -> {
+                when (elementRef) {
+                    is DslGroupRefEither.DslModelgroupRef.DslElementRefEither.DslModelRef     -> elementRef.modelRef(    refList[SUBELEMENTLEVEL-1].functionName)
+                    is DslGroupRefEither.DslModelgroupRef.DslElementRefEither.DslAllModelsRef -> elementRef.allModelsRef(refList[SUBELEMENTLEVEL-1].functionName)
+                    is DslGroupRefEither.DslModelgroupRef.DslElementRefEither.DslFillerRef    -> elementRef.fillerRef(   refList[SUBELEMENTLEVEL-1].functionName)
+                }
+            }
+            is DslGroupRefEither.DslApigroupRef.DslElementRefEither   -> {
+                when (elementRef) {
+                    is DslGroupRefEither.DslApigroupRef.DslElementRefEither.DslApiRef         -> elementRef.apiRef(      refList[SUBELEMENTLEVEL-1].functionName)
+                }
+            }
+            else -> { throw DslException("DslRef '$this' should not be possible to happen!") }
+        }
+    }
 
     companion object {
         val NULL = DslGroupRefEither.NoneRef()
-        fun dslRunRef(disc: String, simpleName: String)  = DslRunRef(disc, simpleName)
+        val GROUPLEVEL = 1
+        val ELEMENTLEVEL = 2
+        val SUBELEMENTLEVEL = 3
+        fun dslRunRef(    disc: String, simpleName: String) = DslRunRef(disc, simpleName)
         fun modelgroupRef(disc: String, simpleName: String) = DslGroupRefEither.DslModelgroupRef(disc, simpleName).also { it.refList.add(DslRefAtom(it.dslGroupFunctionName, simpleName)) }
-        fun apigroupRef(disc: String, simpleName: String) = DslGroupRefEither.DslApigroupRef  (disc, simpleName).also { it.refList.add(DslRefAtom(it.dslGroupFunctionName, simpleName)) }
+        fun apigroupRef(  disc: String, simpleName: String) = DslGroupRefEither.DslApigroupRef  (disc, simpleName).also { it.refList.add(DslRefAtom(it.dslGroupFunctionName, simpleName)) }
     }
 
     // dsl blocks which can be on multiple different dsl blocks
@@ -92,28 +130,26 @@ sealed class DslRef(val discriminator: String, val dslTopLevelFunctionName: Stri
      * chassis dsl class hierarchy
      */
     sealed class DslGroupRefEither(disc: String, val dslGroupFunctionName: String, simpleName: String) : DslRef(disc, dslGroupFunctionName, simpleName) {
-        override val level = 1
+        override val level = GROUPLEVEL
         companion object { val NULL = NoneRef() }
         class NoneRef : DslGroupRefEither(C.NULLSTRING, C.NULLSTRING, C.NULLSTRING)
         open class DslModelgroupRef(disc: String, simpleName: String) : DslGroupRefEither(disc, "modelgroup", simpleName) {
-            //override val level = 1
+            //override val level = GROUPLEVEL
             companion object { val NULL = DslElementRefEither.DslModelRef(C.NULLSTRING, C.NULLSTRING) }
-            fun modelRef(    simpleName: String) = DslElementRefEither.DslModelRef(    discriminator, simpleName)        .also { it.refList.addAll(this.refList) ; it.refList.add(DslRefAtom(it.dslElementFunctionName, simpleName)) }
-            fun fillerRef(   simpleName: String) = DslElementRefEither.DslFillerRef(   discriminator, simpleName)        .also { it.refList.addAll(this.refList) ; it.refList.add(DslRefAtom(it.dslElementFunctionName, simpleName)) }
-            fun apiRef(      simpleName: String) = DslElementRefEither.DslApiRef(      discriminator, simpleName)        .also { it.refList.addAll(this.refList) ; it.refList.add(DslRefAtom(it.dslElementFunctionName, simpleName)) }
-            //fun wheretoRef(  simpleName: String) = DslElementRefEither.DslWheretoRef(  discriminator, simpleName)        .also { it.refList.addAll(this.refList) ; it.refList.add(DslRefAtom(it.dslElementFunctionName, simpleName)) }
-            fun allModelsRef(simpleName: String) = DslElementRefEither.DslAllModelsRef(discriminator, simpleName)        .also { it.refList.addAll(this.refList) ; it.refList.add(DslRefAtom(it.dslElementFunctionName, simpleName)) }
+            fun modelRef(    simpleName: String) = DslElementRefEither.DslModelRef(    discriminator, simpleName)        .also { it.refList.addAll(this.refList.take(GROUPLEVEL)) ; it.refList.add(DslRefAtom(it.dslElementFunctionName, simpleName)) }
+            fun fillerRef(   simpleName: String) = DslElementRefEither.DslFillerRef(   discriminator, simpleName)        .also { it.refList.addAll(this.refList.take(GROUPLEVEL)) ; it.refList.add(DslRefAtom(it.dslElementFunctionName, simpleName)) }
+            fun allModelsRef(simpleName: String) = DslElementRefEither.DslAllModelsRef(discriminator, simpleName)        .also { it.refList.addAll(this.refList.take(GROUPLEVEL)) ; it.refList.add(DslRefAtom(it.dslElementFunctionName, simpleName)) }
 
             sealed class DslElementRefEither(disc: String, val dslElementFunctionName: String, simpleName: String) : DslModelgroupRef(disc, simpleName) {
-                override val level = 2
+                override val level = ELEMENTLEVEL
                 open class DslModelRef(disc: String, simpleName: String) : DslElementRefEither(disc, DslBlockName.MODEL.name, simpleName) {
                     companion object { val NULL = DslSubElementRefEither.NoneRef() }
                     enum class MODELELEMENT { DTO, TABLE }
-                    fun dtoRef(simpleName: String = C.DEFAULT)   = DslSubElementRefEither.DslDtoRef  (discriminator, simpleName).also { it.refList.addAll(this.refList) ; it.refList.add(DslRefAtom(it.dslSubElementFunctionName, simpleName)) }
-                    fun tableRef(simpleName: String) = DslSubElementRefEither.DslTableRef(discriminator, simpleName).also { it.refList.addAll(this.refList) ; it.refList.add(DslRefAtom(it.dslSubElementFunctionName, simpleName)) }
+                    fun dtoRef(simpleName: String = C.DEFAULT)   = DslSubElementRefEither.DslDtoRef  (discriminator, simpleName).also { it.refList.addAll(this.refList.take(ELEMENTLEVEL)) ; it.refList.add(DslRefAtom(it.dslSubElementFunctionName, simpleName)) }
+                    fun tableRef(simpleName: String = C.DEFAULT) = DslSubElementRefEither.DslTableRef(discriminator, simpleName).also { it.refList.addAll(this.refList.take(ELEMENTLEVEL)) ; it.refList.add(DslRefAtom(it.dslSubElementFunctionName, simpleName)) }
 
                     sealed class DslSubElementRefEither(disc: String, val dslSubElementFunctionName: String, simpleName: String) : DslModelRef(disc, simpleName) {
-                        override val level = 3
+                        override val level = SUBELEMENTLEVEL
                         companion object { val NULL: DslSubElementRefEither = NoneRef() }
                         class NoneRef internal constructor() : DslSubElementRefEither("NONE", "NONE", "NONE")
                         open class DslDtoRef(disc: String, simpleName: String) : DslSubElementRefEither(disc, "dto", simpleName) {
@@ -123,19 +159,19 @@ sealed class DslRef(val discriminator: String, val dslTopLevelFunctionName: Stri
                     }
                 }
                 open class DslFillerRef(disc: String, simpleName: String) : DslElementRefEither(disc, DslBlockName.FILLER.name, simpleName)
-                open class DslApiRef(disc: String, simpleName: String) : DslElementRefEither(disc, DslBlockName.API.name, simpleName)
-                //open class DslWheretoRef(disc: String, simpleName: String) : DslElementRefEither(disc, DslBlockName.WHERETO.name, simpleName)
                 open class DslAllModelsRef(disc: String, simpleName: String) : DslElementRefEither(disc, DslBlockName.ALLMODELS.name, simpleName)
             }
         }
         open class DslApigroupRef(disc: String, simpleName: String) : DslGroupRefEither(disc, DslBlockName.APIGROUP.name, simpleName) {
-            // override val level = still 1
-            companion object { val NULL = DslApigroupRef.DslElementRefEither.DslApiRef(C.NULLSTRING, C.NULLSTRING) }
-            fun apiRef(    simpleName: String) = DslApigroupRef.DslElementRefEither.DslApiRef(    discriminator, simpleName)        .also { it.refList.addAll(this.refList) ; it.refList.add(DslRefAtom(it.dslElementFunctionName, simpleName)) }
+            //override val level = again GROUPLEVEL
+            companion object { val NULL = DslElementRefEither.DslApiRef(C.NULLSTRING, C.NULLSTRING) }
+            fun apiRef(    simpleName: String) = DslElementRefEither.DslApiRef(    discriminator, simpleName)        .also { it.refList.addAll(this.refList.take(GROUPLEVEL)) ; it.refList.add(DslRefAtom(it.dslElementFunctionName, simpleName)) }
 
             sealed class DslElementRefEither(disc: String, val dslElementFunctionName: String, simpleName: String) : DslApigroupRef(disc, simpleName) {
-                override val level = 2
-                open class DslApiRef(disc: String, simpleName: String) : DslElementRefEither(disc, DslBlockName.API.name, simpleName)
+                override val level = ELEMENTLEVEL
+                open class DslApiRef(disc: String, simpleName: String) : DslElementRefEither(disc, DslBlockName.API.name, simpleName) {
+
+                }
             }
         }
     }
