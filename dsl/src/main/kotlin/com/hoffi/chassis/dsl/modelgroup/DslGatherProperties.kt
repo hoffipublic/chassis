@@ -1,11 +1,13 @@
 package com.hoffi.chassis.dsl.modelgroup
 
 import com.hoffi.chassis.chassismodel.C
-import com.hoffi.chassis.chassismodel.dsl.ChassisDslMarker
-import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.dsl.DslRef.DslGroupRefEither.DslModelgroupRef
-import com.hoffi.chassis.shared.dsl.DslRef.DslGroupRefEither.DslModelgroupRef.DslElementRefEither.DslModelRef.MODELELEMENT
-import com.hoffi.chassis.shared.dsl.GatherPropertiesEnum
+import com.hoffi.chassis.dsl.internal.DslDelegators
+import com.hoffi.chassis.shared.dsl.*
+
+class GatherPropertys(
+    var modelOrModelSubElement: DslRef.ICrosscuttingPropertiesOf = DslRef.model.NULL,
+    var gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.NONE
+)
 
 interface IDslGatherPropertiesProp {
     // non direct DSL props
@@ -14,78 +16,71 @@ interface IDslGatherPropertiesProp {
 interface IDslGatherPropertiesModelAndElementsCommon {
     fun propertiesOfSuperclasses()
     fun propertiesOf(dslModelOrElementRefString: String,                                     gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.NONE)
-    fun propertiesOf(dslModelOrElementRef: DslModelgroupRef.DslElementRefEither.DslModelRef, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.NONE)
+    fun propertiesOf(dslModelOrElementRef: DslRef.ICrosscuttingPropertiesOf, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.NONE)
 }
-interface IDslGatherPropertiesModelElementsOnlyCommon : IDslGatherPropertiesProp {
-    fun propertiesOf(modelElement: MODELELEMENT, simpleName: String = C.DEFAULT, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.NONE)
-    fun propertiesOfSuperclassesOf(modelElement: MODELELEMENT, simpleName: String = C.DEFAULT)
+interface IDslGatherPropertiesElementsOnlyCommon : IDslGatherPropertiesProp {
+    fun propertiesOf(modelElement: DslRef.model.MODELELEMENT, simpleName: String = C.DEFAULTSTRING, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.NONE)
+    fun propertiesOfSuperclassesOf(modelElement: DslRef.model.MODELELEMENT, simpleName: String = C.DEFAULTSTRING)
 }
-interface IDslGatherPropertiesBoth : IDslGatherPropertiesModelAndElementsCommon, IDslGatherPropertiesModelElementsOnlyCommon
-@ChassisDslMarker
-class DslGatherPropertiesModelAndElementsCommonImpl( // TODO rename as now the only impl class here
-    var modelgroupOrElement: DslModelgroupRef
+interface IDslGatherPropertiesBoth : IDslGatherPropertiesModelAndElementsCommon, IDslGatherPropertiesElementsOnlyCommon
+/** DSL classes, that are contained (and delegated to)
+ * by multiple @ChassisDsl IDslClass'es
+ * - are no IDslClass themselves
+ * - and do not have a ref to the parent IDslClass
+ * as these are multiple different ones, so no help to have them anyway */
+@DslDelegators(DslModel::class, DslDto::class, DslTable::class)
+class DslGatherPropertiesImpl(
+    var modelOrModelSubElement: DslRef.ICrosscuttingPropertiesOf
 )
-    : IDslGatherPropertiesBoth
+    : IDslGatherPropertiesBoth, IDelegatee
 {
     override val igatherPropertys: GatherPropertys = GatherPropertys()
 
     override fun propertiesOfSuperclasses() {
-        igatherPropertys.modelgroupOrElement = modelgroupOrElement
+        igatherPropertys.modelOrModelSubElement = modelOrModelSubElement
         igatherPropertys.gatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES
     }
 
     override fun propertiesOf(dslModelOrElementRefString: String, gatherPropertiesEnum: GatherPropertiesEnum) {
         TODO("Not yet implemented")
+        DslRefString.modelElementRef(dslModelOrElementRefString, DslDiscriminator.NULL)
         // string to ref
-        //igatherPropertys.modelgroupOrElement = theRef
+        //igatherPropertys.modelOrModelSubElement = theRef
         igatherPropertys.gatherPropertiesEnum = gatherPropertiesEnum
     }
 
     override fun propertiesOf(
-        dslModelOrElementRef: DslModelgroupRef.DslElementRefEither.DslModelRef,
+        dslModelOrElementRef: DslRef.ICrosscuttingPropertiesOf,
         gatherPropertiesEnum: GatherPropertiesEnum
     ) {
-        igatherPropertys.modelgroupOrElement = dslModelOrElementRef
+        igatherPropertys.modelOrModelSubElement = dslModelOrElementRef
         igatherPropertys.gatherPropertiesEnum = gatherPropertiesEnum
     }
 
     override fun propertiesOf(
-        modelElement: MODELELEMENT,
+        modelElement: DslRef.model.MODELELEMENT,
         simpleName: String,
         gatherPropertiesEnum: GatherPropertiesEnum
     ) {
-        val modelRef = modelgroupOrElement.elementRef() as DslModelgroupRef.DslElementRefEither.DslModelRef
+        // definitely a modelSubElement, as this function should only be callable in context of a DslRef.IModelSubElement
+        val modelRef = modelOrModelSubElement.parentRef as DslRef.model
         when (modelElement) {
-            MODELELEMENT.DTO -> {
-                igatherPropertys.modelgroupOrElement = modelRef.dtoRef(simpleName)
+            DslRef.model.MODELELEMENT.MODEL -> {
+                igatherPropertys.modelOrModelSubElement = modelRef
                 igatherPropertys.gatherPropertiesEnum = gatherPropertiesEnum
             }
-            MODELELEMENT.TABLE -> {
-                igatherPropertys.modelgroupOrElement = modelRef.tableRef(simpleName)
+            DslRef.model.MODELELEMENT.DTO -> {
+                igatherPropertys.modelOrModelSubElement = DslRef.dto(simpleName, modelRef)
+                igatherPropertys.gatherPropertiesEnum = gatherPropertiesEnum
+            }
+            DslRef.model.MODELELEMENT.TABLE -> {
+                igatherPropertys.modelOrModelSubElement = DslRef.table(simpleName, modelRef)
                 igatherPropertys.gatherPropertiesEnum = gatherPropertiesEnum
             }
         }
     }
 
-    override fun propertiesOfSuperclassesOf(
-        modelElement: MODELELEMENT,
-        simpleName: String
-    ) {
-        TODO("Not yet implemented")
+    override fun propertiesOfSuperclassesOf(modelElement: DslRef.model.MODELELEMENT, simpleName: String) {
+        propertiesOf(modelElement, simpleName, GatherPropertiesEnum.SUPERCLASS_PROPERTIES_ONLY)
     }
 }
-
-//@ChassisDslMarker
-//open class DslGatherPropertiesModelElementsOnlyCommonImpl(
-//    modelgroupOrElement: DslModelgroupRef
-//)
-//    : DslGatherPropertiesModelAndElementsCommonImpl(modelgroupOrElement),  IDslGatherPropertiesModelElementsOnlyCommon
-//{
-//
-//}
-
-
-class GatherPropertys(
-    var modelgroupOrElement: DslRef.DslGroupRefEither = DslRef.DslGroupRefEither.NULL,
-    var gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.NONE
-)

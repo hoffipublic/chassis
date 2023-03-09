@@ -2,8 +2,6 @@ package com.hoffi.chassis.dsl.scratchdslEXAMPLES
 
 import com.hoffi.chassis.dsl.internal.DslRun
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
-import com.hoffi.chassis.shared.dsl.DslRef.DslGroupRefEither.DslModelgroupRef.DslElementRefEither.DslModelRef
-import com.hoffi.chassis.shared.dsl.DslRefString
 import kotlinx.datetime.Clock
 
 fun main() {
@@ -53,9 +51,13 @@ fun main() {
 //    f(aDslRun, DslDiscriminator("someDisc"))
 
     // we continue here later
-    println(aDslRun.dslCtx.getModel(DslRefString.ref(SIMPLE__ROOT) as DslModelRef).kind)
-    for (model in aDslRun.dslCtx.getAllModels()) {
-        println(model.modelOrDslElementRef)
-        println(model.dslDtoObj.modelOrDslElementRef)
+    //val modelRef = DslRefString.elementRef("someDisc;modelgroup:CommonModel;model:Intfc", DslDiscriminator("someDisc"))
+    //val model = aDslRun.dslCtx.getModel(modelRef)
+    //println(model.kind)
+    for (aModel in aDslRun.dslCtx.getAllModels()) {
+        println(aModel.modelOrModelSubElementRef)
+        for(dto in aModel.dslDtos) {
+            println("  ${dto.dtoRef}")
+        }
     }
 }

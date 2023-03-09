@@ -13,7 +13,7 @@ val projectPackage: String by extra { "${rootPackage}.${project.name.toLowerCase
 
 dependencies {
     implementation(project(":chassismodel"))
-    implementation("com.github.ajalt.clikt:clikt".depAndVersion())
+    implementation("org.reflections:reflections:0.10.2")
     implementation("com.squareup:kotlinpoet".depAndVersion())
 }
 

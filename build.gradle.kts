@@ -76,19 +76,30 @@ allprojects {
     }
 }
 
-subprojects {
+allprojects {
     //println("> root/build.gradle.kts subprojects for: sub$project")
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
         println("root/build.gradle.kts subprojects { configuring sub$project as kotlin(\"jvm\") project }")
+        dependencies {
+            implementation(kotlin("reflect"))
+            implementation("com.github.ajalt.clikt:clikt".depAndVersion())
+            implementation("com.squareup:kotlinpoet".depAndVersion())
+            runtimeOnly("ch.qos.logback:logback-classic".depAndVersion())
+            implementation("org.slf4j:slf4j-api".depAndVersion())
+        }
     }
     pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
         println("root/build.gradle.kts subprojects { configuring sub$project as kotlin(\"multiplatform\") project }")
     }
+
 }
 
 dependencies {
+    implementation(kotlin("reflect"))
     implementation("com.github.ajalt.clikt:clikt".depAndVersion())
     implementation("com.squareup:kotlinpoet".depAndVersion())
+    runtimeOnly("ch.qos.logback:logback-classic".depAndVersion())
+    implementation("org.slf4j:slf4j-api".depAndVersion())
 }
 
 kotlin {

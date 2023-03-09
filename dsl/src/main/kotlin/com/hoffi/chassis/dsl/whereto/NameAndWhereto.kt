@@ -1,25 +1,32 @@
 package com.hoffi.chassis.dsl.whereto
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.dsl.ChassisDsl
 import com.hoffi.chassis.chassismodel.dsl.ChassisDslMarker
-import com.hoffi.chassis.shared.dsl.DslBlockName
+import com.hoffi.chassis.dsl.internal.DslDelegators
+import com.hoffi.chassis.dsl.internal.DslRun
+import com.hoffi.chassis.dsl.modelgroup.DslDto
+import com.hoffi.chassis.dsl.modelgroup.DslModel
+import com.hoffi.chassis.dsl.modelgroup.DslModelgroup
+import com.hoffi.chassis.dsl.modelgroup.DslTable
 import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.dsl.DslRef.DslGroupRefEither.DslModelgroupRef.DslElementRefEither.DslModelRef.DslSubElementRefEither
-import com.hoffi.chassis.shared.dsl.IDslClass
+import com.hoffi.chassis.shared.dsl.IDelegatee
 import com.hoffi.chassis.shared.helpers.pathSepRE
 import okio.Path
 import okio.Path.Companion.toPath
 
-@ChassisDslMarker
+/** DSL classes, that are contained (and delegated to)
+ * by multiple @ChassisDsl IDslClass'es
+ * - are no IDslClass themselves
+ * - and do not have a ref to the parent IDslClass
+ * as these are multiple different ones, so no help to have them anyway */
+@DslDelegators(DslRun::class, DslModelgroup::class, DslModel::class, DslDto::class, DslTable::class) //, DslFiller::class)
 abstract class NameAndWheretoImpl(
-    final override val parent: IDslClass
+    val runOrModelgroupOrModelOrDtoOrTable: DslRef.ICrosscuttingNameAndWhereto
 )
-    : IDslClass
+    : IDelegatee
 {
-    val wheretoRef: DslRef.DslWheretoRef = parent.selfDslRef.wheretoRef(DslBlockName.WHERETO.name)
-    override val selfDslRef: DslRef = wheretoRef
-    override val parentDslRef: DslRef = parent.selfDslRef
-    override val groupDslRef: DslRef.DslGroupRefEither = parent.groupDslRef
+    override fun toString() = runOrModelgroupOrModelOrDtoOrTable.toString()
 
     var baseDir: String
         get() = baseDirPath.toString()
@@ -50,15 +57,15 @@ abstract class NameAndWheretoImpl(
     fun packagePostfixBefore(concat: String) { packagePostfix= "$concat$packagePostfix" }
     fun packagePostfixAfter(concat: String)  { packagePostfix= "$packagePostfix$concat" }
 }
-@ChassisDslMarker
+@ChassisDsl
 interface INameAndWheretoWithoutModelSubtypes {
     fun nameAndWhereto(block: NameAndWheretoWithoutModelSubtypesImpl.() -> Unit)
 }
-@ChassisDslMarker
-class NameAndWheretoWithoutModelSubtypesImpl(
-    parent: IDslClass
+@ChassisDsl
+class NameAndWheretoWithoutModelSubtypesImpl( // TODO simpleName as first param
+    runOrModelgroupOrModelOrDtoOrTable: DslRef.ICrosscuttingNameAndWhereto
 )
-    : NameAndWheretoImpl(parent), INameAndWheretoWithoutModelSubtypes
+    : NameAndWheretoImpl(runOrModelgroupOrModelOrDtoOrTable), INameAndWheretoWithoutModelSubtypes
 {
     override fun nameAndWhereto(block: NameAndWheretoWithoutModelSubtypesImpl.() -> Unit) {
         this.apply(block)
@@ -69,26 +76,18 @@ interface INameAndWheretoPlusModelSubtypes {
     fun nameAndWhereto(block: NameAndWheretoPlusModelSubtypesImpl.() -> Unit)
 }
 @ChassisDslMarker
-class NameAndWheretoPlusModelSubtypesImpl(
-    parent: IDslClass
+class NameAndWheretoPlusModelSubtypesImpl( // TODO simpleName as first param
+    runOrModelgroupOrModelOrDtoOrTable: DslRef.ICrosscuttingNameAndWhereto
 )
-    : NameAndWheretoImpl(parent), INameAndWheretoPlusModelSubtypes
+    : NameAndWheretoImpl(runOrModelgroupOrModelOrDtoOrTable), INameAndWheretoPlusModelSubtypes
 {
-    init {
-        // ensure at compile-time that all ModelSubtypes are handled in this class
-        when (DslSubElementRefEither.NULL) {
-            is DslSubElementRefEither.NoneRef -> { }
-            is DslSubElementRefEither.DslDtoRef -> { }
-            is DslSubElementRefEither.DslTableRef -> { }
-        }
-    }
-
     override fun nameAndWhereto(block: NameAndWheretoPlusModelSubtypesImpl.() -> Unit) {
         this.apply(block)
     }
 
-    val dtoNameAndWheretoImpl =   NameAndWheretoWithoutModelSubtypesImpl(this)
-    val tableNameAndWheretoImpl = NameAndWheretoWithoutModelSubtypesImpl(this)
+    // TODO simpleName as first param, so do not instantiate upfront, but set to NULL
+    val dtoNameAndWheretoImpl =   NameAndWheretoWithoutModelSubtypesImpl(runOrModelgroupOrModelOrDtoOrTable)
+    val tableNameAndWheretoImpl = NameAndWheretoWithoutModelSubtypesImpl(runOrModelgroupOrModelOrDtoOrTable)
     fun dtoNameAndWhereto(  name: String = C.DEFAULT, block: NameAndWheretoImpl.() -> Unit) = dtoNameAndWheretoImpl.apply(  block)
     fun tableNameAndWhereto(name: String = C.DEFAULT, block: NameAndWheretoImpl.() -> Unit) = tableNameAndWheretoImpl.apply(block)
 }

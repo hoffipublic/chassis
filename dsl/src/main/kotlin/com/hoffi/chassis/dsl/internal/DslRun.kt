@@ -5,6 +5,7 @@ import com.hoffi.chassis.dsl.whereto.INameAndWheretoPlusModelSubtypes
 import com.hoffi.chassis.dsl.whereto.NameAndWheretoPlusModelSubtypesImpl
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslClass
+import com.hoffi.chassis.shared.dsl.IDslRef
 
 class DslRun(var runIdentifierEgEnvAndTime: String) : IDslClass {
     var running = false
@@ -14,9 +15,10 @@ class DslRun(var runIdentifierEgEnvAndTime: String) : IDslClass {
     val runTopLevelFunction = TopLevelDslFunction()
 
     override val parent: IDslClass = runTopLevelFunction
-    override val selfDslRef: DslRef = DslRef.dslRunRef("runDiscriminator", runIdentifierEgEnvAndTime)
-    override val parentDslRef: DslRef = parent.selfDslRef
-    override val groupDslRef: DslRef.DslGroupRefEither = DslRef.DslGroupRefEither.NULL
+    override val selfDslRef: DslRef = DslRef.DslRun(runIdentifierEgEnvAndTime)
+    override val parentDslRef: IDslRef = parent.selfDslRef
+    override val groupDslRef: DslRef.IGroupLevel = DslRef.IGroupLevel.NULL
+    override fun toString() = selfDslRef.toString()
 
     fun start(dslRunBlock: DslRun.() -> Unit = {}): DslRun {
         this.apply(dslRunBlock)
@@ -27,8 +29,8 @@ class DslRun(var runIdentifierEgEnvAndTime: String) : IDslClass {
     }
 
     @DslInstance
-    internal val wheretoImpl = NameAndWheretoPlusModelSubtypesImpl(this)
-    @DslBlockOn<NameAndWheretoPlusModelSubtypesImpl>
+    internal val wheretoImpl = NameAndWheretoPlusModelSubtypesImpl(DslRef.DslRun("<DslRun>"))
+    @DslBlockOn(NameAndWheretoPlusModelSubtypesImpl::class)
     fun configure(whereToBlock: INameAndWheretoPlusModelSubtypes.() -> Unit) {
         wheretoImpl.apply(whereToBlock)
     }

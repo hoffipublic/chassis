@@ -5,19 +5,16 @@ import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.INTERFACE
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.OBJECT
 import com.hoffi.chassis.dsl.internal.DslRun
 import com.hoffi.chassis.dsl.modelgroup
-import com.hoffi.chassis.shared.dsl.DslDiscriminator
-import com.hoffi.chassis.shared.dsl.DslRef.DslGroupRefEither.DslModelgroupRef.DslElementRefEither.DslModelRef.MODELELEMENT.DTO
-import com.hoffi.chassis.shared.dsl.DslRefString.modelElementRef
-import com.hoffi.chassis.shared.dsl.GatherPropertiesEnum
+import com.hoffi.chassis.shared.dsl.*
 
 const val SIMPLE = "Simple"
-const val SIMPLE__ROOT      = "$SIMPLE;"
-const val SIMPLE__ENTITY    = "$SIMPLE;Entity"
-const val SIMPLE__SUBENTITY = "$SIMPLE;Subentity"
+const val SIMPLE__ROOT      = ""
+const val SIMPLE__ENTITY    = "Entity"
+const val SIMPLE__SUBENTITY = "Subentity"
 
 context(DslRun)
-fun simpleEntities(dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEFAULTSTRING)) {
-    with (dslDiscriminator) {
+fun simpleEntities(disc: DslDiscriminator = DslDiscriminator(C.DEFAULT)) {
+    with (DslDiscriminatorWrapper(disc)) {
 //    apigroup(SIMPLE) {
 //
 //    }
@@ -42,9 +39,9 @@ fun simpleEntities(dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEFAU
             //    +com.hoffi.codegen.Dummy::class // special models overwrite non-Interface super classes
             //}
          // propertiesOf(DTO, VGatherFromSuperclasses(false)) // SHOULD NOT EXIST ON model() { }
-            propertiesOf("disc;modelgroup:someGroup;modelElement:someModel", GatherPropertiesEnum.NONE)
-            propertiesOf("disc;modelgroup:someGroup;modelElement:someModel;DTO:someDto", GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
-            propertiesOf("disc;modelgroup:someGroup;modelElement:someModel;DTO", GatherPropertiesEnum.SUPERCLASS_PROPERTIES_ONLY)
+//            propertiesOf("disc;modelgroup:someGroup;modelElement:someModel", GatherPropertiesEnum.NONE)
+//            propertiesOf("disc;modelgroup:someGroup;modelElement:someModel;DTO:someDto", GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+//            propertiesOf("disc;modelgroup:someGroup;modelElement:someModel;DTO", GatherPropertiesEnum.SUPERCLASS_PROPERTIES_ONLY)
             propertiesOfSuperclasses()
          // propertiesOfSuperclassesOf(DTO) // SHOULD NOT EXIST ON model() { }
 
@@ -69,13 +66,13 @@ fun simpleEntities(dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEFAU
 //            //addToStringMembers(toStringMembersList = COMMON_MODEL___toStringMembers)
 
             dto {
-                propertiesOf(DTO)
-                propertiesOf("disc;modelgroup:someGroup;modelElement:someModel")
-                propertiesOf("disc;modelgroup:someGroup;modelElement:someModel;DTO:someDto")
-                propertiesOf("disc;modelgroup:someGroup;modelElement:someModel;DTO")
+                propertiesOf(DslRef.model.MODELELEMENT.DTO)
+//                propertiesOf("disc;modelgroup:someGroup;modelElement:someModel")
+//                propertiesOf("disc;modelgroup:someGroup;modelElement:someModel;DTO:someDto")
+//                propertiesOf("disc;modelgroup:someGroup;modelElement:someModel;DTO")
                 propertiesOfSuperclasses()
-                propertiesOfSuperclassesOf(DTO)
-                propertiesOf(modelElementRef(COMMON), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+                propertiesOfSuperclassesOf(DslRef.model.MODELELEMENT.DTO)
+                propertiesOf(DslRefString.modelElementRef("disc:${disc.dslDiscriminator};modelgroup:$COMMON;model:$COMMON__INTFC", disc), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
                 //extends {
                 //    replaceSuperclass = true
                 //    from(COMMON__PERSISTENT_OPTIMISTIC)
@@ -91,10 +88,10 @@ fun simpleEntities(dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEFAU
             }
             table {
                 kind = OBJECT
-                propertiesOf(DTO)
+                propertiesOf(DslRef.model.MODELELEMENT.DTO)
                 propertiesOfSuperclasses()
-                propertiesOfSuperclassesOf(DTO)
-                propertiesOf(modelElementRef(COMMON), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+                propertiesOfSuperclassesOf(DslRef.model.MODELELEMENT.DTO)
+                propertiesOf(DslRefString.modelElementRef("disc:${disc.dslDiscriminator};modelgroup:$COMMON;model:$COMMON__INTFC", disc), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
                 //alterPropertyForDB("name", "uniqueIndex()")
             }
 //            filler {

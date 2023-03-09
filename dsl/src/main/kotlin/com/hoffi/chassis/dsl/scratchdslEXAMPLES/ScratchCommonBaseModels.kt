@@ -4,21 +4,18 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.*
 import com.hoffi.chassis.dsl.internal.DslRun
 import com.hoffi.chassis.dsl.modelgroup
-import com.hoffi.chassis.shared.dsl.DslDiscriminator
-import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.dsl.DslRefString
-import com.hoffi.chassis.shared.dsl.GatherPropertiesEnum
+import com.hoffi.chassis.shared.dsl.*
 
 const val COMMON = "CommonModel"
-const val COMMON__INTFC                 = "$COMMON;Intfc"
-const val COMMON__ROOT                  = "$COMMON;"
-const val COMMON__PERSISTENT            = "$COMMON;Persistent"
-const val COMMON__TRANSIENT_STATE       = "$COMMON;TransientState"
-const val COMMON__PERSISTENT_OPTIMISTIC = "$COMMON;PersistentOptimistic"
+const val COMMON__INTFC                 = "Intfc"
+const val COMMON__ROOT                  = ""
+const val COMMON__PERSISTENT            = "Persistent"
+const val COMMON__TRANSIENT_STATE       = "TransientState"
+const val COMMON__PERSISTENT_OPTIMISTIC = "PersistentOptimistic"
 
 context(DslRun)
-fun commonBaseModels(dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEFAULTSTRING)) {
-    with (dslDiscriminator) {
+fun commonBaseModels(disc: DslDiscriminator = DslDiscriminator(C.DEFAULT)) {
+    with (DslDiscriminatorWrapper(disc)) {
     modelgroup(COMMON) {
         // property() in group itself?
         nameAndWhereto {
@@ -32,14 +29,14 @@ fun commonBaseModels(dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEF
         }
         model(COMMON__INTFC) {
             kind = INTERFACE
-            propertiesOf(DslRefString.modelElementRef(COMMON), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+            propertiesOf(DslRefString.modelElementRef("disc:${disc.dslDiscriminator};modelgroup:$COMMON;model:$COMMON__INTFC", disc), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
 //            subPackage("base")
             nameAndWhereto {
                 packageName = dslRun.wheretoImpl.packageName
                 dtoNameAndWhereto {  }
                 //fillerWhereto {  }
 
-                val countInCommonBaseModels: Int = dslCtx.countModelsOfModelgroup(groupDslRef as DslRef.DslGroupRefEither.DslModelgroupRef)
+                val countInCommonBaseModels: Int = dslCtx.countModelsOfModelgroup(this@modelgroup.groupDslRef as DslRef.modelgroup)
                 classPostfix = "overwrite"
                 classPostfix(countInCommonBaseModels.toString())
             }

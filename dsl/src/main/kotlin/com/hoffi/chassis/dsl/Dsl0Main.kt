@@ -4,14 +4,12 @@ import com.hoffi.chassis.chassismodel.dsl.DslInstance
 import com.hoffi.chassis.chassismodel.dsl.DslTopLevel
 import com.hoffi.chassis.dsl.internal.DslRun
 import com.hoffi.chassis.dsl.modelgroup.DslModelgroup
-import com.hoffi.chassis.shared.dsl.DslBlockName.MODELGROUP
-import com.hoffi.chassis.shared.dsl.DslDiscriminator
+import com.hoffi.chassis.shared.dsl.DslDiscriminatorWrapper
 import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.dsl.DslRef.DslGroupRefEither.DslModelgroupRef
 
-context(DslRun, DslDiscriminator)
+context(DslRun, DslDiscriminatorWrapper)
 @DslTopLevel
-fun modelgroup(name: String, modelgroupBlock: DslModelgroup.() -> Unit) {
+fun modelgroup(simpleName: String, modelgroupBlock: DslModelgroup.() -> Unit) {
 //    when (DSLPASS)
 //
 //    when (dslCtx.DSLPASS) {
@@ -43,7 +41,7 @@ fun modelgroup(name: String, modelgroupBlock: DslModelgroup.() -> Unit) {
 //        }
 //    }
 
-    val modelgroupRef: DslModelgroupRef = DslRef.modelgroupRef(dslDiscriminator, MODELGROUP.name)
+    val modelgroupRef = DslRef.modelgroup(simpleName, dslDiscriminator)
     @DslInstance val dslModelgroup: DslModelgroup = dslCtx.createModelgroup(modelgroupRef)
     dslModelgroup.apply(modelgroupBlock)
 }

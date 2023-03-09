@@ -1,5 +1,14 @@
 # chassis root README
 
+## self-reminders
+
+- `interfaces` that are used for dsl-blocks (`dslBlock: Ifc.() -> Unit`)</br>
+  are "independant" of Interfaces of `Impl`s.</br>
+  So you can use `Impl`s that implement "broader" `interfaces`</br>
+  as long as the dsl-block functions use the "narrower" ones
+- 
+
+
 ## Project Layout (work in progress)
 
 - `root` project chassis

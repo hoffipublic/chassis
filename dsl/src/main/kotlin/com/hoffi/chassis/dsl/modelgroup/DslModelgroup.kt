@@ -1,5 +1,6 @@
 package com.hoffi.chassis.dsl.modelgroup
 
+import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.dsl.ChassisDslMarker
 import com.hoffi.chassis.chassismodel.dsl.DslInstance
 import com.hoffi.chassis.dsl.internal.DslBlockOn
@@ -9,26 +10,26 @@ import com.hoffi.chassis.dsl.modelgroup.allmodels.AllModels
 import com.hoffi.chassis.dsl.modelgroup.allmodels.IAllModels
 import com.hoffi.chassis.dsl.whereto.INameAndWheretoPlusModelSubtypes
 import com.hoffi.chassis.dsl.whereto.NameAndWheretoPlusModelSubtypesImpl
-import com.hoffi.chassis.shared.dsl.DslBlockName
-import com.hoffi.chassis.shared.dsl.DslDiscriminator
+import com.hoffi.chassis.shared.dsl.DslDiscriminatorWrapper
 import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.dsl.DslRef.DslGroupRefEither.DslModelgroupRef
 import com.hoffi.chassis.shared.dsl.IDslClass
+import com.hoffi.chassis.shared.dsl.IDslRef
 
 @ChassisDslMarker
 class DslModelgroup(
-    val modelgroupRef: DslModelgroupRef,
+    val modelgroupRef: DslRef.modelgroup,
     override val parent: TopLevelDslFunction,
-    val nameAndWheretoPlusModelSubtypesImpl: NameAndWheretoPlusModelSubtypesImpl = NameAndWheretoPlusModelSubtypesImpl(parent),
-    val gatherPropertiesImpl: DslGatherPropertiesModelAndElementsCommonImpl = DslGatherPropertiesModelAndElementsCommonImpl(modelgroupRef)
+    val nameAndWheretoPlusModelSubtypesImpl: NameAndWheretoPlusModelSubtypesImpl = NameAndWheretoPlusModelSubtypesImpl(modelgroupRef),
+    val gatherPropertiesImpl: DslGatherPropertiesImpl = DslGatherPropertiesImpl(modelgroupRef)
 )
     : IDslClass,
     INameAndWheretoPlusModelSubtypes by nameAndWheretoPlusModelSubtypesImpl,
     IDslGatherPropertiesModelAndElementsCommon by gatherPropertiesImpl
 {
     override val selfDslRef: DslRef = modelgroupRef
-    override val parentDslRef: DslRef = parent.selfDslRef
-    override val groupDslRef: DslRef.DslGroupRefEither = modelgroupRef
+    override val parentDslRef: IDslRef = parent.selfDslRef
+    override val groupDslRef: DslRef.IGroupLevel = modelgroupRef
+    override fun toString() = selfDslRef.toString()
 
 //    override fun toString(): String = "${DslModelgroup::class.simpleName}[${modelgroupName.string}]"
 //    val string = modelgroupName.string
@@ -54,20 +55,25 @@ class DslModelgroup(
 //        this.classesPostfix = postfix
 //    }
 
-    val allModelsRef = modelgroupRef.allModelsRef(DslBlockName.ALLMODELS.name)
     @DslInstance
-    internal val allModels = AllModels(allModelsRef, this)
+    internal val allModels = mutableSetOf<AllModels>()
 
-    @DslBlockOn<AllModels>
+    @DslBlockOn(AllModels::class)
     fun allModels(allModelsBlock: IAllModels.() -> Unit) {
+        val allModels = AllModels(DslRef.allModels(C.DEFAULTSTRING, modelgroupRef), this)
+        this.allModels.add(allModels)
         allModels.apply(allModelsBlock)
     }
 
-    context(DslRun, DslDiscriminator)
-    @DslBlockOn<DslModel>
-    fun model(name: String, dslModelBlock: IDslModel.() -> Unit) {
-        val modelRef = modelgroupRef.modelRef(name)
-        @DslInstance val dslModel: DslModel = dslCtx.createModel(modelRef, this)
+    @DslInstance
+    var dslModels = mutableSetOf<DslModel>()
+
+    context(DslRun, DslDiscriminatorWrapper)
+    @DslBlockOn(DslModel::class)
+    fun model(simpleName: String, dslModelBlock: IDslModel.() -> Unit) {
+        val modelRef = DslRef.model(simpleName, modelgroupRef)
+        val dslModel = dslCtx.createModel(simpleName, modelRef, this)
+        dslModels.add(dslModel)
         dslModel.apply(dslModelBlock)
 
 //        val modelNameString = if(name.contains(':')) name.s2() else name
