@@ -36,9 +36,6 @@ val cg by tasks.registering {
 
 allprojects {
     //println("> root/build.gradle.kts allprojects: $project")
-    repositories {
-        mavenCentral()
-    }
     project.plugins.withId("org.jetbrains.kotlin.multiplatform") {
         println("${project.name}: starting configure for kotlin MPP project ...")
     }

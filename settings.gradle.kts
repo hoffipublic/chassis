@@ -7,11 +7,20 @@ pluginManagement {
     // Using this mechanism, the included build may also contribute a settings plugin that can be applied in the settings file itself.
     includeBuild("buildLogic/binaryPlugins/ProjectInfosBuildLogicPlugin")
     includeBuild("buildLogic/binaryPlugins/ProjectSetupBuildLogicPlugin")
+    repositories {
+        gradlePluginPortal()
+        google()
+    }
 }
 
 dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS) // FAIL_ON_PROJECT_REPOS or PREFER_PROJECT or PREFER_SETTINGS)
+    repositories {
+        mavenCentral()
+        google()
+    }
     versionCatalogs {
-        println("searching for libs.versions.toml in project '${rootProject.name}'s settings.gradle.kts")
+        println("project '${rootProject.name}'s settings.gradle.kts searching for libs.versions.toml")
         create("libs") {
             from(files(File(rootProject.projectDir, "libs.versions.toml"))) // in rootProject folder
         }

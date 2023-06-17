@@ -18,12 +18,11 @@ if [[ -n $1 && $1 == "overwriteback" ]]; then            OPT_SYNC_DIRECTION="OVE
 if [[ "OVERWRITE" == "$OPT_SYNC_DIRECTION" ]]; then
     SYNC_SOURCE="$SYNCDIR_base"
     SYNC_TARGET="$SCRIPTDIR"
-    mkdir -p "$SYNC_TARGET/../gradle"
-    cp -f "$SYNC_SOURCE/libs.versions.toml"           "$SYNC_TARGET/../gradle/libs.versions.toml"
+    cp -f "$SYNC_SOURCE/libs.versions.toml"           "$SYNC_TARGET/../libs.versions.toml"
 elif [[ "OVERWRITEBACK" == "$OPT_SYNC_DIRECTION" ]]; then
     SYNC_SOURCE="$SCRIPTDIR"
     SYNC_TARGET="$SYNCDIR_base"
-    cp -f "$SYNC_SOURCE/../gradle/libs.versions.toml" "$SYNC_TARGET/libs.versions.toml"
+    cp -f "$SYNC_SOURCE/../libs.versions.toml" "$SYNC_TARGET/libs.versions.toml"
 fi
 
 if [[ "OVERWRITE" == "$OPT_SYNC_DIRECTION" || "OVERWRITEBACK" == "$OPT_SYNC_DIRECTION" ]]; then
@@ -40,8 +39,8 @@ if [[ "OVERWRITE" == "$OPT_SYNC_DIRECTION" || "OVERWRITEBACK" == "$OPT_SYNC_DIRE
 fi
 
 ERROR_MESSAGES=()
-if [[   -f "$SCRIPTDIR/libs.versions.toml" ]]; then           ERROR_MESSAGES+=( "libs.versions.toml should be inside 'ROOT/gradle/' folder!" ) ; fi
-if [[ ! -f "$SCRIPTDIR/../gradle/libs.versions.toml" ]]; then ERROR_MESSAGES+=( "no libs.versions.toml file in ROOT/gradle/" ) ; fi
+#if [[   -f "$SCRIPTDIR/libs.versions.toml" ]]; then           ERROR_MESSAGES+=( "libs.versions.toml should be inside 'ROOT/gradle/' folder!" ) ; fi
+if [[   -f "$SCRIPTDIR/../gradle/libs.versions.toml" ]]; then ERROR_MESSAGES+=( "libs.versions.toml file should be directly in topmost rootProject (and not inside ROOT/gradle/ folder!)" ) ; fi
 if [[ ! -f "$SYNCDIR_base/libs.versions.toml" ]]; then        ERROR_MESSAGES+=( "no libs.versions.toml file in SYNC/libs.versions.toml" ) ; fi
 if [[   -f "$SYNCDIR_base/gradle/libs.versions.toml" ]]; then ERROR_MESSAGES+=( "there shouldn't be a libs.versions.toml found in SYNC/gradle/libs.versions.toml" ) ; fi
 if [[ ${#ERROR_MESSAGES[@]} -gt 0 ]]; then printf '%s\n' "${ERROR_MESSAGES[@]}" >&2 ; exit 2 ; fi
@@ -132,6 +131,6 @@ for PLUGIN in "${BINARYPLUGINS_TO_CHECK[@]}"; do
 done
 
 # finally deal with libs.versions.toml
-doTheDiff "$SCRIPTDIR/../gradle/libs.versions.toml" "$SYNCDIR_base/libs.versions.toml" "libs.versions.toml"
+doTheDiff "$SCRIPTDIR/../libs.versions.toml" "$SYNCDIR_base/libs.versions.toml" "libs.versions.toml"
 
 exit 0

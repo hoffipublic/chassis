@@ -1,3 +1,4 @@
+// only to be applied to ROOT projects and not(!) to multiproject subprojects!
 plugins {
     id("com.github.ben-manes.versions")
     id("nl.littlerobots.version-catalog-update")
@@ -5,6 +6,8 @@ plugins {
 }
 
 versionCatalogUpdate {
+    val libsVersionsTomlFile = libsVersionsTomlFile()
+    catalogFile.set(libsVersionsTomlFile) // file(File()) // TODO remove comment
     keep {
         keepUnusedVersions.set(true)
         keepUnusedLibraries.set(true)
