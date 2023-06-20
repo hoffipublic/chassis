@@ -1,14 +1,16 @@
 plugins {
-    kotlin("jvm") version "1.8.22"
-    kotlin("plugin.serialization") version "1.8.22" apply false
+    kotlin("jvm") version libs.versions.kotlin.asProvider().get()
+    kotlin("plugin.serialization") version libs.versions.kotlin.asProvider().get() apply false
     application
+    id("buildLogic.binaryPlugins.ProjectSetupBuildLogicPlugin")
+    id("buildLogic.binaryPlugins.ProjectInfosBuildLogicPlugin")
 }
 
 group = "com.hoffi"
 version = "1.0-SNAPSHOT"
-val artifactName: String by extra { "${rootProject.name.toLowerCase()}-${project.name.replace("[-_]".toRegex(), "").toLowerCase()}" }
+val artifactName: String by extra { "${rootProject.name.lowercase()}-${project.name.replace("[-_]".toRegex(), "").lowercase()}" }
 
-val rootPackage: String by extra { "${rootProject.group}.${rootProject.name.toLowerCase()}" }
+val rootPackage: String by extra { "${rootProject.group}.${rootProject.name.lowercase()}" }
 val projectPackage: String by extra { rootPackage }
 val theMainClass: String by extra { "Main" }
 application {

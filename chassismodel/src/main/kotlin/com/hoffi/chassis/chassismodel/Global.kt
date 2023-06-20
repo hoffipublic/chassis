@@ -4,8 +4,12 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 fun main(@Suppress("UNUSED_PARAMETER") args: Array<String>) {
-    val copyableHeading = "String related extension functions".padForHeader(78)
-    println(copyableHeading)
+    if (true) {
+        val copyableHeading = "String related extension functions".padForHeader(78)
+        println(copyableHeading)
+    } else {
+        casingToStdout()
+    }
 }
 
     //
@@ -87,49 +91,49 @@ value class MixedCaseString(private val s: String) {
     fun toUpperTitleKebabCase(): String =  toLowerTitleKebabCase().replaceFirstChar { c -> c.titlecase(C.LOCALE) }
 }
 
-//fun main(@Suppress("UNUSED_PARAMETER") args: Array<String>) {
-//    val exampleList = listOf(
-//        "oneTwoThree", "OneTwoThree", "oneTWOThree", "ONETwoThree",
-//        "one-Two_Three", "One-Two_Three", "one-TWO_Three", "ONE-Two_Three", "one-two_three", "ONE-TWO-THREE",
-//        "one--Two___Three", "One--Two___Three", "one--TWO___Three", "ONE--Two___Three", "one--two___three", "ONE--TWO--THREE",
-//        "one--Two_-_Three", "One--Two-_-Three", "one--TWO_-_Three", "ONE--Two_-_Three", "one--two_-_three", "ONE--TWO--THREE",
-//        "",
-//        "single"
-//    )
-//
-//    print("| " + "original".padCenter(16))
-//    print(" | " + "Camel".padCenter(16))
-//    print(" | " + "UpperCamel".padCenter(16))
-//    print(" | " + "LowerCamel".padCenter(16))
-//    print(" | " + "Snake".padCenter(16))
-//    print(" | " + "UpperSnake".padCenter(16))
-//    print(" | " + "LowerSnake".padCenter(16))
-//    print(" | " + "UpTitleSnake".padCenter(16))
-//    print(" | " + "LoTitleSnake".padCenter(16))
-//    print(" | " + "Kebab".padCenter(16))
-//    print(" | " + "UpperKebab".padCenter(16))
-//    print(" | " + "LowerKebab".padCenter(16))
-//    print(" | " + "UpTitleKebab".padCenter(16))
-//    print(" | " + "LoTitleKebab".padCenter(16))
-//    println(" |")
-//    for (ex in exampleList) {
-//        print("| " + "%-16s".format(ex))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toCamelCase()))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toUpperCamelCase()))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toLowerCamelCase()))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toSnakeCase()))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toUpperSnakeCase()))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toLowerSnakeCase()))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toUpperTitleSnakeCase()))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toLowerTitleSnakeCase()))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toKebabCase()))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toUpperKebabCase()))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toLowerKebabCase()))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toUpperTitleKebabCase()))
-//        print(" | " + "%-16s".format(MixedCaseString(ex).toLowerTitleKebabCase()))
-//        println(" |")
-//    }
-//}
+fun casingToStdout() {
+    val exampleList = listOf(
+        "oneTwoThree", "OneTwoThree", "oneTWOThree", "ONETwoThree",
+        "one-Two_Three", "One-Two_Three", "one-TWO_Three", "ONE-Two_Three", "one-two_three", "ONE-TWO-THREE",
+        "one--Two___Three", "One--Two___Three", "one--TWO___Three", "ONE--Two___Three", "one--two___three", "ONE--TWO--THREE",
+        "one--Two_-_Three", "One--Two-_-Three", "one--TWO_-_Three", "ONE--Two_-_Three", "one--two_-_three", "ONE--TWO--THREE",
+        "",
+        "single"
+    )
+
+    print("| " + "original".padCenter(16))
+    print(" | " + "Camel".padCenter(16))
+    print(" | " + "UpperCamel".padCenter(16))
+    print(" | " + "LowerCamel".padCenter(16))
+    print(" | " + "Snake".padCenter(16))
+    print(" | " + "UpperSnake".padCenter(16))
+    print(" | " + "LowerSnake".padCenter(16))
+    print(" | " + "UpTitleSnake".padCenter(16))
+    print(" | " + "LoTitleSnake".padCenter(16))
+    print(" | " + "Kebab".padCenter(16))
+    print(" | " + "UpperKebab".padCenter(16))
+    print(" | " + "LowerKebab".padCenter(16))
+    print(" | " + "UpTitleKebab".padCenter(16))
+    print(" | " + "LoTitleKebab".padCenter(16))
+    println(" |")
+    for (ex in exampleList) {
+        print("| " + "%-16s".format(ex))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toCamelCase()))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toUpperCamelCase()))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toLowerCamelCase()))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toSnakeCase()))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toUpperSnakeCase()))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toLowerSnakeCase()))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toUpperTitleSnakeCase()))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toLowerTitleSnakeCase()))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toKebabCase()))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toUpperKebabCase()))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toLowerKebabCase()))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toUpperTitleKebabCase()))
+        print(" | " + "%-16s".format(MixedCaseString(ex).toLowerTitleKebabCase()))
+        println(" |")
+    }
+}
 
 //====================================================================================================
 //==================   String.padCenter() and String.padForHeader(boxLines = 1)   ====================

@@ -1,13 +1,15 @@
 package com.hoffi.chassis.shared.parsedata
 
 import com.hoffi.chassis.shared.dsl.DslRef
+import com.hoffi.chassis.shared.parsedata.nameandwhereto.IModelClassName
+import com.hoffi.chassis.shared.parsedata.nameandwhereto.ModelClassName
 import com.hoffi.chassis.shared.shared.GatherPropertys
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 
 /** all props and sub-props are set on chassis DSL PASS_FINISH */
 abstract class ModelClassData(
-    var modelSubElRef: DslRef.IModelSubElement,
+    var modelSubElRef: DslRef.IModelSubelement,
     val modelClassName: ModelClassName = ModelClassName(modelSubElRef)
 ) : Comparable<ModelClassData>,
     IModelClassName by modelClassName
@@ -78,7 +80,7 @@ abstract class ModelClassData(
     //endregion
 }
 
-sealed class EitherModel(modelSubElRef: DslRef.IModelSubElement)
+sealed class EitherModel(modelSubElRef: DslRef.IModelSubelement)
     : ModelClassData(modelSubElRef) {
     class DtoModel(dtoRef: DslRef.dto) : EitherModel(dtoRef)
     class TableModel(tableRef: DslRef.table) : EitherModel(tableRef)

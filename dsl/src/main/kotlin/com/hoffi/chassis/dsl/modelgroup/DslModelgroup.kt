@@ -5,9 +5,11 @@ import com.hoffi.chassis.chassismodel.padForHeader
 import com.hoffi.chassis.dsl.internal.*
 import com.hoffi.chassis.dsl.modelgroup.allmodels.AllModels
 import com.hoffi.chassis.dsl.modelgroup.allmodels.IApiAllModels
-import com.hoffi.chassis.dsl.whereto.DslNameAndWheretoWithSubElementsDelegateImpl
-import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoWithSubElements
+import com.hoffi.chassis.dsl.whereto.DslNameAndWheretoWithSubelementsDelegateImpl
+import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoWithSubelements
 import com.hoffi.chassis.shared.dsl.DslRef
+import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
+import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedNameAndWhereto
 import org.slf4j.LoggerFactory
 
 context(DslCtxWrapper)
@@ -17,15 +19,15 @@ class DslModelgroup(
     val modelgroupRef: DslRef.modelgroup,
     //override val parent: TopLevelDslFunction,
     val classModifiersImpl: DslClassModifiersImpl                           = DslClassModifiersImpl(),
-    //val nameAndWheretoWithSubelements: DslNameAndWheretoWithSubElementsDelegateImpl = dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto(simpleName, modelgroupRef)),
+    //val nameAndWheretoWithSubelements: DslNameAndWheretoWithSubelementsDelegateImpl = dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto(simpleName, modelgroupRef)),
     //val gatherPropertiesImpl: DslGatherPropertiesDelegateImpl                       = dslCtx.ctxObjOrCreate(DslRef.propertiesOf(simpleName, modelgroupRef)),
-    val nameAndWheretoWithSubelements: DslNameAndWheretoWithSubElementsDelegateImpl = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto(simpleName, modelgroupRef)) },
+    val nameAndWheretoWithSubelements: DslNameAndWheretoWithSubelementsDelegateImpl = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto(simpleName, modelgroupRef)) },
     val gatherPropertiesImpl: DslGatherPropertiesDelegateImpl                       = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.propertiesOf(simpleName, modelgroupRef)) },
 )
     : ADslClass(),
-    IDslApiNameAndWheretoWithSubElements by nameAndWheretoWithSubelements,
+    IDslApiNameAndWheretoWithSubelements by nameAndWheretoWithSubelements,
     IDslApiClassModifiers by classModifiersImpl,
-    IDslApiGatherPropertiesModelAndModelSubElementsCommon by gatherPropertiesImpl
+    IDslApiGatherPropertiesModelAndModelSubelementsCommon by gatherPropertiesImpl
 {
     val log = LoggerFactory.getLogger(javaClass)
     init {
@@ -64,7 +66,7 @@ class DslModelgroup(
 
     context(DslCtxWrapper)
     @DslBlockOn(DslModel::class)
-    fun model(simpleName: String = C.DEFAULT, dslModelBlock: IDslApiModel.() -> Unit) {
+    fun model(simpleName: String, dslModelBlock: IDslApiModel.() -> Unit) {
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
             dslCtx.PASS_0_CONFIGURE -> {}
@@ -79,8 +81,8 @@ class DslModelgroup(
                 val modelRef = DslRef.model(simpleName, modelgroupRef)
                 println("now finishing modelgroup '${this@DslModelgroup.simpleName}'s model '${dslCtx.ctxObj<DslModel>(modelRef).simpleName}'".
                     padForHeader(120, 3, spacesAround = 5))
-                dslCtx.getModel(modelRef).apply(dslModelBlock) // first let all the subtree finish
-                finish()
+                val dslModel = dslCtx.getModel(modelRef).apply(dslModelBlock) // first let all the subtree finish
+                dslModel.finish(dslCtx)
             }
             else -> {
                 val modelRef = DslRef.model(simpleName, modelgroupRef)
@@ -89,9 +91,105 @@ class DslModelgroup(
         }
     }
 
-    fun finish() {
+    fun finish(dslCtx: DslCtx) {
 
     }
+    fun finishNameAndWheretos(dslCtx: DslCtx) {
+        val gatheredNameAndWheretosFakeOfDslRun = SharedGatheredNameAndWheretos(DslRef.model("Fake", DslRef.NULL), "Fake")
+        val nameAndWheretoWithSubelementsDevRun: DslNameAndWheretoWithSubelementsDelegateImpl = dslCtx.ctxObj(DslRef.nameAndWhereto("<DslRun>", dslCtx.dslRun.runRef))
+        for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.nameAndWheretos) {
+            gatheredNameAndWheretosFakeOfDslRun.createFor(SharedGatheredNameAndWheretos.THINGSWITHNAMEANDWHERETOS.DslRunConfigure, SharedNameAndWhereto(
+                dslNameAndWheretoDelegateEntry.value.simpleName,
+                dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                dslNameAndWheretoDelegateEntry.value.baseDirPath,
+                dslNameAndWheretoDelegateEntry.value.pathPath,
+                dslNameAndWheretoDelegateEntry.value.classPrefix,
+                dslNameAndWheretoDelegateEntry.value.classPostfix,
+                dslNameAndWheretoDelegateEntry.value.basePackage,
+                dslNameAndWheretoDelegateEntry.value.packageName,
+                dslNameAndWheretoDelegateEntry.value.strategyClassName,
+                dslNameAndWheretoDelegateEntry.value.strategyTableName
+            ))
+        }
+        for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.dtoNameAndWheretos) {
+            gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(DslRef.dto(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
+                dslNameAndWheretoDelegateEntry.value.simpleName,
+                dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                dslNameAndWheretoDelegateEntry.value.baseDirPath,
+                dslNameAndWheretoDelegateEntry.value.pathPath,
+                dslNameAndWheretoDelegateEntry.value.classPrefix,
+                dslNameAndWheretoDelegateEntry.value.classPostfix,
+                dslNameAndWheretoDelegateEntry.value.basePackage,
+                dslNameAndWheretoDelegateEntry.value.packageName,
+                dslNameAndWheretoDelegateEntry.value.strategyClassName,
+                dslNameAndWheretoDelegateEntry.value.strategyTableName
+            ))
+        }
+        for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.tableNameAndWheretos) {
+            gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(DslRef.table(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
+                dslNameAndWheretoDelegateEntry.value.simpleName,
+                dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                dslNameAndWheretoDelegateEntry.value.baseDirPath,
+                dslNameAndWheretoDelegateEntry.value.pathPath,
+                dslNameAndWheretoDelegateEntry.value.classPrefix,
+                dslNameAndWheretoDelegateEntry.value.classPostfix,
+                dslNameAndWheretoDelegateEntry.value.basePackage,
+                dslNameAndWheretoDelegateEntry.value.packageName,
+                dslNameAndWheretoDelegateEntry.value.strategyClassName,
+                dslNameAndWheretoDelegateEntry.value.strategyTableName
+            ))
+        }
 
+        for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.nameAndWheretos) {
+            gatheredNameAndWheretosFakeOfDslRun.createFor(SharedGatheredNameAndWheretos.THINGSWITHNAMEANDWHERETOS.Modelgroup, SharedNameAndWhereto(
+                dslNameAndWheretoDelegateEntry.value.simpleName,
+                dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                dslNameAndWheretoDelegateEntry.value.baseDirPath,
+                dslNameAndWheretoDelegateEntry.value.pathPath,
+                dslNameAndWheretoDelegateEntry.value.classPrefix,
+                dslNameAndWheretoDelegateEntry.value.classPostfix,
+                dslNameAndWheretoDelegateEntry.value.basePackage,
+                dslNameAndWheretoDelegateEntry.value.packageName,
+                dslNameAndWheretoDelegateEntry.value.strategyClassName,
+                dslNameAndWheretoDelegateEntry.value.strategyTableName
+            ))
+        }
+        for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.dtoNameAndWheretos) {
+            gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(DslRef.dto(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
+                dslNameAndWheretoDelegateEntry.value.simpleName,
+                dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                dslNameAndWheretoDelegateEntry.value.baseDirPath,
+                dslNameAndWheretoDelegateEntry.value.pathPath,
+                dslNameAndWheretoDelegateEntry.value.classPrefix,
+                dslNameAndWheretoDelegateEntry.value.classPostfix,
+                dslNameAndWheretoDelegateEntry.value.basePackage,
+                dslNameAndWheretoDelegateEntry.value.packageName,
+                dslNameAndWheretoDelegateEntry.value.strategyClassName,
+                dslNameAndWheretoDelegateEntry.value.strategyTableName
+            ))
+        }
+        for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.tableNameAndWheretos) {
+            gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(DslRef.table(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
+                dslNameAndWheretoDelegateEntry.value.simpleName,
+                dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                dslNameAndWheretoDelegateEntry.value.baseDirPath,
+                dslNameAndWheretoDelegateEntry.value.pathPath,
+                dslNameAndWheretoDelegateEntry.value.classPrefix,
+                dslNameAndWheretoDelegateEntry.value.classPostfix,
+                dslNameAndWheretoDelegateEntry.value.basePackage,
+                dslNameAndWheretoDelegateEntry.value.packageName,
+                dslNameAndWheretoDelegateEntry.value.strategyClassName,
+                dslNameAndWheretoDelegateEntry.value.strategyTableName
+            ))
+        }
+
+        for (dslModel in dslModels) {
+            val gatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(dslModel.selfDslRef)
+            gatheredNameAndWheretos.allFromDslRunConfigure.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromDslRunConfigure)
+            gatheredNameAndWheretos.allFromDslRunConfigureForSubelement.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromDslRunConfigureForSubelement)
+            gatheredNameAndWheretos.allFromGroup.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromGroup)
+            gatheredNameAndWheretos.allFromGroupForSubelement.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromGroupForSubelement)
+        }
+    }
 }
 

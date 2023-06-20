@@ -1,6 +1,5 @@
 package com.hoffi.chassis.dsl
 
-import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.internal.DslInstance
 import com.hoffi.chassis.dsl.internal.DslTopLevel
@@ -10,7 +9,7 @@ import org.slf4j.LoggerFactory
 
 context(DslCtxWrapper)
 @DslTopLevel
-fun modelgroup(simpleName: String = C.DEFAULT, modelgroupBlock: DslModelgroup.() -> Unit) {
+fun modelgroup(simpleName: String, modelgroupBlock: DslModelgroup.() -> Unit) {
     val log = LoggerFactory.getLogger("modelgroup")
 
     log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
@@ -19,12 +18,14 @@ fun modelgroup(simpleName: String = C.DEFAULT, modelgroupBlock: DslModelgroup.()
         dslCtx.PASS_1_BASEMODELS -> {
             @DslInstance val dslModelgroup = dslCtx.createModelgroup(simpleName)
             dslModelgroup.apply(modelgroupBlock)
+            dslModelgroup.finishNameAndWheretos(dslCtx)
         }
         dslCtx.PASS_ERROR -> TODO()
         dslCtx.PASS_FINISH -> {
             /* no special modelgroup finishing at the moment, so the same as else -> { } */
             val modelgroupRef = DslRef.modelgroup(simpleName, dslDiscriminator)
-            dslCtx.getModelgroup(modelgroupRef).apply(modelgroupBlock)
+            val modelgroup = dslCtx.getModelgroup(modelgroupRef).apply(modelgroupBlock)
+            modelgroup.finish(dslCtx)
         }
         else -> {
             val modelgroupRef = DslRef.modelgroup(simpleName, dslDiscriminator)

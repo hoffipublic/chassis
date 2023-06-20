@@ -1,9 +1,11 @@
 package com.hoffi.chassis.dsl.modelgroup
 
+import com.hoffi.chassis.dsl.internal.ChassisDslMarker
 import com.hoffi.chassis.dsl.internal.DslBlockOn
 import com.squareup.kotlinpoet.KModifier
 
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
+@ChassisDslMarker
 interface IDslApiClassModifiers {
     fun classModifiers(vararg modifiers: KModifier)
     operator fun KModifier.unaryPlus()

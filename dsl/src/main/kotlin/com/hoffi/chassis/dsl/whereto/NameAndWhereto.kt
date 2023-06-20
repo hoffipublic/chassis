@@ -8,42 +8,60 @@ import com.hoffi.chassis.dsl.modelgroup.DslModelgroup
 import com.hoffi.chassis.dsl.modelgroup.DslTable
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
+import com.hoffi.chassis.shared.helpers.ifNotBlank
 import com.hoffi.chassis.shared.helpers.pathSepRE
+import com.hoffi.chassis.shared.parsedata.nameandwhereto.ISharedNameAndWhereto
+import com.hoffi.chassis.shared.parsedata.nameandwhereto.NameAndWheretoDefaults
+import com.hoffi.chassis.shared.strategies.IClassNameStrategy
+import com.hoffi.chassis.shared.strategies.ITableNameStrategy
 import okio.Path
 import okio.Path.Companion.toPath
 import org.slf4j.LoggerFactory
 
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
 
-interface IDslApiNameAndWheretoProps {
-    var baseDir: String
+@ChassisDslMarker
+interface IDslApiNameAndWheretoProps : ISharedNameAndWhereto {
+    fun strategyClassName(strategyName: String) { strategyClassName = IClassNameStrategy.STRATEGY.valueOf(strategyName) }
+    override var strategyClassName: IClassNameStrategy.STRATEGY
+    fun strategyTableName(strategyName: String) { strategyTableName = ITableNameStrategy.STRATEGY.valueOf(strategyName) }
+    override var strategyTableName: ITableNameStrategy.STRATEGY
+    override var baseDir: String
         get() = baseDirPath.toString()
-        set(value) { baseDirPath = value.toPath()}
-    var baseDirPath: Path
+        set(value) { baseDirPath = value.toPath() }
+    override var baseDirPath: Path
     fun baseDir(concat: String)
     fun baseDir(concat: Path)
+    override var path: String
+        get() = pathPath.toString()
+        set(value) { pathPath = value.toPath() }
+    override var pathPath: Path
+    fun path(concat: String)
+    fun path(concat: Path)
 
-    var classPrefix: String
+    override var classPrefix: String
     fun classPrefix(concat: String)
     fun classPrefixBefore(concat: String)
     fun classPrefixAfter(concat: String)
-    var classPostfix: String
+    override var classPostfix: String
     fun classPostfix(concat: String)
     fun classPostfixBefore(concat: String)
     fun classPostfixAfter(concat: String)
 
-    var packageName: String
+    override var packageName: String
     fun packageName(concat: String)
     fun packagePrefixBefore(concat: String)
     fun packagePrefixAfter(concat: String)
     fun packagePostfixBefore(concat: String)
     fun packagePostfixAfter(concat: String)
 }
+@ChassisDslMarker
 interface IDslApiNameAndWheretoOnly {
     //context(DslCtxWrapper)
     fun nameAndWhereto(simpleName: String = C.DEFAULT, block: IDslApiNameAndWheretoProps.() -> Unit)
 }
-interface IDslApiNameAndWheretoWithSubElements {
+@ChassisDslMarker
+interface IDslApiNameAndWheretoWithSubelements {
     //context(DslCtxWrapper)
     fun nameAndWhereto(simpleName: String = C.DEFAULT, block: IDslApiNameAndWheretoOnSubElements.() -> Unit)
 }
@@ -61,7 +79,7 @@ interface IDslApiNameAndWheretoOnSubElements : IDslApiNameAndWheretoProps {
 interface IImplNameAndWheretoOnlyDelegate : IDslApiNameAndWheretoOnly {
     @DslInstance val nameAndWheretos: MutableMap<String, DslNameAndWheretoPropsImpl>
 }
-interface IDslImplNameAndWheretoWithSubElementsDelegate : IDslApiNameAndWheretoWithSubElements {
+interface IDslImplNameAndWheretoWithSubelementsDelegate : IDslApiNameAndWheretoWithSubelements {
     @DslInstance val nameAndWheretos: MutableMap<String, DslNameAndWheretoOnSubElementsDelegateImpl>
     @DslInstance val dtoNameAndWheretos: MutableMap<String, DslNameAndWheretoPropsImpl>
     @DslInstance val tableNameAndWheretos: MutableMap<String, DslNameAndWheretoPropsImpl>
@@ -82,28 +100,42 @@ open class DslNameAndWheretoPropsImpl(
     override val selfDslRef = DslRef.nameAndWhereto(simpleName, parentRef)
 
     override fun toString() = "$selfDslRef"
-    override var baseDir: String
-        get() = baseDirPath.toString()
-        set(value) { baseDirPath = value.toPath()}
-    override var baseDirPath: Path = java.io.File("./generated").absolutePath.toPath(normalize = true) // current working directory + "generated"
-    internal var baseDirAddendum: Path = "".toPath(normalize = false)
-    override fun baseDir(concat: String) { baseDirAddendum/=concat }
+    override var strategyClassName = IClassNameStrategy.STRATEGY.DEFAULT
+    override var strategyTableName = ITableNameStrategy.STRATEGY.DEFAULT
+    override var baseDirPath: Path = NameAndWheretoDefaults.basePath
+    //internal var baseDirAddendum: Path = "".toPath(normalize = false)
+    //override fun baseDir(concat: String) { baseDirAddendum/=concat }
+    //override fun baseDir(concat: Path)   { baseDirAddendum/=concat }
+    override fun baseDir(concat: String) { baseDirPath/=concat }
     override fun baseDir(concat: Path)   { baseDirPath/=concat }
+    override var pathPath: Path = NameAndWheretoDefaults.path
+    //internal var pathPathAddendum: Path = "".toPath(normalize = false)
+    //override fun path(concat: String) { pathPathAddendum/=concat }
+    //override fun path(concat: Path) { pathPathAddendum/=concat }
+    override fun path(concat: String) { pathPath/=concat }
+    override fun path(concat: Path) { pathPath/=concat }
 
-    override var classPrefix: String = ""
-    internal var classPrefixAddendum: String = ""
+
+    override var classPrefix: String = NameAndWheretoDefaults.classPrefix
+    //internal var classPrefixAddendum: String = ""
     override fun classPrefix(concat: String) { classPrefixBefore(concat) }
-    override fun classPrefixBefore(concat: String) { classPrefixAddendum = "$concat$classPrefixAddendum" }
-    override fun classPrefixAfter(concat: String)  { classPrefixAddendum = "$classPrefixAddendum$concat" }
-    override var classPostfix: String = ""
-    internal var classPostfixAddendum: String = ""
+    //override fun classPrefixBefore(concat: String) { classPrefixAddendum = "$concat$classPrefixAddendum" }
+    //override fun classPrefixAfter(concat: String)  { classPrefixAddendum = "$classPrefixAddendum$concat" }
+    override fun classPrefixBefore(concat: String) { classPrefix = "$concat$classPrefix" }
+    override fun classPrefixAfter(concat: String)  { classPrefix = "$classPrefix$concat" }
+    override var classPostfix: String = NameAndWheretoDefaults.classPostfix
+    //internal var classPostfixAddendum: String = ""
     override fun classPostfix(concat: String) { classPostfixAfter(concat) }
-    override fun classPostfixBefore(concat: String) { classPostfixAddendum = "$concat$classPostfixAddendum" }
-    override fun classPostfixAfter(concat: String)  { classPostfixAddendum = "$classPostfixAddendum$concat" }
+    //override fun classPostfixBefore(concat: String) { classPostfixAddendum = "$concat$classPostfixAddendum" }
+    //override fun classPostfixAfter(concat: String)  { classPostfixAddendum = "$classPostfixAddendum$concat" }
+    override fun classPostfixBefore(concat: String) { classPostfix = "$concat$classPostfix" }
+    override fun classPostfixAfter(concat: String)  { classPostfix = "$classPostfix$concat" }
 
-    override var packageName: String = "generated"
-    internal var packageNameAddendum: String = ""
-    override fun packageName(concat: String) { packageNameAddendum = "$packageNameAddendum.${concat.replace(pathSepRE, ".")}" }
+    override var basePackage: String = NameAndWheretoDefaults.basePackage
+    override var packageName: String = NameAndWheretoDefaults.packageName
+    //internal var packageNameAddendum: String = ""
+    //override fun packageName(concat: String) { packageName = "$packageName.${concat.replace(pathSepRE, ".")}" }
+    override fun packageName(concat: String) { packageName = "${packageName.ifNotBlank{"$packageName."}}${concat.replace(pathSepRE, ".")}" }
     internal var packagePrefix: String = ""
     override fun packagePrefixBefore(concat: String) { packagePrefix = "$concat$packagePrefix" }
     override fun packagePrefixAfter(concat: String)  { packagePrefix = "$packagePrefix$concat" }
@@ -130,22 +162,23 @@ class DslNameAndWheretoOnlyDelegateImpl constructor(
     override fun nameAndWhereto(simpleName: String, block: IDslApiNameAndWheretoProps.() -> Unit) { //dslCtx.currentPASS)
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
-            dslCtx.PASS_ERROR -> TODO()
-            dslCtx.PASS_FINISH -> { /* TODO implement me! */ }
-            else -> {
+            dslCtx.PASS_1_BASEMODELS-> {
                 val dslImpl = nameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoPropsImpl(simpleName, selfDslRef) }
                 dslImpl.apply(block)
             }
+            dslCtx.PASS_ERROR -> TODO()
+            dslCtx.PASS_FINISH -> { /* TODO implement me! */ }
+            else -> { }
         }
     }
 }
 
 context(DslCtxWrapper)
 @ChassisDslMarker
-class DslNameAndWheretoWithSubElementsDelegateImpl(
+class DslNameAndWheretoWithSubelementsDelegateImpl(
     simpleNameOfParentDslBlock: String,
     parentRef: IDslRef
-) : ADslDelegateClass(simpleNameOfParentDslBlock, parentRef), IDslImplNameAndWheretoWithSubElementsDelegate, IDslParticipator {
+) : ADslDelegateClass(simpleNameOfParentDslBlock, parentRef), IDslImplNameAndWheretoWithSubelementsDelegate, IDslParticipator {
     val log = LoggerFactory.getLogger(javaClass)
     override val selfDslRef = DslRef.nameAndWhereto(simpleNameOfParentDslBlock, parentRef)
 
@@ -159,12 +192,13 @@ class DslNameAndWheretoWithSubElementsDelegateImpl(
     override fun nameAndWhereto(simpleName: String, block: IDslApiNameAndWheretoOnSubElements.() -> Unit) {
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
-            dslCtx.PASS_ERROR -> TODO()
-            dslCtx.PASS_FINISH -> { /* TODO implement me! */ }
-            else -> {
+            dslCtx.PASS_1_BASEMODELS-> {
                 val dslImpl = nameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoOnSubElementsDelegateImpl(simpleName, selfDslRef) }
                 dslImpl.apply(block)
             }
+            dslCtx.PASS_ERROR -> TODO()
+            dslCtx.PASS_FINISH -> { /* TODO implement me! */ }
+            else -> { }
         }
     }
 }
@@ -176,24 +210,32 @@ class DslNameAndWheretoOnSubElementsDelegateImpl(
     parentRef: IDslRef
 ) : DslNameAndWheretoPropsImpl(simpleNameOfParentDslBlock, parentRef), IDslImplNameAndWheretoOnSubElements {
     val log = LoggerFactory.getLogger(javaClass)
-    val parentDslClass = dslCtx.ctxObj<DslNameAndWheretoWithSubElementsDelegateImpl>(parentRef)
+    val parentDslClass = dslCtx.ctxObj<DslNameAndWheretoWithSubelementsDelegateImpl>(parentRef)
 
     //context(DslCtxWrapper)
     override fun dtoNameAndWhereto(simpleName: String, block: IDslApiNameAndWheretoProps.() -> Unit) {
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
-            dslCtx.PASS_ERROR -> TODO()
-            dslCtx.PASS_FINISH -> { /* TODO implement me! */ }
-            else -> {
+            dslCtx.PASS_1_BASEMODELS -> {
                 val dslImpl = parentDslClass.dtoNameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoPropsImpl(simpleName, selfDslRef) }
                 dslImpl.apply(block)
             }
+            dslCtx.PASS_ERROR -> TODO()
+            dslCtx.PASS_FINISH -> { /* TODO implement me! */ }
+            else -> { }
         }
     }
     //context(DslCtxWrapper)
     override fun tableNameAndWhereto(simpleName: String, block: IDslApiNameAndWheretoProps.() -> Unit) {
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
-        val simpleNameNameAndWhereto = parentDslClass.tableNameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoPropsImpl(simpleName, selfDslRef) }
-        simpleNameNameAndWhereto.apply(block)
+        when (dslCtx.currentPASS) {
+            dslCtx.PASS_1_BASEMODELS -> {
+                val dslImpl = parentDslClass.tableNameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoPropsImpl(simpleName, selfDslRef) }
+                dslImpl.apply(block)
+            }
+            dslCtx.PASS_ERROR -> TODO()
+            dslCtx.PASS_FINISH -> { /* TODO implement me! */ }
+            else -> { }
+        }
     }
 }

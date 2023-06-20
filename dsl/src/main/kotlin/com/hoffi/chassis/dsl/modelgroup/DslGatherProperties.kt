@@ -14,24 +14,28 @@ import com.hoffi.chassis.shared.shared.GatherPropertys
 import org.slf4j.LoggerFactory
 
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
+@ChassisDslMarker
 interface IDslApiGatherPropertiesProp
-interface IDslApiGatherPropertiesModelAndModelSubElementsCommon {
+@ChassisDslMarker
+interface IDslApiGatherPropertiesModelAndModelSubelementsCommon {
     fun propertiesOfSuperclasses()
     fun propertiesOf(dslModelOrElementRefString: String,                   gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES)
     fun propertiesOf(dslModelOrElementRef: DslRef.IModelOrModelSubElement, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES)
 }
+@ChassisDslMarker
 interface IDslApiGatherPropertiesElementsOnlyCommon : IDslApiGatherPropertiesProp {
     fun propertiesOf(modelElement: DslRef.model.MODELELEMENT, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.NONE, simpleName: String = C.DEFAULTSTRING)
     fun propertiesOfSuperclassesOf(modelElement: DslRef.model.MODELELEMENT, simpleName: String = C.DEFAULTSTRING)
 }
-interface IDslApiGatherPropertiesBoth : IDslApiGatherPropertiesModelAndModelSubElementsCommon, IDslApiGatherPropertiesElementsOnlyCommon
+@ChassisDslMarker
+interface IDslApiGatherPropertiesBoth : IDslApiGatherPropertiesModelAndModelSubelementsCommon, IDslApiGatherPropertiesElementsOnlyCommon
 
 // === Impl Interfaces (extend IDslApi's plus methods and props that should not be visible from the DSL ===
 interface IDslImplGatherPropertiesProp : IDslApiGatherPropertiesProp {
     // non direct DSL props
     val theGatherPropertys: MutableSet<GatherPropertys>
 }
-interface IDslImplGatherPropertiesModelAndModelSubElementsCommon : IDslApiGatherPropertiesModelAndModelSubElementsCommon
+interface IDslImplGatherPropertiesModelAndModelSubelementsCommon : IDslApiGatherPropertiesModelAndModelSubelementsCommon
 interface IDslImplGatherPropertiesElementsOnlyCommon : IDslApiGatherPropertiesElementsOnlyCommon
 interface IDslImplGatherPropertiesBoth : IDslImplGatherPropertiesProp, IDslApiGatherPropertiesBoth
 
@@ -83,7 +87,7 @@ class DslGatherPropertiesDelegateImpl(
         simpleName: String
     ) {
         if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return
-        // definitely a modelSubElement, as this function should only be callable in context of a DslRef.IModelSubElement
+        // definitely a modelSubElement, as this function should only be callable in context of a DslRef.IModelSubelement
         val modelRef = parentRef.parentRef.parentRef as DslRef.model
         when (modelElement) {
             DslRef.model.MODELELEMENT.MODEL -> {

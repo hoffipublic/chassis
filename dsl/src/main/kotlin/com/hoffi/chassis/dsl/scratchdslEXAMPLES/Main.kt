@@ -23,16 +23,16 @@ fun main() {
             baseDir = "./generated/src/main/kotlin"
             packageName = "com.hoffi.generated"
             dtoNameAndWhereto {
-                classPostfix = "DtoType"
-                packageName("dtoType")
+                classPostfix = "DtoDevRun"
+                packageName("dtoDevRun")
             }
             dtoNameAndWhereto(COMMON) {
-                classPostfix = "CommonDto"
-                packageName("common")
+                classPostfix = "CommonDtoDevRun"
+                packageName("commonDevRun")
             }
             tableNameAndWhereto {
-                classPostfix = "TableType"
-                packageName("tableType")
+                classPostfix = "TableDevRun"
+                packageName("tableDevRun")
             }
 //            fillerNameAndWhereto {
 //                classPostfix = "Filler"
@@ -43,6 +43,28 @@ fun main() {
 
     println("devRun ...")
     val devDslRun = DslRun("devRun")
+    devDslRun.configure {
+        nameAndWhereto {
+            baseDir = "./devRunBaseDir/generated"
+            packageName = "com.hoffi.generated.devrun"
+            dtoNameAndWhereto {
+                classPostfix = "DevRunDtoType"
+                packageName("DevRundtoType")
+            }
+            dtoNameAndWhereto(COMMON) {
+                classPostfix = "DevRunCommonDto"
+                packageName("devRunCommon")
+            }
+            tableNameAndWhereto {
+                classPostfix = "DevRunTableType"
+                packageName("DevRunTableType")
+            }
+//            fillerNameAndWhereto {
+//                classPostfix = "Filler"
+//                packageName("filler")
+//            }
+        }
+    }
     devDslRun.start("devDisc") {
         commonScratch()
     }

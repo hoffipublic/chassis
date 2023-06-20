@@ -126,16 +126,16 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
                 companion object { val funcname: String = allModels::class.simpleName!! }
                 override val E_MODEL_ELEMENT = MODELGROUP_ELEMENTLEVEL.ALLMODELS
                 init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
-    interface IModelSubElement : ISubElementLevel, IModelOrModelSubElement, ICrosscuttingNameAndWhereto, ICrosscuttingPropertiesOf, ICrosscuttingClassModifiers {
+    interface IModelSubelement : ISubElementLevel, IModelOrModelSubElement, ICrosscuttingNameAndWhereto, ICrosscuttingPropertiesOf, ICrosscuttingClassModifiers {
         val E_MODEL_SUBELEMENT: MODELGROUP_MODEL_SUBELEMENTLEVEL
     }
     class         dto(  simpleName: String, parentDslRef: IDslRef)       : DslRef(3, simpleName, parentDslRef)
-                , IModelSubElement {
+                , IModelSubelement {
                     companion object { val funcname: String = dto::class.simpleName!! }
                     override val E_MODEL_SUBELEMENT = MODELGROUP_MODEL_SUBELEMENTLEVEL.DTO
                     init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
     class         table(simpleName: String, parentDslRef: IDslRef)       : DslRef(3, simpleName, parentDslRef)
-                , IModelSubElement {
+                , IModelSubelement {
                     companion object { val funcname: String = table::class.simpleName!! }
                     override val E_MODEL_SUBELEMENT = MODELGROUP_MODEL_SUBELEMENTLEVEL.TABLE
                     init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
@@ -291,7 +291,7 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
 //                when (subelementRefAtom.functionName) {
 //                    dto.funcname -> { dto(subelementRefAtom.simpleName, elementRef) }
 //                    table.funcname -> { table(subelementRefAtom.simpleName, elementRef) }
-//                    else -> { throw DslException("forgot to add ${IModelSubElement::class.simpleName} level element in when case here for element '${subelementRefAtom.functionName}'???")}
+//                    else -> { throw DslException("forgot to add ${IModelSubelement::class.simpleName} level element in when case here for element '${subelementRefAtom.functionName}'???")}
 //                }
 //            }
 //        }

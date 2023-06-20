@@ -1,13 +1,10 @@
 package com.hoffi.chassis.dsl.scratchdslEXAMPLES
 
-import com.hoffi.chassis.chassismodel.C
-import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.CLASS
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.INTERFACE
-import com.hoffi.chassis.dsl.internal.DslCtx
+import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.shared.TYP
-import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.mutable
 import com.hoffi.chassis.shared.shared.Tag
 import com.squareup.kotlinpoet.KModifier
@@ -25,6 +22,14 @@ fun commonBaseModels() {
         // property() in group itself?
         nameAndWhereto("TEST") {
             packageName("base")
+            dtoNameAndWhereto {
+                classPostfix = "Dto"
+                packageName("dto")
+            }
+            tableNameAndWhereto {
+                classPostfix = "Table"
+                packageName("table")
+            }
         }
         model(COMMON__INTFC) {
             nameAndWhereto("TEST") {
@@ -92,20 +97,20 @@ fun commonBaseModels() {
         // ================================================================================================================================
 
         allModels {
-            nameAndWhereto {
-                dtoNameAndWhereto {
-                    classPostfix = "Dto"
-                    packageName("dto")
-                }
-                tableNameAndWhereto {
-                    classPostfix = "Table"
-                    packageName("table")
-                }
+//            nameAndWhereto {
+//                dtoNameAndWhereto {
+//                    classPostfix = "Dto"
+//                    packageName("dto")
+//                }
+//                tableNameAndWhereto {
+//                    classPostfix = "Table"
+//                    packageName("table")
+//                }
                 //fillerNameAndWhereto {
                 //    classPostfix = "Filler"
                 //    packageName("filler")
                 //}
-            }
+//            }
         }
 
         //filler {

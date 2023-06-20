@@ -1,5 +1,6 @@
 package com.hoffi.chassis.dsl.modelgroup
 
+import com.hoffi.chassis.dsl.internal.ChassisDslMarker
 import com.hoffi.chassis.shared.*
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.shared.Tag
@@ -9,6 +10,7 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asTypeName
 import kotlin.reflect.KClass
 
+@ChassisDslMarker
 interface IDslApiPropFuns {
     // ===================================================================================================================================
     // ====================   "primitive" TYP properties   ===============================================================================
@@ -81,6 +83,6 @@ interface IDslApiPropFuns {
     fun property(name: String, modelRefString: String, modelSubelement: DslRef.model.MODELELEMENT, mutable: Mutable = immutable, collectionType: COLLECTIONTYPE = COLLECTIONTYPE.NONE, initializer: Initializer = Initializer.EMPTY, length: Int = TYP.DEFAULT_INT, tags: Tags)
 
 
-    fun property(name: String, modelSubElementRef: DslRef.IModelSubElement, mutable: Mutable = immutable, collectionType: COLLECTIONTYPE = COLLECTIONTYPE.NONE, initializer: Initializer = Initializer.EMPTY, length: Int = TYP.DEFAULT_INT, vararg tags: Tag) = property(name, modelSubElementRef, mutable, collectionType, initializer, length, Tags(*tags))
-    fun property(name: String, modelSubElementRef: DslRef.IModelSubElement, mutable: Mutable = immutable, collectionType: COLLECTIONTYPE = COLLECTIONTYPE.NONE, initializer: Initializer = Initializer.EMPTY, length: Int = TYP.DEFAULT_INT, tags: Tags = Tags.NONE)
+    fun property(name: String, modelSubElementRef: DslRef.IModelSubelement, mutable: Mutable = immutable, collectionType: COLLECTIONTYPE = COLLECTIONTYPE.NONE, initializer: Initializer = Initializer.EMPTY, length: Int = TYP.DEFAULT_INT, vararg tags: Tag) = property(name, modelSubElementRef, mutable, collectionType, initializer, length, Tags(*tags))
+    fun property(name: String, modelSubElementRef: DslRef.IModelSubelement, mutable: Mutable = immutable, collectionType: COLLECTIONTYPE = COLLECTIONTYPE.NONE, initializer: Initializer = Initializer.EMPTY, length: Int = TYP.DEFAULT_INT, tags: Tags = Tags.NONE)
 }

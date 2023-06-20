@@ -1,10 +1,7 @@
 package com.hoffi.chassis.dsl
 
 import com.hoffi.chassis.chassismodel.C
-import com.hoffi.chassis.dsl.internal.ADslClass
-import com.hoffi.chassis.dsl.internal.ADslDelegateClass
-import com.hoffi.chassis.dsl.internal.DslBlockOn
-import com.hoffi.chassis.dsl.internal.DslCtxWrapper
+import com.hoffi.chassis.dsl.internal.*
 import com.hoffi.chassis.dsl.modelgroup.DslDto
 import com.hoffi.chassis.dsl.modelgroup.DslModel
 import com.hoffi.chassis.dsl.modelgroup.DslTable
@@ -75,6 +72,7 @@ class ShowcaseProps(
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
 
 /** props/fields and "direct/non-inner-dsl-block" funcs inside dsl block */
+@ChassisDslMarker
 interface IDslApiShowcaseProps {
     var dslProp: Int
     operator fun String.unaryPlus()
@@ -84,12 +82,14 @@ interface IDslApiShowcaseProps {
     operator fun IDslApiShowcaseProps.rem(rem: String)
 }
 /** the "outermost" dsl block fun, that opens up this new "scope-hierarchy" (doesn't hold gathered DSL data by itself) */
+@ChassisDslMarker
 interface IDslApiShowcaseDelegate {
     /** default dsl block's simpleName */
     @DslBlockOn(DslModel::class, DslDto::class, DslTable::class) // IDE clickable shortcuts to implementing @ChassisDslMarker classes
     fun showcase(simpleName: String = C.DEFAULT, block: IDslApiShowcaseBlock.() -> Unit)
 }
 /** would contain "inner" nested Dsl block scopes, and implements the props/directFuns */
+@ChassisDslMarker
 interface IDslApiShowcaseBlock : IDslApiShowcaseProps {
 }
 
@@ -158,7 +158,7 @@ class DslShowcaseBlockImpl(
     }
 
     override fun IDslApiShowcaseProps.minusAssign(s: String) {
-        showcaseProps.dslDerivedData = s
+        this@DslShowcaseBlockImpl.showcaseProps.dslDerivedData = s
     }
 
     override fun String.not() {
@@ -166,6 +166,6 @@ class DslShowcaseBlockImpl(
     }
 
     override fun IDslApiShowcaseProps.rem(rem: String) {
-        showcaseProps.dslDerivedData += " % $rem"
+        this@DslShowcaseBlockImpl.showcaseProps.dslDerivedData += " % $rem"
     }
 }

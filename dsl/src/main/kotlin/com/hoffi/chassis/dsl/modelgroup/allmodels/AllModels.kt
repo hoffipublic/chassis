@@ -5,10 +5,10 @@ import com.hoffi.chassis.dsl.internal.ChassisDslMarker
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.shared.dsl.DslRef
 
+@ChassisDslMarker
 interface IApiAllModels
 
 context(DslCtxWrapper)
-@ChassisDslMarker
 internal class AllModels( // TODO Is This class a Delegate or not???
     val simpleName: String,
     val allModelsRef: DslRef.allModels

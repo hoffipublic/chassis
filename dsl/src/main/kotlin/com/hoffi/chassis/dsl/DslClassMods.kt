@@ -2,6 +2,7 @@ package com.hoffi.chassis.dsl
 
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.dsl.internal.ADslDelegateClass
+import com.hoffi.chassis.dsl.internal.ChassisDslMarker
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
@@ -20,6 +21,7 @@ class ClassModProps(
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
 
 /** props/fields and "direct/non-inner-dsl-block" funcs inside dsl block */
+@ChassisDslMarker
 interface IDslApiClassModProps {
     var dslProp: Int
     operator fun String.unaryPlus()
@@ -29,11 +31,13 @@ interface IDslApiClassModProps {
     operator fun IDslApiClassModProps.rem(rem: String)
 }
 /** the "outermost" dsl block fun, that opens up this new "scope-hierarchy" (doesn't hold gathered DSL data by itself) */
+@ChassisDslMarker
 interface IDslApiClassModsDelegate {
     /** default dsl block's simpleName */
     fun classMods(simpleName: String = C.DEFAULT, block: IDslApiClassModsBlock.() -> Unit)
 }
 /** would contain "inner" nested Dsl block scopes, and implements the props/directFuns */
+@ChassisDslMarker
 interface IDslApiClassModsBlock : IDslApiClassModProps {
 }
 
@@ -89,7 +93,7 @@ class DslClassModsBlockImpl(val simpleName: String, val classModsRef: DslRef.cla
     }
 
     override fun IDslApiClassModProps.minusAssign(s: String) {
-        classModProps.dslDerivedData = s
+        this@DslClassModsBlockImpl.classModProps.dslDerivedData = s
     }
 
     override fun String.not() {
@@ -97,6 +101,6 @@ class DslClassModsBlockImpl(val simpleName: String, val classModsRef: DslRef.cla
     }
 
     override fun IDslApiClassModProps.rem(rem: String) {
-        classModProps.dslDerivedData += " % $rem"
+        this@DslClassModsBlockImpl.classModProps.dslDerivedData += " % $rem"
     }
 }

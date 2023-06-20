@@ -4,6 +4,7 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.dsl.DslCtxException
 import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.dsl.internal.ADslDelegateClass
+import com.hoffi.chassis.dsl.internal.ChassisDslMarker
 import com.hoffi.chassis.dsl.internal.DslBlockOn
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.shared.EitherTypeOrDslRef
@@ -26,6 +27,7 @@ data class Extends(
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
 
 /** props/fields and "direct/non-inner-dsl-block" funcs inside dsl block */
+@ChassisDslMarker
 interface IDslApiExtendsProps : IDslApiModelRefing {
     var replaceSuperclass: Boolean
     var replaceSuperInterfaces: Boolean
@@ -42,6 +44,7 @@ interface IDslApiExtendsProps : IDslApiModelRefing {
     operator fun IDslApiExtendsProps.rem(docs: CodeBlock)
 }
 /** the "outermost" dsl block fun, that opens up this new "scope-hierarchy" (doesn't hold gathered DSL data by itself) */
+@ChassisDslMarker
 interface IDslApiExtendsDelegate {
     /** default dsl block's simpleName */
     // context(DslCtxWrapper) // see https://youtrack.jetbrains.com/issue/KT-57409/context-receivers-fail-if-implemented-via-delegated-interface
@@ -49,6 +52,7 @@ interface IDslApiExtendsDelegate {
     fun extends(simpleName: String = C.DEFAULT, block: IDslApiExtendsBlock.() -> Unit)
 }
 /** would contain "inner" nested Dsl block scopes, and implements the props/directFuns */
+@ChassisDslMarker
 interface IDslApiExtendsBlock : IDslApiExtendsProps {
 }
 
@@ -192,15 +196,15 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
 
     // TODO really not sure if this works ... definitely depends on EitherTypeOrDslRef's implementation of equals and hashCode throughout all its sealed cases
     override fun IDslApiExtendsProps.minusAssign(kClass: KClass<*>) {
-        when (extends.typeClassOrDslRef) {
+        when (this@DslExtendsBlockImpl.extends.typeClassOrDslRef) {
             is EitherTypeOrDslRef.EitherDslRef -> { }
             is EitherTypeOrDslRef.EitherKClass -> {
-                if ((extends.typeClassOrDslRef as EitherTypeOrDslRef.EitherKClass).typeName == kClass) {
-                    extends.typeClassOrDslRef = EitherTypeOrDslRef.NOTHING
+                if ((this@DslExtendsBlockImpl.extends.typeClassOrDslRef as EitherTypeOrDslRef.EitherKClass).typeName == kClass) {
+                    this@DslExtendsBlockImpl.extends.typeClassOrDslRef = EitherTypeOrDslRef.NOTHING
                 } else {
-                    val superInterface = extends.superInterfaces.firstOrNull { it is EitherTypeOrDslRef.EitherKClass && it.isInterface && it.typeName == kClass.asTypeName() }
+                    val superInterface = this@DslExtendsBlockImpl.extends.superInterfaces.firstOrNull { it is EitherTypeOrDslRef.EitherKClass && it.isInterface && it.typeName == kClass.asTypeName() }
                     if ( superInterface != null ) {
-                        extends.superInterfaces.remove(superInterface)
+                        this@DslExtendsBlockImpl.extends.superInterfaces.remove(superInterface)
                     }
                 }
             }
@@ -210,14 +214,14 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
 
     // TODO really not sure if this works ... definitely depends on EitherTypeOrDslRef's implementation of equals and hashCode throughout all its sealed cases
     override fun IDslApiExtendsProps.minusAssign(dslRef: DslRef) {
-        when (extends.typeClassOrDslRef) {
+        when (this@DslExtendsBlockImpl.extends.typeClassOrDslRef) {
             is EitherTypeOrDslRef.EitherDslRef -> {
-                if ((extends.typeClassOrDslRef as EitherTypeOrDslRef.EitherDslRef).dslRef == dslRef) {
-                    extends.typeClassOrDslRef = EitherTypeOrDslRef.NOTHING
+                if ((this@DslExtendsBlockImpl.extends.typeClassOrDslRef as EitherTypeOrDslRef.EitherDslRef).dslRef == dslRef) {
+                    this@DslExtendsBlockImpl.extends.typeClassOrDslRef = EitherTypeOrDslRef.NOTHING
                 } else {
-                    val superInterface = extends.superInterfaces.firstOrNull { it is EitherTypeOrDslRef.EitherDslRef && it.isInterface && it.dslRef == dslRef }
+                    val superInterface = this@DslExtendsBlockImpl.extends.superInterfaces.firstOrNull { it is EitherTypeOrDslRef.EitherDslRef && it.isInterface && it.dslRef == dslRef }
                     if ( superInterface != null ) {
-                        extends.superInterfaces.remove(superInterface)
+                        this@DslExtendsBlockImpl.extends.superInterfaces.remove(superInterface)
                     }
                 }
             }

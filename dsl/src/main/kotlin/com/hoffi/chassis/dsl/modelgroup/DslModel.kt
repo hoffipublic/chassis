@@ -6,9 +6,9 @@
 //import com.hoffi.chassis.dsl.internal.*
 //import com.hoffi.chassis.dsl.strategies.DslResolutionStrategies
 //import com.hoffi.chassis.dsl.whereto.DslNameAndWheretoOnlyDelegateImpl
-//import com.hoffi.chassis.dsl.whereto.DslNameAndWheretoWithSubElementsDelegateImpl
+//import com.hoffi.chassis.dsl.whereto.DslNameAndWheretoWithSubelementsDelegateImpl
 //import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoOnly
-//import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoWithSubElements
+//import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoWithSubelements
 //import com.hoffi.chassis.shared.dsl.DslRef
 //import com.hoffi.chassis.shared.parsedata.EitherModel
 //import com.hoffi.chassis.shared.parsedata.Property
@@ -16,9 +16,9 @@
 //import org.slf4j.LoggerFactory
 //
 //// === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
-//interface IDslApiModelAndModelSubElementsCommon
+//interface IDslApiModelAndModelSubelementsCommon
 //    // interfaces implemented by Model And Elements
-//    :   IDslApiGatherPropertiesModelAndModelSubElementsCommon,
+//    :   IDslApiGatherPropertiesModelAndModelSubelementsCommon,
 //        IDslApiClassModifiers,
 //        IDslApiGatherPropertiesProp,
 //        IDslApiPropFuns,
@@ -29,14 +29,14 @@
 //    var kind: DslClassObjectOrInterface
 //}
 //interface IDslApiModelOnlyCommon
-//    : IDslApiNameAndWheretoWithSubElements
-//interface IDslApiSubElementsOnlyCommon
+//    : IDslApiNameAndWheretoWithSubelements
+//interface IDslApiSubelementsOnlyCommon
 //    :   IDslApiNameAndWheretoOnly,
 //        IDslApiGatherPropertiesElementsOnlyCommon
 //interface IDslApiFillerModel
-//interface IDslApiDto :   IDslApiSubElementsOnlyCommon, IDslApiModelAndModelSubElementsCommon
-//interface IDslApiTable : IDslApiSubElementsOnlyCommon, IDslApiModelAndModelSubElementsCommon
-//interface IDslApiModel : IDslApiModelAndModelSubElementsCommon, IDslApiModelOnlyCommon, IDslApiExtendsDelegate, IDslApiPropFuns, IDslApiNameAndWheretoWithSubElements, IDslApiClassModsDelegate, IDslApiShowcaseDelegate {
+//interface IDslApiDto :   IDslApiSubelementsOnlyCommon, IDslApiModelAndModelSubelementsCommon
+//interface IDslApiTable : IDslApiSubelementsOnlyCommon, IDslApiModelAndModelSubelementsCommon
+//interface IDslApiModel : IDslApiModelAndModelSubelementsCommon, IDslApiModelOnlyCommon, IDslApiExtendsDelegate, IDslApiPropFuns, IDslApiNameAndWheretoWithSubelements, IDslApiClassModsDelegate, IDslApiShowcaseDelegate {
 //    context(DslCtxWrapper)
 //    @DslBlockOn(DslDto::class)
 //    fun dto(simpleName: String = C.DEFAULT, dslBlock: IDslApiDto.() -> Unit)
@@ -46,11 +46,11 @@
 //}
 //
 //// === Impl Interfaces (extend IDslApi's plus methods and props that should not be visible from the DSL ===
-//interface IDslImplModelAndModelSubElementsCommon : IDslApiModelAndModelSubElementsCommon {
+//interface IDslImplModelAndModelSubElementsCommon : IDslApiModelAndModelSubelementsCommon {
 //    val modelElement: DslRef.model.MODELELEMENT
 //}
 //interface IDslImplModelOnlyCommon : IDslApiModelOnlyCommon
-//interface IDslImplSubElementsOnlyCommon : IDslApiSubElementsOnlyCommon
+//interface IDslImplSubElementsOnlyCommon : IDslApiSubelementsOnlyCommon
 //interface IDslImplFillerModel : IDslApiFillerModel
 //interface IDslImplDto : IDslApiDto, IDslImplSubElementsOnlyCommon, IDslImplModelAndModelSubElementsCommon
 //interface IDslImplTable : IDslApiTable, IDslImplSubElementsOnlyCommon, IDslImplModelAndModelSubElementsCommon
@@ -120,7 +120,7 @@
 //    parentRef: DslRef.IModelOrModelSubElement,
 //    classModifiersImpl: DslClassModifiersImpl,
 //    propsImpl: DslPropsDelegate,
-//    val nameAndWheretos: DslNameAndWheretoWithSubElementsDelegateImpl,
+//    val nameAndWheretos: DslNameAndWheretoWithSubelementsDelegateImpl,
 //    val gatherProperties: DslGatherPropertiesDelegateImpl,
 //    classModsImpl: DslClassModsDelegateImpl,
 //    extendsImpl: DslExtendsDelegateImpl,
@@ -128,8 +128,8 @@
 //)
 //    : ADslModelAndElementsCommonImpl(simpleName, parentRef, classModifiersImpl, propsImpl, classModsImpl, extendsImpl, showcaseImpl),
 //    IDslImplModelOnlyCommon,
-//    IDslApiNameAndWheretoWithSubElements by nameAndWheretos,
-//    IDslApiGatherPropertiesModelAndModelSubElementsCommon by gatherProperties
+//    IDslApiNameAndWheretoWithSubelements by nameAndWheretos,
+//    IDslApiGatherPropertiesModelAndModelSubelementsCommon by gatherProperties
 //{
 //}
 //
@@ -240,7 +240,7 @@
 //    modelgroupRef: DslRef.modelgroup,
 //    classModifiersImpl: DslClassModifiersImpl                           = DslClassModifiersImpl(),
 //    propsImpl: DslPropsDelegate                                         = this@DslCtxWrapper.dslCtx.ctxObjOrCreate(DslRef.properties(simpleName, modelgroupRef)),
-//    nameAndWheretoWithSubElements: DslNameAndWheretoWithSubElementsDelegateImpl = this@DslCtxWrapper.dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto(simpleName, modelgroupRef)),
+//    nameAndWheretoWithSubElements: DslNameAndWheretoWithSubelementsDelegateImpl = this@DslCtxWrapper.dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto(simpleName, modelgroupRef)),
 //    gatherPropertiesImpl: DslGatherPropertiesDelegateImpl               = this@DslCtxWrapper.dslCtx.ctxObjOrCreate(DslRef.propertiesOf(simpleName, modelgroupRef)),
 //    classModsImpl: DslClassModsDelegateImpl                             = this@DslCtxWrapper.dslCtx.ctxObjOrCreate(DslRef.classMods(simpleName, modelgroupRef)),
 //    extendsImpl: DslExtendsDelegateImpl                                 = this@DslCtxWrapper.dslCtx.ctxObjOrCreate(DslRef.extends(simpleName, modelgroupRef)),

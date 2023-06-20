@@ -2,8 +2,8 @@ package com.hoffi.chassis.dsl.internal
 
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.dsl.DslCtxException
-import com.hoffi.chassis.dsl.whereto.DslNameAndWheretoWithSubElementsDelegateImpl
-import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoWithSubElements
+import com.hoffi.chassis.dsl.whereto.DslNameAndWheretoWithSubelementsDelegateImpl
+import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoWithSubelements
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.dsl.DslRef
 
@@ -50,12 +50,12 @@ class DslRun(var runIdentifierEgEnvAndTime: String) : IDslClass {
     }
 
     @DslInstance
-    internal val wheretoImpl: DslNameAndWheretoWithSubElementsDelegateImpl = with(dslCtxWrapper) {
-        dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto("<DslRun>", DslRef.nameAndWhereto("<DslRun>", runRef)))
+    internal val wheretoImpl: DslNameAndWheretoWithSubelementsDelegateImpl = with(dslCtxWrapper) {
+        dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto("<DslRun>", runRef))
     }
 
-    @DslBlockOn(DslNameAndWheretoWithSubElementsDelegateImpl::class)
-    fun configure(whereToBlock: IDslApiNameAndWheretoWithSubElements.() -> Unit) {
+    @DslBlockOn(DslNameAndWheretoWithSubelementsDelegateImpl::class)
+    fun configure(whereToBlock: IDslApiNameAndWheretoWithSubelements.() -> Unit) {
         dslCtx.currentPASS = dslCtx.PASS_0_CONFIGURE // special PASS_0 !
         wheretoImpl.apply(whereToBlock)
     }

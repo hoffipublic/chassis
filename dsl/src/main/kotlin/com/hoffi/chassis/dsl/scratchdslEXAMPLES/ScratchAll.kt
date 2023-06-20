@@ -18,20 +18,16 @@ fun commonScratch() {
         // property() in group itself?
         nameAndWhereto("TEST1") {
             baseDir = "MODELGROUP baseDir"
-            packageName("common")
-            nameAndWhereto {
-            }
+            packageName("commonMG")
             dtoNameAndWhereto("TESTNEST") {
                 baseDir = "MODELGROUP dtoNameAndWhereto baseDir"
-                packageName("dtoType")
-                classPrefix("Common")
+                packageName("dtoTypeMG")
+                classPrefix("CommonMGDto")
             }
         }
         model(SCRATCH__INTFC) {
 //            baseDir = "should fail!"
             nameAndWhereto("TEST2") {
-                nameAndWhereto {
-                }
                 baseDir = "MODEL baseDir"
                 if (dslCtx.dslRun.runIdentifierEgEnvAndTime != "devRun") {
                     packageName = dslCtx.dslRun.wheretoImpl.nameAndWheretos[C.DEFAULT]!!.baseDir
@@ -60,16 +56,10 @@ fun commonScratch() {
             }
             dto {
                 nameAndWhereto("TEST3") {
-                    nameAndWhereto {
-                        val x = this
-                    }
                     baseDir = "DTO baseDir"
-                    classPostfix = "DtoType"
-                    packageName("dtoType")
+                    classPostfix = "Dto"
+                    packageName("dtoTypeDto")
                     classPrefix = "Common"
-                    nameAndWhereto("TESTNEST") {
-                        baseDir = "DTO NOTALLOWED NESTED baseDir"
-                    }
                 }
             }
             dto("other") {
@@ -94,20 +84,20 @@ fun commonScratch() {
         // ================================================================================================================================
 
         allModels {
-            nameAndWhereto {
-                dtoNameAndWhereto {
-                    classPostfix = "DtoType"
-                    packageName("dtoType")
-                }
-                tableNameAndWhereto {
-                    classPostfix = "TableType"
-                    packageName("tableType")
-                }
+//            nameAndWhereto {
+//                dtoNameAndWhereto {
+//                    classPostfix = "DtoTypeAllModels"
+//                    packageName("dtoTypeAllModels")
+//                }
+//                tableNameAndWhereto {
+//                    classPostfix = "TableTypeAllModels"
+//                    packageName("tableTypeAllModels")
+//                }
                 //fillerNameAndWhereto {
                 //    classPostfix = "Filler"
                 //    packageName("filler")
                 //}
-            }
+//            }
         }
 
         //filler {

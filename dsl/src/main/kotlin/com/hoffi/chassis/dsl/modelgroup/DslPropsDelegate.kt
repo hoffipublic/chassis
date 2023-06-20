@@ -94,14 +94,14 @@ class DslPropsDelegate(
         if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
         val modelOrModelSubElementRef = DslRefString.MODELREF(modelSubElementRefString)
-        if (modelOrModelSubElementRef !is DslRef.IModelSubElement) {
+        if (modelOrModelSubElementRef !is DslRef.IModelSubelement) {
             throw DslException("prop $name of ref: $parentRef does not reference a modelSubElement (dto/table/...)")
         }
         property(name, modelOrModelSubElementRef, mutable, collectionType, initializer, length, tags)
     }
 
 
-    override fun property(name: String, modelSubElementRef: DslRef.IModelSubElement, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, length: Int, tags: Tags) {
+    override fun property(name: String, modelSubElementRef: DslRef.IModelSubelement, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, length: Int, tags: Tags) {
         if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS

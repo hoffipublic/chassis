@@ -10,6 +10,7 @@ import com.hoffi.chassis.shared.codegen.GenCtx
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
+import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
 import org.slf4j.LoggerFactory
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.isSubtypeOf
@@ -47,7 +48,7 @@ class DslCtx private constructor(){
     val firstPass = PASS_1_BASEMODELS
     val PASS_0_CONFIGURE  = DSLPASS.PASS_0_CONFIGURE(firstPass, this)
     fun start(): DSLPASS     {
-        if (currentPASS != DSLPASS.NULL) { throw DslCtxException("DslRun(\"${dslRun.runIdentifierEgEnvAndTime}\")'s DslCtx already started and in PASS '${currentPASS}'. exiting.") }
+        if (currentPASS != DSLPASS.NULL && currentPASS != PASS_0_CONFIGURE) { throw DslCtxException("DslRun(\"${dslRun.runIdentifierEgEnvAndTime}\")'s DslCtx already started and in PASS '${currentPASS}'. exiting.") }
         currentPASS = firstPass
         return currentPASS.start()
     }
@@ -143,6 +144,17 @@ class DslCtx private constructor(){
 
     fun getAllModelgroups() = modelgroups.values
     fun getAllModels() = models.values
+
+    val sharedGatheredNameAndWheretos: MutableMap<DslRef.IElementLevel, SharedGatheredNameAndWheretos> = mutableMapOf()
+    fun createGatheredNameAndWheretos(dslRef: DslRef.IElementLevel): SharedGatheredNameAndWheretos {
+        val item = sharedGatheredNameAndWheretos[dslRef]
+        return if (item == null) SharedGatheredNameAndWheretos(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredNameAndWheretos[dslRef] = it }
+            else throw DslCtxException("${SharedGatheredNameAndWheretos::class.simpleName}('$dslRef') already exists in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    }
+    fun getGatheredNameAndWheretos(dslRef: DslRef.IElementLevel): SharedGatheredNameAndWheretos =
+        sharedGatheredNameAndWheretos[dslRef] ?: throw DslCtxException("no ${SharedGatheredNameAndWheretos::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    fun gatheredNameAndWheretos(dslRef: DslRef.IElementLevel): SharedGatheredNameAndWheretos =
+        sharedGatheredNameAndWheretos[dslRef] ?: SharedGatheredNameAndWheretos(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredNameAndWheretos[dslRef] = it }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
