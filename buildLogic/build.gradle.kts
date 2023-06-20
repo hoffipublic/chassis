@@ -4,6 +4,7 @@
 // Therefore, we move the Gradle-specific declarations here.
 // Precompiled script plugins are basically XXX.gradle.kts Kotlin scripts that can be placed together with other Kotlin source sets (src/main/kotlin ).
 // Precompiled scripts have accessors, and don’t need extensions (Project.xxx) to be added, like Binary plugins.
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     `kotlin-dsl`
     `kotlin-dsl-precompiled-script-plugins`

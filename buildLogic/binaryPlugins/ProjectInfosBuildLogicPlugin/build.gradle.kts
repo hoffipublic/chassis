@@ -1,3 +1,4 @@
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     //id("org.jetbrains.kotlin.jvm") version libs.versions.kotlin.asProvider().get()
     kotlin("jvm") version libs.versions.kotlin.asProvider().get()
