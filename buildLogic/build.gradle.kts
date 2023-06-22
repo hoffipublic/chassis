@@ -22,7 +22,11 @@ dependencies {
 }
 
 versionCatalogUpdate {
-    catalogFile.set(File(rootProject.projectDir, "libs.versions.toml")) // that's where libs.versions.toml is located in the standalone master buildLogic git repo project
+    if (rootProject.name == "buildLogic") {
+        catalogFile.set(File(rootProject.projectDir, "libs.versions.toml")) // that's where libs.versions.toml is located in the standalone master buildLogic git repo project
+    } else {
+        catalogFile.set(File(rootProject.projectDir, "buildLogic/libs.versions.toml")) // this is the standard case
+    }
     keep {
         keepUnusedVersions.set(true)
         keepUnusedLibraries.set(true)

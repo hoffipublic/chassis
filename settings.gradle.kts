@@ -20,9 +20,12 @@ dependencyResolutionManagement {
         google()
     }
     versionCatalogs {
-        println("project '${rootProject.name}'s settings.gradle.kts searching for libs.versions.toml")
         create("libs") {
-            from(files(File(rootProject.projectDir, "libs.versions.toml"))) // in rootProject folder
+            if (rootProject.name == "buildLogic") {
+                from(files(File(rootProject.projectDir, "libs.versions.toml"))) // that's where libs.versions.toml is located in the standalone master buildLogic git repo project))
+            } else {
+                from(files(File(rootProject.projectDir, "buildLogic/libs.versions.toml"))) // this is the standard case
+            }
         }
     }
 }

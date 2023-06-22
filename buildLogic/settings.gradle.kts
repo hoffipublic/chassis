@@ -29,33 +29,11 @@ dependencyResolutionManagement {
     versionCatalogs {
         //println("buildLogic/settings.gradle.kts searching for libs.versions.toml")
         create("libs") {
-            // This code is a copy of buildLogic/src/main/kotlin/GlobalFunctions.kt fun libsVersionsTomlFile(...)
-            var standaloneBuildLogicProject = false
-            val tomlFile = if ( (rootProject.name == "buildLogic") && (File(rootProject.projectDir.parentFile, "settings.gradle.kts").exists()) ) {
-                // "normal" buildLogic/ subfolder of a gradle multiproject (as parent also has a settings.gradle.kts file)
-                File(rootProject.projectDir, "../libs.versions.toml").canonicalFile // using file of rootProject this buildLogic composite build is in
+            if (rootProject.name == "buildLogic") {
+                from(files(File(rootProject.projectDir, "libs.versions.toml"))) // that's where libs.versions.toml is located in the standalone master buildLogic git repo project))
             } else {
-                // standalone/reference buildLogic/ project
-                standaloneBuildLogicProject = true
-                println("-> ${rootProject.name} of standalone project buildLogic")
-                File(rootProject.projectDir, "libs.versions.toml")
+                from(files(File(rootProject.projectDir, "buildLogic/libs.versions.toml"))) // this is the standard case
             }
-            if (tomlFile.exists()) {
-                if ( rootProject.projectDir.parentFile.name == "binaryPlugins" ) {
-                    println("-> ${rootProject.name}: buildLogic/binaryPlugins/${rootProject.name}/settings.gradle.kts using versions of \n\t\t'$tomlFile'")
-                } else if (standaloneBuildLogicProject) {
-                    println("-> standalone ${rootProject.name}: ${rootProject.name}/settings.gradle.kts using versions of \n\t\t'$tomlFile'")
-                } else {
-                    println("-> ${rootProject.name}: ${rootProject.name}/settings.gradle.kts using versions of \n\t\t'$tomlFile'")
-                }
-            } else {
-                if ( rootProject.projectDir.parentFile.name == "binaryPlugins" ) {
-                    throw GradleException("${rootProject.name}: buildLogic/binaryPlugins/${rootProject.name}/settings.gradle.kts did not find version information file '$tomlFile'")
-                } else {
-                    throw GradleException("${rootProject.name}: ${rootProject.name}/settings.gradle.kts did not find version information file '$tomlFile'")
-                }
-            }
-            from(files(tomlFile.absolutePath)) // in "parent"'s rootProject folder
         }
     }
 }

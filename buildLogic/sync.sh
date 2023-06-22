@@ -18,11 +18,11 @@ if [[ -n $1 && $1 == "overwriteback" ]]; then            OPT_SYNC_DIRECTION="OVE
 if [[ "OVERWRITE" == "$OPT_SYNC_DIRECTION" ]]; then
     SYNC_SOURCE="$SYNCDIR_base"
     SYNC_TARGET="$SCRIPTDIR"
-    cp -f "$SYNC_SOURCE/libs.versions.toml"           "$SYNC_TARGET/../libs.versions.toml"
+    cp -f "$SYNC_SOURCE/libs.versions.toml"  "$SYNC_TARGET/libs.versions.toml"
 elif [[ "OVERWRITEBACK" == "$OPT_SYNC_DIRECTION" ]]; then
     SYNC_SOURCE="$SCRIPTDIR"
     SYNC_TARGET="$SYNCDIR_base"
-    cp -f "$SYNC_SOURCE/../libs.versions.toml" "$SYNC_TARGET/libs.versions.toml"
+    cp -f "$SYNC_SOURCE/libs.versions.toml" "$SYNC_TARGET/libs.versions.toml"
 fi
 
 if [[ "OVERWRITE" == "$OPT_SYNC_DIRECTION" || "OVERWRITEBACK" == "$OPT_SYNC_DIRECTION" ]]; then
@@ -131,6 +131,6 @@ for PLUGIN in "${BINARYPLUGINS_TO_CHECK[@]}"; do
 done
 
 # finally deal with libs.versions.toml
-doTheDiff "$SCRIPTDIR/../libs.versions.toml" "$SYNCDIR_base/libs.versions.toml" "libs.versions.toml"
+doTheDiff "$SCRIPTDIR/libs.versions.toml" "$SYNCDIR_base/libs.versions.toml" "libs.versions.toml"
 
 exit 0
