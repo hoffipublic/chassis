@@ -53,6 +53,7 @@ class DslPropsDelegate(
         length: Int, // in interface = -1,
         tags: Tags, // in interface = Tags.NONE
     ) {
+        log.info("fun {}(\"{}, TYP\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
 
@@ -66,6 +67,7 @@ class DslPropsDelegate(
     // ====================   "CLASS" propertys   ====================================================================================
     // ===================================================================================================================================
     override fun property(name: String, poetType: TypeName, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, modifiers: MutableSet<KModifier>, length: Int, tags: Tags) {
+        log.info("fun {}(\"{}, poetType\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
         val prop = DslModelProp(name, DslRef.prop(name, parentRef), EitherTypOrModelOrPoetType.EitherPoetType(poetType), mutable, tags, length, collectionType)
@@ -73,6 +75,7 @@ class DslPropsDelegate(
     }
 
     override fun property(name: String, modelRefString: String, modelSubelement: DslRef.model.MODELELEMENT, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, length: Int, tags: Tags) {
+        log.info("fun {}(\"{}, modelRefString\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
         val modelOrModelSubElementRef = DslRefString.MODELREF(modelRefString)
@@ -91,6 +94,7 @@ class DslPropsDelegate(
     // ===================================================================================================================================
 
     override fun property(name: String, modelSubElementRefString: String, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, length: Int, tags: Tags) {
+        log.info("fun {}(\"{}, modelSubElementRefString\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
         val modelOrModelSubElementRef = DslRefString.MODELREF(modelSubElementRefString)
@@ -102,6 +106,7 @@ class DslPropsDelegate(
 
 
     override fun property(name: String, modelSubElementRef: DslRef.IModelSubelement, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, length: Int, tags: Tags) {
+        log.info("fun {}(\"{}, DslRef\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS

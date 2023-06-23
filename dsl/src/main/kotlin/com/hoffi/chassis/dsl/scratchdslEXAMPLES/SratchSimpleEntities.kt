@@ -45,8 +45,8 @@ fun simpleEntities() {
             extends {
                 + SIMPLE__ROOT
                 // NEXT WILL BREAK for Table
-                + ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT) ) // withName COMMON__PERSISTENT) //
-                + com.hoffi.chassis.shared.Dummy::class // special models overwrite non-Interface super classes
+                //+ ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT) ) // withName COMMON__PERSISTENT) //
+                //+ com.hoffi.chassis.shared.Dummy::class // special models overwrite non-Interface super classes
             }
 
             property("name", TYP.STRING, mutable, Tag.CONSTRUCTOR, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
@@ -73,7 +73,7 @@ fun simpleEntities() {
                 extends {
                     replaceSuperclass = true
                     + SIMPLE__ROOT
-                    + ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT_OPTIMISTIC) ) // withName COMMON__PERSISTENT) //
+                    //+ ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT_OPTIMISTIC) ) // withName COMMON__PERSISTENT) //
                 }
 //                annotateProperty("someObject", AnnotationSpec.builder(Contextual::class))
                 property("dtoSpecificProp", TYP.STRING, mutable = mutable, Tag.CONSTRUCTOR)

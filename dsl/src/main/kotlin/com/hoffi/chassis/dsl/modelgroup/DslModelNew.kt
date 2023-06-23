@@ -98,6 +98,7 @@ class DslModel constructor(
 
     @DslBlockOn(DslDto::class)
     override fun dto(simpleName: String, dslBlock: IDslApiDto.() -> Unit) {
+globalDslCtx = dslCtx // TODO remove workaround
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
             dslCtx.PASS_1_BASEMODELS -> {
@@ -120,6 +121,7 @@ class DslModel constructor(
 
     @DslBlockOn(DslTable::class)
     override fun table(simpleName: String, dslBlock: IDslApiTable.() -> Unit) {
+globalDslCtx = dslCtx // TODO remove workaround
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
             dslCtx.PASS_1_BASEMODELS -> {
@@ -327,6 +329,10 @@ class DslDto(
         setOfGatheredPropertysOfThis.addAll(gatherPropertiesImpl.theGatherPropertys)
         val modelGatherProperties: Set<GatherPropertys> = StrategyGatherProperties.resolve(StrategyGatherProperties.STRATEGY.UNION, selfDslRef, sharedGatheredGatherPropertys)
         dtoModel.gatheredFromDslRefs.addAll(modelGatherProperties)
+
+        if(dslModel.simpleName == "Entity") {
+            val x = 0
+        }
 
         // Subelement (Dto, Table, ...) properties
         for (dslProp in propsImpl.theProps.values) {

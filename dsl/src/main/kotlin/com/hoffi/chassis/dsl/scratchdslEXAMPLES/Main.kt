@@ -92,18 +92,18 @@ fun main() {
     for (aModel in aDslRun.dslCtx.getAllModels()) {
         println(aModel.selfDslRef)
         for(dto in aModel.dslDtos.values) {
-            println("  ${dto.selfDslRef}")
+            println("  dto(\"${dto.selfDslRef.simpleName}\")")
         }
     }
 
-    println("================================================================================")
-    println("================================================================================")
-    println("================================================================================")
-
-    var i = 0
-    for (dslInstance in aDslRun.dslCtx.allCtxObjs) {
-        println(" ${String.format("%4d", ++i)}: ${dslInstance.key}\n    -> ${dslInstance.value}")
-    }
+//    println("================================================================================")
+//    println("================================================================================")
+//    println("================================================================================")
+//
+//    var i = 0
+//    for (dslInstance in aDslRun.dslCtx.allCtxObjs) {
+//        println(" ${String.format("%4d", ++i)}: ${dslInstance.key}\n    -> ${dslInstance.value}")
+//    }
 
 
     println("================================================================================")

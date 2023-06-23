@@ -35,7 +35,7 @@ class DslCtxWrapper(val dslCtx: DslCtx, var dslDiscriminator: DslDiscriminator) 
 }
 
 class DslCtx private constructor(){
-    override fun toString() = "DslCtx of (${if(dslRun.running) "" else "not "}running) DslRun '${dslRun.runIdentifierEgEnvAndTime}'"
+    override fun toString() = "${super.hashCode()} DslCtx of (${if(dslRun.running) "" else "not "}running) in currentPass='${currentPASS}' of DslRun '${dslRun.runIdentifierEgEnvAndTime}'"
     var topLevelDslFunctionName: String = C.NULLSTRING
         set(value) { log.info("||--> of topLeveDslFunctionName {}()", value) ; field = value }
     lateinit var dslRun: DslRun

@@ -88,7 +88,7 @@ class DslGatherPropertiesDelegateImpl(
     ) {
         if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return
         // definitely a modelSubElement, as this function should only be callable in context of a DslRef.IModelSubelement
-        val modelRef = parentRef.parentRef.parentRef as DslRef.model
+        val modelRef = parentRef.parentRef as DslRef.model
         when (modelElement) {
             DslRef.model.MODELELEMENT.MODEL -> {
                 theGatherPropertys.add(GatherPropertys(modelRef, gatherPropertiesEnum))

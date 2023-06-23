@@ -45,6 +45,7 @@ class DslModelgroup(
     context(DslCtxWrapper)
     @DslBlockOn(AllModels::class)
     fun allModels(simpleName: String = C.DEFAULT, allModelsBlock: IApiAllModels.() -> Unit) {
+globalDslCtx = dslCtx // TODO remove workaround
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
             dslCtx.PASS_0_CONFIGURE -> {}
@@ -68,7 +69,8 @@ class DslModelgroup(
     context(DslCtxWrapper)
     @DslBlockOn(DslModel::class)
     fun model(simpleName: String, dslModelBlock: IDslApiModel.() -> Unit) {
-        log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
+globalDslCtx = dslCtx // TODO remove workaround
+        //        log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
             dslCtx.PASS_0_CONFIGURE -> {}
             dslCtx.PASS_1_BASEMODELS -> {
