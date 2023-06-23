@@ -10,7 +10,8 @@ import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.helpers.ifNotBlank
 import com.hoffi.chassis.shared.helpers.pathSepRE
-import com.hoffi.chassis.shared.parsedata.nameandwhereto.ISharedNameAndWhereto
+import com.hoffi.chassis.shared.helpers.pathSepREFirst
+import com.hoffi.chassis.shared.parsedata.nameandwhereto.IDslApiSharedNameAndWheretoProps
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.NameAndWheretoDefaults
 import com.hoffi.chassis.shared.strategies.IClassNameStrategy
 import com.hoffi.chassis.shared.strategies.ITableNameStrategy
@@ -21,55 +22,45 @@ import org.slf4j.LoggerFactory
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
 
 @ChassisDslMarker
-interface IDslApiNameAndWheretoProps : ISharedNameAndWhereto {
+interface IDslApiNameAndWheretoProps : IDslApiSharedNameAndWheretoProps {
     fun strategyClassName(strategyName: String) { strategyClassName = IClassNameStrategy.STRATEGY.valueOf(strategyName) }
     override var strategyClassName: IClassNameStrategy.STRATEGY
     fun strategyTableName(strategyName: String) { strategyTableName = ITableNameStrategy.STRATEGY.valueOf(strategyName) }
     override var strategyTableName: ITableNameStrategy.STRATEGY
-    override var baseDir: String
-        get() = baseDirPath.toString()
-        set(value) { baseDirPath = value.toPath() }
-    override var baseDirPath: Path
+    fun baseDirAbsolute(absolute: String)
+    fun baseDirAbsolute(absolute: Path)
     fun baseDir(concat: String)
     fun baseDir(concat: Path)
-    override var path: String
-        get() = pathPath.toString()
-        set(value) { pathPath = value.toPath() }
-    override var pathPath: Path
+    fun pathAbsolute(absolute: String)
+    fun pathAbsolute(absolute: Path)
     fun path(concat: String)
     fun path(concat: Path)
 
-    override var classPrefix: String
+    fun classPrefixAbsolute(absolute: String)
     fun classPrefix(concat: String)
     fun classPrefixBefore(concat: String)
     fun classPrefixAfter(concat: String)
-    override var classPostfix: String
+    fun classPostfixAbsolute(absolute: String)
     fun classPostfix(concat: String)
     fun classPostfixBefore(concat: String)
     fun classPostfixAfter(concat: String)
 
-    override var packageName: String
+    fun basePackageAbsolute(absolute: String)
+    fun basePackage(concat: String)
+    fun packageNameAbsolute(absolute: String)
     fun packageName(concat: String)
-    fun packagePrefixBefore(concat: String)
-    fun packagePrefixAfter(concat: String)
-    fun packagePostfixBefore(concat: String)
-    fun packagePostfixAfter(concat: String)
 }
 @ChassisDslMarker
 interface IDslApiNameAndWheretoOnly {
-    //context(DslCtxWrapper)
     fun nameAndWhereto(simpleName: String = C.DEFAULT, block: IDslApiNameAndWheretoProps.() -> Unit)
 }
 @ChassisDslMarker
 interface IDslApiNameAndWheretoWithSubelements {
-    //context(DslCtxWrapper)
     fun nameAndWhereto(simpleName: String = C.DEFAULT, block: IDslApiNameAndWheretoOnSubElements.() -> Unit)
 }
 interface IDslApiNameAndWheretoOnSubElements : IDslApiNameAndWheretoProps {
-    //context(DslCtxWrapper)
     @DslBlockOn(DslDto::class)
     fun dtoNameAndWhereto(  simpleName: String = C.DEFAULT, block: IDslApiNameAndWheretoProps.() -> Unit)
-    //context(DslCtxWrapper)
     @DslBlockOn(DslTable::class)
     fun tableNameAndWhereto(simpleName: String = C.DEFAULT, block: IDslApiNameAndWheretoProps.() -> Unit)
 }
@@ -102,46 +93,41 @@ open class DslNameAndWheretoPropsImpl(
     override fun toString() = "$selfDslRef"
     override var strategyClassName = IClassNameStrategy.STRATEGY.DEFAULT
     override var strategyTableName = ITableNameStrategy.STRATEGY.DEFAULT
-    override var baseDirPath: Path = NameAndWheretoDefaults.basePath
-    //internal var baseDirAddendum: Path = "".toPath(normalize = false)
-    //override fun baseDir(concat: String) { baseDirAddendum/=concat }
-    //override fun baseDir(concat: Path)   { baseDirAddendum/=concat }
-    override fun baseDir(concat: String) { baseDirPath/=concat }
-    override fun baseDir(concat: Path)   { baseDirPath/=concat }
-    override var pathPath: Path = NameAndWheretoDefaults.path
-    //internal var pathPathAddendum: Path = "".toPath(normalize = false)
-    //override fun path(concat: String) { pathPathAddendum/=concat }
-    //override fun path(concat: Path) { pathPathAddendum/=concat }
-    override fun path(concat: String) { pathPath/=concat }
-    override fun path(concat: Path) { pathPath/=concat }
+    var baseDirPathAbsolute: Path = NameAndWheretoDefaults.path
+    override fun baseDirAbsolute(absolute: Path) { baseDirPathAbsolute = absolute }
+    override fun baseDirAbsolute(absolute: String) { baseDirPathAbsolute = absolute.toPath() }
+    var baseDirAddendum: Path = NameAndWheretoDefaults.path
+    override fun baseDir(concat: String) { baseDirAddendum/=concat }
+    override fun baseDir(concat: Path)   { baseDirAddendum/=concat }
+    var pathAbsolute: Path = NameAndWheretoDefaults.path
+    override fun pathAbsolute(absolute: String) { pathAbsolute = absolute.replace(pathSepREFirst, "").toPath() }
+    override fun pathAbsolute(absolute: Path) { pathAbsolute = absolute.toString().replace(pathSepREFirst, "").toPath() }
+    var pathAddendum: Path = NameAndWheretoDefaults.path
+    override fun path(concat: String) { pathAddendum/=concat }
+    override fun path(concat: Path) { pathAddendum/=concat }
 
 
-    override var classPrefix: String = NameAndWheretoDefaults.classPrefix
-    //internal var classPrefixAddendum: String = ""
+    var classPrefixAbsolute: String = NameAndWheretoDefaults.classPrefix
+    override fun classPrefixAbsolute(absolute: String) { classPrefixAbsolute = absolute }
+    var classPrefixAddendum: String = NameAndWheretoDefaults.classPrefix
     override fun classPrefix(concat: String) { classPrefixBefore(concat) }
-    //override fun classPrefixBefore(concat: String) { classPrefixAddendum = "$concat$classPrefixAddendum" }
-    //override fun classPrefixAfter(concat: String)  { classPrefixAddendum = "$classPrefixAddendum$concat" }
-    override fun classPrefixBefore(concat: String) { classPrefix = "$concat$classPrefix" }
-    override fun classPrefixAfter(concat: String)  { classPrefix = "$classPrefix$concat" }
-    override var classPostfix: String = NameAndWheretoDefaults.classPostfix
-    //internal var classPostfixAddendum: String = ""
+    override fun classPrefixBefore(concat: String) { classPrefixAddendum = "$concat$classPrefixAddendum" }
+    override fun classPrefixAfter(concat: String)  { classPrefixAddendum = "$classPrefixAddendum$concat" }
+    var classPostfixAbsolute: String = NameAndWheretoDefaults.classPostfix
+    override fun classPostfixAbsolute(absolute: String) { classPostfixAbsolute = absolute }
+    var classPostfixAddendum: String = NameAndWheretoDefaults.classPostfix
     override fun classPostfix(concat: String) { classPostfixAfter(concat) }
-    //override fun classPostfixBefore(concat: String) { classPostfixAddendum = "$concat$classPostfixAddendum" }
-    //override fun classPostfixAfter(concat: String)  { classPostfixAddendum = "$classPostfixAddendum$concat" }
-    override fun classPostfixBefore(concat: String) { classPostfix = "$concat$classPostfix" }
-    override fun classPostfixAfter(concat: String)  { classPostfix = "$classPostfix$concat" }
+    override fun classPostfixBefore(concat: String) { classPostfixAddendum = "$concat$classPostfixAddendum" }
+    override fun classPostfixAfter(concat: String)  { classPostfixAddendum = "$classPostfixAddendum$concat" }
 
-    override var basePackage: String = NameAndWheretoDefaults.basePackage
-    override var packageName: String = NameAndWheretoDefaults.packageName
-    //internal var packageNameAddendum: String = ""
-    //override fun packageName(concat: String) { packageName = "$packageName.${concat.replace(pathSepRE, ".")}" }
-    override fun packageName(concat: String) { packageName = "${packageName.ifNotBlank{"$packageName."}}${concat.replace(pathSepRE, ".")}" }
-    internal var packagePrefix: String = ""
-    override fun packagePrefixBefore(concat: String) { packagePrefix = "$concat$packagePrefix" }
-    override fun packagePrefixAfter(concat: String)  { packagePrefix = "$packagePrefix$concat" }
-    internal var packagePostfix: String = ""
-    override fun packagePostfixBefore(concat: String) { packagePostfix= "$concat$packagePostfix" }
-    override fun packagePostfixAfter(concat: String)  { packagePostfix= "$packagePostfix$concat" }
+    var basePackageAbsolute: String = NameAndWheretoDefaults.packageName
+    override fun basePackageAbsolute(absolute: String) { basePackageAbsolute = absolute }
+    var basePackageAddendum: String = NameAndWheretoDefaults.packageName
+    override fun basePackage(concat: String) { basePackageAddendum = "${basePackageAddendum.ifNotBlank{"$basePackageAddendum."}}${concat.replace(pathSepRE, ".")}" }
+    var packageNameAbsolute: String = NameAndWheretoDefaults.packageName
+    override fun packageNameAbsolute(absolute: String) { packageNameAbsolute = absolute }
+    var packageNameAddendum: String = NameAndWheretoDefaults.packageName
+    override fun packageName(concat: String) { packageNameAddendum = "${packageNameAddendum.ifNotBlank{"$packageNameAddendum."}}${concat.replace(pathSepRE, ".")}" }
 }
 
 context(DslCtxWrapper)

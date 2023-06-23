@@ -1,15 +1,13 @@
 package com.hoffi.chassis.dsl.scratchdslEXAMPLES
 
 import com.hoffi.chassis.chassismodel.C
-import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.INTERFACE
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.OBJECT
-import com.hoffi.chassis.dsl.internal.DslCtx
+import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.shared.COLLECTIONTYPE
 import com.hoffi.chassis.shared.Initializer
 import com.hoffi.chassis.shared.TYP
-import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.dsl.DslRef.model.MODELELEMENT.DTO
 import com.hoffi.chassis.shared.dsl.DslRef.model.MODELELEMENT.MODEL
 import com.hoffi.chassis.shared.mutable
@@ -29,7 +27,7 @@ fun simpleEntities() {
 //    }
     modelgroup(SIMPLE) {
         nameAndWhereto {
-            classPrefix = "Simple"
+            classPrefix("Simple")
         }
 
         // ================================================================================================================================

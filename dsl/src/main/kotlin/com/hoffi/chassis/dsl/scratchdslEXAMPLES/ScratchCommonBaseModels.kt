@@ -23,11 +23,11 @@ fun commonBaseModels() {
         nameAndWhereto("TEST") {
             packageName("base")
             dtoNameAndWhereto {
-                classPostfix = "Dto"
+                classPostfix("Dto")
                 packageName("dto")
             }
             tableNameAndWhereto {
-                classPostfix = "Table"
+                classPostfix("Table")
                 packageName("table")
             }
         }

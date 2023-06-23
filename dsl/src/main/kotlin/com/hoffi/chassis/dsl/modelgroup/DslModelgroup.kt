@@ -101,42 +101,39 @@ class DslModelgroup(
             gatheredNameAndWheretosFakeOfDslRun.createFor(SharedGatheredNameAndWheretos.THINGSWITHNAMEANDWHERETOS.DslRunConfigure, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.baseDirPath,
-                dslNameAndWheretoDelegateEntry.value.pathPath,
-                dslNameAndWheretoDelegateEntry.value.classPrefix,
-                dslNameAndWheretoDelegateEntry.value.classPostfix,
-                dslNameAndWheretoDelegateEntry.value.basePackage,
-                dslNameAndWheretoDelegateEntry.value.packageName,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName,
-                dslNameAndWheretoDelegateEntry.value.strategyTableName
+                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.dtoNameAndWheretos) {
             gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(DslRef.dto(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.baseDirPath,
-                dslNameAndWheretoDelegateEntry.value.pathPath,
-                dslNameAndWheretoDelegateEntry.value.classPrefix,
-                dslNameAndWheretoDelegateEntry.value.classPostfix,
-                dslNameAndWheretoDelegateEntry.value.basePackage,
-                dslNameAndWheretoDelegateEntry.value.packageName,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName,
-                dslNameAndWheretoDelegateEntry.value.strategyTableName
+                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.tableNameAndWheretos) {
             gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(DslRef.table(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.baseDirPath,
-                dslNameAndWheretoDelegateEntry.value.pathPath,
-                dslNameAndWheretoDelegateEntry.value.classPrefix,
-                dslNameAndWheretoDelegateEntry.value.classPostfix,
-                dslNameAndWheretoDelegateEntry.value.basePackage,
-                dslNameAndWheretoDelegateEntry.value.packageName,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName,
-                dslNameAndWheretoDelegateEntry.value.strategyTableName
+                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
 
@@ -144,42 +141,39 @@ class DslModelgroup(
             gatheredNameAndWheretosFakeOfDslRun.createFor(SharedGatheredNameAndWheretos.THINGSWITHNAMEANDWHERETOS.Modelgroup, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.baseDirPath,
-                dslNameAndWheretoDelegateEntry.value.pathPath,
-                dslNameAndWheretoDelegateEntry.value.classPrefix,
-                dslNameAndWheretoDelegateEntry.value.classPostfix,
-                dslNameAndWheretoDelegateEntry.value.basePackage,
-                dslNameAndWheretoDelegateEntry.value.packageName,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName,
-                dslNameAndWheretoDelegateEntry.value.strategyTableName
+                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.dtoNameAndWheretos) {
             gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(DslRef.dto(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.baseDirPath,
-                dslNameAndWheretoDelegateEntry.value.pathPath,
-                dslNameAndWheretoDelegateEntry.value.classPrefix,
-                dslNameAndWheretoDelegateEntry.value.classPostfix,
-                dslNameAndWheretoDelegateEntry.value.basePackage,
-                dslNameAndWheretoDelegateEntry.value.packageName,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName,
-                dslNameAndWheretoDelegateEntry.value.strategyTableName
+                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.tableNameAndWheretos) {
             gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(DslRef.table(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.baseDirPath,
-                dslNameAndWheretoDelegateEntry.value.pathPath,
-                dslNameAndWheretoDelegateEntry.value.classPrefix,
-                dslNameAndWheretoDelegateEntry.value.classPostfix,
-                dslNameAndWheretoDelegateEntry.value.basePackage,
-                dslNameAndWheretoDelegateEntry.value.packageName,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName,
-                dslNameAndWheretoDelegateEntry.value.strategyTableName
+                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
 

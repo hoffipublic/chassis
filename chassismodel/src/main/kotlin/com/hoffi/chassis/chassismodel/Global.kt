@@ -76,19 +76,19 @@ value class MixedCaseString(private val s: String) {
     private fun toCamelConsecutiveParts(): String = RE.fromMixedRegex.replace(s) { it.value.replace(RE.fromMixedCharsRegex, "").lowercase().replaceFirstChar { innerMatch->innerMatch.titlecase(C.LOCALE)} }
 
     fun toCamelCase(): String { if (s.isEmpty()) return ""; val firstChar = s[0]
-                              return toLowerCamelFirstPart(s).toCamelConsecutiveParts().replaceFirstChar {firstChar} }
-    fun toLowerCamelCase(): String = toLowerCamelFirstPart(s).toCamelConsecutiveParts()
-    fun toUpperCamelCase(): String = toLowerCamelFirstPart(s).toCamelConsecutiveParts().replaceFirstChar { it.titlecase(C.LOCALE) }
+                              return toLowerCamelFirstPart(s).toCamelConsecutiveParts().replaceFirstChar { firstChar } }
+    fun toLowerCamelCase(): String = toLowerCamelFirstPart(s).toCamelConsecutiveParts().replaceFirstChar { it.lowercaseChar() }
+    fun toUpperCamelCase(): String = toLowerCamelFirstPart(s).toCamelConsecutiveParts().replaceFirstChar { it.titlecaseChar() }
     fun toSnakeCase(): String      = RE.camelRegex.replace(s) { "_${it.value}" }.replace(RE.fromMixedCharsRegex, "_")
     fun toLowerSnakeCase(): String = toSnakeCase().lowercase()
     fun toUpperSnakeCase(): String = toSnakeCase().uppercase()
     fun toLowerTitleSnakeCase(): String = RE.snakeKebabTitleRegex.replace(toLowerSnakeCase()) { it.value.uppercase() }
-    fun toUpperTitleSnakeCase(): String = toLowerTitleSnakeCase().replaceFirstChar { c -> c.titlecase(C.LOCALE) }
+    fun toUpperTitleSnakeCase(): String = toLowerTitleSnakeCase().replaceFirstChar { it.titlecaseChar() }
     fun toKebabCase(): String      = RE.camelRegex.replace(s) { "-${it.value}" }.replace(RE.fromMixedCharsRegex, "-")
     fun toLowerKebabCase(): String = toKebabCase().lowercase()
     fun toUpperKebabCase(): String = toKebabCase().uppercase()
     fun toLowerTitleKebabCase(): String = RE.snakeKebabTitleRegex.replace(toLowerKebabCase()) { it.value.uppercase() }
-    fun toUpperTitleKebabCase(): String =  toLowerTitleKebabCase().replaceFirstChar { c -> c.titlecase(C.LOCALE) }
+    fun toUpperTitleKebabCase(): String =  toLowerTitleKebabCase().replaceFirstChar { it.titlecaseChar() }
 }
 
 fun casingToStdout() {

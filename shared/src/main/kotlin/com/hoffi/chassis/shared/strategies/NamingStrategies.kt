@@ -45,14 +45,14 @@ object TableNameStrategy {
 }
 interface ITableNameStrategy : INamingStrategy {
     enum class STRATEGY { DEFAULT, LOWERSNAKECASE }
-    fun tableName(className: String, packageName: String, prefix: String = "", postfix: String = ""): String
+    fun tableName(modelName: String, prefix: String = "", postfix: String = ""): String
 }
 
 object TableNameStrategyLowerSnakeCase : ITableNameStrategy {
     override fun name(string: String) = MixedCaseString(string).toLowerSnakeCase()
     override fun nameUpperFirst(string: String) = MixedCaseString(string).toLowerSnakeCase().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
     override fun nameLowerFirst(string: String) = MixedCaseString(string).toLowerSnakeCase().replaceFirstChar { it.lowercase() }
-    override fun tableName(className: String, packageName: String, prefix: String, postfix: String): String {
-        return MixedCaseString(joinName(prefix, className, postfix)).toLowerSnakeCase()
+    override fun tableName(modelName: String, prefix: String, postfix: String): String {
+        return MixedCaseString(joinName(prefix, modelName, postfix)).toLowerSnakeCase()
     }
 }

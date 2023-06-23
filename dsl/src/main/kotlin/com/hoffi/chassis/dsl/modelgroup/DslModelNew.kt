@@ -7,6 +7,7 @@ import com.hoffi.chassis.dsl.internal.*
 import com.hoffi.chassis.dsl.whereto.*
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.EitherModel
+import com.hoffi.chassis.shared.parsedata.StrategyGatherProperties
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedNameAndWhereto
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.StrategyNameAndWhereto
@@ -142,42 +143,39 @@ class DslModel constructor(
             gatheredNameAndWheretos.createFor(SharedGatheredNameAndWheretos.THINGSWITHNAMEANDWHERETOS.model, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.baseDirPath,
-                dslNameAndWheretoDelegateEntry.value.pathPath,
-                dslNameAndWheretoDelegateEntry.value.classPrefix,
-                dslNameAndWheretoDelegateEntry.value.classPostfix,
-                dslNameAndWheretoDelegateEntry.value.basePackage,
-                dslNameAndWheretoDelegateEntry.value.packageName,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName,
-                dslNameAndWheretoDelegateEntry.value.strategyTableName
+                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.dtoNameAndWheretos) {
             gatheredNameAndWheretos.createFromElementForSubelement(DslRef.dto(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.baseDirPath,
-                dslNameAndWheretoDelegateEntry.value.pathPath,
-                dslNameAndWheretoDelegateEntry.value.classPrefix,
-                dslNameAndWheretoDelegateEntry.value.classPostfix,
-                dslNameAndWheretoDelegateEntry.value.basePackage,
-                dslNameAndWheretoDelegateEntry.value.packageName,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName,
-                dslNameAndWheretoDelegateEntry.value.strategyTableName
+                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.tableNameAndWheretos) {
             gatheredNameAndWheretos.createFromElementForSubelement(DslRef.table(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.baseDirPath,
-                dslNameAndWheretoDelegateEntry.value.pathPath,
-                dslNameAndWheretoDelegateEntry.value.classPrefix,
-                dslNameAndWheretoDelegateEntry.value.classPostfix,
-                dslNameAndWheretoDelegateEntry.value.basePackage,
-                dslNameAndWheretoDelegateEntry.value.packageName,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName,
-                dslNameAndWheretoDelegateEntry.value.strategyTableName
+                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
     }
@@ -289,20 +287,19 @@ class DslDto(
             gatheredNameAndWheretos.createFor(selfDslRef, SharedNameAndWhereto(
                 dslNameAndWhereto.simpleName,
                 selfDslRef,
-                dslNameAndWhereto.baseDirPath,
-                dslNameAndWhereto.pathPath,
-                dslNameAndWhereto.classPrefix,
-                dslNameAndWhereto.classPostfix,
-                dslNameAndWhereto.basePackage,
-                dslNameAndWhereto.packageName,
-                dslNameAndWhereto.strategyClassName,
-                dslNameAndWhereto.strategyTableName
+                dslNameAndWhereto.strategyClassName, dslNameAndWhereto.strategyTableName,
+                dslNameAndWhereto.baseDirPathAbsolute, dslNameAndWhereto.baseDirAddendum,
+                dslNameAndWhereto.pathAbsolute , dslNameAndWhereto.pathAddendum,
+                dslNameAndWhereto.classPrefixAbsolute, dslNameAndWhereto.classPrefixAddendum,
+                dslNameAndWhereto.classPostfixAbsolute, dslNameAndWhereto.classPostfixAddendum,
+                dslNameAndWhereto.basePackageAbsolute, dslNameAndWhereto.basePackageAddendum,
+                dslNameAndWhereto.packageNameAbsolute, dslNameAndWhereto.packageNameAddendum,
             ))
         }
 
         val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS, selfDslRef, gatheredNameAndWheretos)
+        val modelGatherProperties = StrategyGatherProperties.resolve(StrategyGatherProperties.STRATEGY.SPECIAL_WINS, this.modelSubelementRef)
 //        // TODO XXX set "own" properties (and the ones of model { } into dtoModel
-//        val modelGatherProperties = DslResolutionStrategies.resolveGatherPropertiesStrategy(this, C.DEFAULT)
 //        dtoModel.gatheredFromDslRefs.addAll(modelGatherProperties)
 //
 //        for (gatherFrom in modelGatherProperties) {

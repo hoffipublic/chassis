@@ -20,18 +20,18 @@ fun main() {
     // or maybe with different naming conventions there
     aDslRun.configure {
         nameAndWhereto {
-            baseDir = "./generated/src/main/kotlin"
-            packageName = "com.hoffi.generated"
+            baseDirAbsolute("./generated/src/main/kotlin")
+            basePackage("com.hoffi.generated")
             dtoNameAndWhereto {
-                classPostfix = "DtoDevRun"
+                classPostfix("DtoDevRun")
                 packageName("dtoDevRun")
             }
             dtoNameAndWhereto(COMMON) {
-                classPostfix = "CommonDtoDevRun"
+                classPostfix("CommonDtoDevRun")
                 packageName("commonDevRun")
             }
             tableNameAndWhereto {
-                classPostfix = "TableDevRun"
+                classPostfix("TableDevRun")
                 packageName("tableDevRun")
             }
 //            fillerNameAndWhereto {
@@ -45,18 +45,18 @@ fun main() {
     val devDslRun = DslRun("devRun")
     devDslRun.configure {
         nameAndWhereto {
-            baseDir = "./devRunBaseDir/generated"
-            packageName = "com.hoffi.generated.devrun"
+            baseDirAbsolute("./devRunBaseDir/generated")
+            packageNameAbsolute("com.hoffi.generated.devrun")
             dtoNameAndWhereto {
-                classPostfix = "DevRunDtoType"
+                classPostfix("DevRunDtoType")
                 packageName("DevRundtoType")
             }
             dtoNameAndWhereto(COMMON) {
-                classPostfix = "DevRunCommonDto"
+                classPostfix("DevRunCommonDto")
                 packageName("devRunCommon")
             }
             tableNameAndWhereto {
-                classPostfix = "DevRunTableType"
+                classPostfix("DevRunTableType")
                 packageName("DevRunTableType")
             }
 //            fillerNameAndWhereto {

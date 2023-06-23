@@ -17,10 +17,10 @@ fun commonScratch() {
     modelgroup(SCRATCH) {
         // property() in group itself?
         nameAndWhereto("TEST1") {
-            baseDir = "MODELGROUP baseDir"
+            baseDir("MODELGROUP baseDir")
             packageName("commonMG")
             dtoNameAndWhereto("TESTNEST") {
-                baseDir = "MODELGROUP dtoNameAndWhereto baseDir"
+                baseDir("MODELGROUP dtoNameAndWhereto baseDir")
                 packageName("dtoTypeMG")
                 classPrefix("CommonMGDto")
             }
@@ -28,17 +28,17 @@ fun commonScratch() {
         model(SCRATCH__INTFC) {
 //            baseDir = "should fail!"
             nameAndWhereto("TEST2") {
-                baseDir = "MODEL baseDir"
+                baseDir("MODEL baseDir")
                 if (dslCtx.dslRun.runIdentifierEgEnvAndTime != "devRun") {
-                    packageName = dslCtx.dslRun.wheretoImpl.nameAndWheretos[C.DEFAULT]!!.baseDir
+                    packageName(dslCtx.dslRun.wheretoImpl.nameAndWheretos[C.DEFAULT]!!.baseDirAddendum.toString())
                 }
                 dtoNameAndWhereto("TESTNEST") {
-                    baseDir = "MODEL dtoNameAndWhereto baseDir"
+                    baseDir("MODEL dtoNameAndWhereto baseDir")
                 }
                 //fillerWhereto {  }
 
                 val countInCommonBaseModels: Int = dslCtx.countModelsOfModelgroup(this@modelgroup.modelgroupRef)
-                classPostfix = "overwrite"
+                classPostfixAbsolute("overwrite")
                 classPostfix(countInCommonBaseModels.toString())
             }
             kind = INTERFACE
@@ -56,16 +56,16 @@ fun commonScratch() {
             }
             dto {
                 nameAndWhereto("TEST3") {
-                    baseDir = "DTO baseDir"
-                    classPostfix = "Dto"
+                    baseDirAbsolute("DTO baseDir")
+                    classPostfix("Dto")
                     packageName("dtoTypeDto")
-                    classPrefix = "Common"
+                    classPrefix("Common")
                 }
             }
             dto("other") {
                 kind = CLASS
                 nameAndWhereto("TEST otherDTO") {
-                    baseDir = "DTO OTHER baseDir"
+                    baseDirAbsolute("DTO OTHER baseDir")
                 }
                 showcase {
                     dslProp = 66
