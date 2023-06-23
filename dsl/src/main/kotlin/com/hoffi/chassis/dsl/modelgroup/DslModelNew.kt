@@ -6,11 +6,14 @@ import com.hoffi.chassis.dsl.*
 import com.hoffi.chassis.dsl.internal.*
 import com.hoffi.chassis.dsl.whereto.*
 import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.parsedata.EitherModel
-import com.hoffi.chassis.shared.parsedata.StrategyGatherProperties
+import com.hoffi.chassis.shared.parsedata.*
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedNameAndWhereto
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.StrategyNameAndWhereto
+import com.hoffi.chassis.shared.shared.Extends
+import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
+import com.hoffi.chassis.shared.shared.GatherPropertys
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import org.slf4j.LoggerFactory
 
@@ -266,25 +269,9 @@ class DslDto(
 
 
     fun finish(dslCtx: DslCtx) {
-        val dtoModel = EitherModel.DtoModel(selfDslRef as DslRef.dto)
-        dslCtx.genCtx.genModels[selfDslRef] = dtoModel
-        when (kind) {
-            DslClassObjectOrInterface.CLASS -> dtoModel.kind = TypeSpec.Kind.CLASS
-            DslClassObjectOrInterface.OBJECT -> dtoModel.kind = TypeSpec.Kind.OBJECT
-            DslClassObjectOrInterface.INTERFACE -> dtoModel.kind = TypeSpec.Kind.INTERFACE
-            DslClassObjectOrInterface.UNDEFINED -> {
-                when ((dslCtx.ctxObj<DslModel>(selfDslRef.parentRef)).kind) {
-                    DslClassObjectOrInterface.CLASS -> dtoModel.kind = TypeSpec.Kind.CLASS
-                    DslClassObjectOrInterface.OBJECT -> dtoModel.kind = TypeSpec.Kind.OBJECT
-                    DslClassObjectOrInterface.INTERFACE -> dtoModel.kind = TypeSpec.Kind.INTERFACE
-                    DslClassObjectOrInterface.UNDEFINED -> { throw DslException("ref: $selfDslRef has undefined kind, neither set in ModelSubelement, nor in parent model() { }")
-                    }
-                }
-            }
-        }
-        val gatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(selfDslRef.parentRef as DslRef.IElementLevel)
+        val sharedGatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(selfDslRef.parentRef as DslRef.IElementLevel)
         for (dslNameAndWhereto in nameAndWheretoWithoutModelSubelementsImpl.nameAndWheretos.values) {
-            gatheredNameAndWheretos.createFor(selfDslRef, SharedNameAndWhereto(
+            sharedGatheredNameAndWheretos.createFor(selfDslRef, SharedNameAndWhereto(
                 dslNameAndWhereto.simpleName,
                 selfDslRef,
                 dslNameAndWhereto.strategyClassName, dslNameAndWhereto.strategyTableName,
@@ -297,28 +284,85 @@ class DslDto(
             ))
         }
 
-        val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS, selfDslRef, gatheredNameAndWheretos)
-        val modelGatherProperties = StrategyGatherProperties.resolve(StrategyGatherProperties.STRATEGY.SPECIAL_WINS, this.modelSubelementRef)
-//        // TODO XXX set "own" properties (and the ones of model { } into dtoModel
-//        dtoModel.gatheredFromDslRefs.addAll(modelGatherProperties)
-//
-//        for (gatherFrom in modelGatherProperties) {
-//            val otherDslModelOrModelSubelement: ADslClass = dslCtx.ctxObj(gatherFrom.modelOrModelSubelementRef)
-//            when (otherDslModelOrModelSubelement) {
-//                is DslModel -> {
-//                    for (modelProp in otherDslModelOrModelSubelement.propsImpl.theProps.values) {
-//                        val prop = Property(
-//                            modelProp.name,
-//                            modelProp.propRef,
-//                            modelProp.mutable,
-//                            modelProp.tags,
-//                        )
-//                        dtoModel.propertys[prop.name] = prop
-//                    }
-//                }
-//            }
-//        }
+        val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS, selfDslRef, sharedGatheredNameAndWheretos)
+        val dtoModel = EitherModel.DtoModel(selfDslRef as DslRef.dto, modelClassName)
+        dslCtx.genCtx.genModels[selfDslRef] = dtoModel
+        val dslModel: DslModel = dslCtx.ctxObj(selfDslRef.parentRef)
+
+        when (kind) {
+            DslClassObjectOrInterface.CLASS -> dtoModel.kind = TypeSpec.Kind.CLASS
+            DslClassObjectOrInterface.OBJECT -> dtoModel.kind = TypeSpec.Kind.OBJECT
+            DslClassObjectOrInterface.INTERFACE -> dtoModel.kind = TypeSpec.Kind.INTERFACE
+            DslClassObjectOrInterface.UNDEFINED -> {
+                when (dslModel.kind) {
+                    DslClassObjectOrInterface.CLASS -> dtoModel.kind = TypeSpec.Kind.CLASS
+                    DslClassObjectOrInterface.OBJECT -> dtoModel.kind = TypeSpec.Kind.OBJECT
+                    DslClassObjectOrInterface.INTERFACE -> dtoModel.kind = TypeSpec.Kind.INTERFACE
+                    DslClassObjectOrInterface.UNDEFINED -> { throw DslException("ref: $selfDslRef has undefined kind, neither set in ModelSubelement, nor in parent model() { }")
+                    }
+                }
+            }
+        }
+
+        val sharedGatheredClassModifiers = dslCtx.gatheredClassModifiers(dslModel.selfDslRef)
+        if (sharedGatheredClassModifiers.allFromSubelement.containsKey(simpleName)) throw DslException("There is already a set of ClassModifiers in dslCtx for '${selfDslRef}")
+        val setOfGatheredClassModifiers: MutableSet<KModifier> = mutableSetOf()
+        sharedGatheredClassModifiers.allFromSubelement[simpleName] = setOfGatheredClassModifiers
+        setOfGatheredClassModifiers.addAll(classModifiersImpl.theClassModifiers)
+        val modelGatherClassModifiers: Set<KModifier> = StrategyGatherClassModifiers.resolve(StrategyGatherClassModifiers.STRATEGY.UNION, selfDslRef, sharedGatheredClassModifiers)
+        dtoModel.classModifiers.addAll(modelGatherClassModifiers)
+
+        val sharedGatheredExtends = dslCtx.gatheredExtends(dslModel.selfDslRef)
+        if (sharedGatheredExtends.allFromSubelement.containsKey(simpleName)) throw DslException("There is already a map.entry of Extends for simpleName '${simpleName}' in dslCtx for '${selfDslRef}'")
+        val mapOfGatheredExtends: MutableMap<String, Extends> = mutableMapOf()
+        sharedGatheredExtends.allFromSubelement[simpleName] = mapOfGatheredExtends
+        mapOfGatheredExtends.putAll(extendsImpl.theExtendBlocks.map { entry -> entry.key to entry.value.extends })
+        val modelGatherExtends: Set<Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.UNION, selfDslRef, sharedGatheredExtends)
+        dtoModel.extends.addAll(modelGatherExtends)
+
+        val sharedGatheredGatherPropertys: SharedGatheredGatherPropertys = dslCtx.gatheredGatherPropertys(selfDslRef.parentRef as DslRef.IElementLevel)
+        if (sharedGatheredGatherPropertys.allFromSubelement.containsKey(simpleName)) throw DslException("There is already a set of GatherPropertys in dslCtx for '${selfDslRef}")
+        val setOfGatheredPropertysOfThis: MutableSet<GatherPropertys> = mutableSetOf()
+        sharedGatheredGatherPropertys.allFromSubelement[simpleName] = setOfGatheredPropertysOfThis
+        setOfGatheredPropertysOfThis.addAll(gatherPropertiesImpl.theGatherPropertys)
+        val modelGatherProperties: Set<GatherPropertys> = StrategyGatherProperties.resolve(StrategyGatherProperties.STRATEGY.UNION, selfDslRef, sharedGatheredGatherPropertys)
+        dtoModel.gatheredFromDslRefs.addAll(modelGatherProperties)
+
+        // Subelement (Dto, Table, ...) properties
+        for (dslProp in propsImpl.theProps.values) {
+            val property: Property = DslPropToGenProp.createFrom(dslProp)
+            dtoModel.propertys[property.name] = property
+        }
+        // model (Element) properties
+        for (dslProp in dslModel.propsImpl.theProps.values) {
+            val property: Property = DslPropToGenProp.createFrom(dslProp)
+            dtoModel.propertys[property.name] = property
+        }
+
+        // referenced models/subelements properties to gather also
         // TODO XXX really gatherProperties and set them into dtoModel
+        for (gatherFrom in modelGatherProperties) {
+            val otherDslModelOrModelSubelement: ADslClass = dslCtx.ctxObj(gatherFrom.modelOrModelSubelementRef)
+            when (otherDslModelOrModelSubelement) {
+                is DslModel -> {
+                    for (modelProp in otherDslModelOrModelSubelement.propsImpl.theProps.values) {
+                        val prop = Property(
+                            modelProp.name,
+                            modelProp.propRef,
+                            modelProp.mutable,
+                            modelProp.tags,
+                        )
+                        dtoModel.propertys[prop.name] = prop
+                    }
+                    when (gatherFrom.gatherPropertiesEnum) {
+                        GatherPropertiesEnum.NONE -> { }
+                        GatherPropertiesEnum.PROPERTIES -> TODO()
+                        GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES -> TODO()
+                        GatherPropertiesEnum.SUPERCLASS_PROPERTIES_ONLY -> TODO()
+                    }
+                }
+            }
+        }
 
         // TODO XXX Continue here
     }

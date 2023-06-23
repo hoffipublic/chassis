@@ -22,6 +22,7 @@ const val SIMPLE__SUBENTITY = "Subentity"
 
 context(DslCtxWrapper)
 fun simpleEntities() {
+    dslCtx.topLevelDslFunctionName = object{}.javaClass.enclosingMethod.name
 //    apigroup(SIMPLE) {
 //
 //    }
@@ -42,7 +43,9 @@ fun simpleEntities() {
 
         model(SIMPLE__ENTITY) {
             extends {
-                //+SIMPLE__ROOT
+                + SIMPLE__ROOT
+                // NEXT WILL BREAK for Table
+                + ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT) ) // withName COMMON__PERSISTENT) //
                 + com.hoffi.chassis.shared.Dummy::class // special models overwrite non-Interface super classes
             }
 
@@ -68,7 +71,9 @@ fun simpleEntities() {
 
             dto {
                 extends {
+                    replaceSuperclass = true
                     + SIMPLE__ROOT
+                    + ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT_OPTIMISTIC) ) // withName COMMON__PERSISTENT) //
                 }
 //                annotateProperty("someObject", AnnotationSpec.builder(Contextual::class))
                 property("dtoSpecificProp", TYP.STRING, mutable = mutable, Tag.CONSTRUCTOR)
@@ -81,6 +86,10 @@ fun simpleEntities() {
             }
             table {
                 kind = OBJECT
+                extends {
+                    replaceSuperclass = true
+                }
+
                 propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
                 //alterPropertyForDB("name", "uniqueIndex()")
             }

@@ -28,6 +28,14 @@ val c by tasks.registering {
         )
     }.mapNotNull{it})
 }
+// 'c'ompile without compileTestKotlin
+val cc by tasks.registering {
+    dependsOn(subprojects.filter { it.name !in listOf("generated") }.flatMap {
+        listOf(
+            it.tasks.findByName("compileKotlin"),
+        )
+    }.mapNotNull{it})
+}
 // 'c'ompile 'g'enerated
 val cg by tasks.registering {
     dependsOn(

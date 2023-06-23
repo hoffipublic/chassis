@@ -10,6 +10,9 @@ import com.hoffi.chassis.shared.codegen.GenCtx
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
+import com.hoffi.chassis.shared.parsedata.SharedGatheredClassModifiers
+import com.hoffi.chassis.shared.parsedata.SharedGatheredExtends
+import com.hoffi.chassis.shared.parsedata.SharedGatheredGatherPropertys
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
 import org.slf4j.LoggerFactory
 import kotlin.reflect.full.createType
@@ -33,6 +36,8 @@ class DslCtxWrapper(val dslCtx: DslCtx, var dslDiscriminator: DslDiscriminator) 
 
 class DslCtx private constructor(){
     override fun toString() = "DslCtx of (${if(dslRun.running) "" else "not "}running) DslRun '${dslRun.runIdentifierEgEnvAndTime}'"
+    var topLevelDslFunctionName: String = C.NULLSTRING
+        set(value) { log.info("||--> of topLeveDslFunctionName {}()", value) ; field = value }
     lateinit var dslRun: DslRun
     val log = LoggerFactory.getLogger(javaClass)
 
@@ -54,7 +59,24 @@ class DslCtx private constructor(){
     }
     fun nextPass(): DSLPASS? {
         val nextPass: DSLPASS? = currentPASS.nextPass()
-        return if (nextPass != null) { currentPASS = nextPass ; nextPass } else null
+        return if (nextPass != null) {
+            currentPASS.finish()
+            nextPass.start()
+            if (nextPass !is DSLPASS.PASS_FINISH) {
+                currentPASS = nextPass; nextPass
+            } else {
+                if (errors.isEmpty()) {
+                    currentPASS = nextPass; nextPass
+                } else {
+                    nextPass.finish() // was started above -> immediately finish
+                    PASS_ERROR.start()
+                    currentPASS = PASS_ERROR ; PASS_ERROR
+                }
+            }
+        } else {
+            currentPASS.finish()
+            null
+        }
     }
 
     val errors = mutableMapOf<String, String>()
@@ -155,6 +177,39 @@ class DslCtx private constructor(){
         sharedGatheredNameAndWheretos[dslRef] ?: throw DslCtxException("no ${SharedGatheredNameAndWheretos::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
     fun gatheredNameAndWheretos(dslRef: DslRef.IElementLevel): SharedGatheredNameAndWheretos =
         sharedGatheredNameAndWheretos[dslRef] ?: SharedGatheredNameAndWheretos(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredNameAndWheretos[dslRef] = it }
+
+    val sharedGatheredGatherPropertys: MutableMap<DslRef.IElementLevel, SharedGatheredGatherPropertys> = mutableMapOf()
+    fun createGatheredGatherPropertys(dslRef: DslRef.IElementLevel): SharedGatheredGatherPropertys {
+        val item = sharedGatheredGatherPropertys[dslRef]
+        return if (item == null) SharedGatheredGatherPropertys(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredGatherPropertys[dslRef] = it }
+            else throw DslCtxException("${SharedGatheredGatherPropertys::class.simpleName}('$dslRef') already exists in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    }
+    fun getGatheredGatherPropertys(dslRef: DslRef.IElementLevel): SharedGatheredGatherPropertys =
+        sharedGatheredGatherPropertys[dslRef] ?: throw DslCtxException("no ${SharedGatheredGatherPropertys::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    fun gatheredGatherPropertys(dslRef: DslRef.IElementLevel): SharedGatheredGatherPropertys =
+        sharedGatheredGatherPropertys[dslRef] ?: SharedGatheredGatherPropertys(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredGatherPropertys[dslRef] = it }
+
+    val sharedGatheredClassModifiers: MutableMap<DslRef.IElementLevel, SharedGatheredClassModifiers> = mutableMapOf()
+    fun createGatheredClassModifiers(dslRef: DslRef.IElementLevel): SharedGatheredClassModifiers {
+        val item = sharedGatheredClassModifiers[dslRef]
+        return if (item == null) SharedGatheredClassModifiers(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredClassModifiers[dslRef] = it }
+            else throw DslCtxException("${SharedGatheredClassModifiers::class.simpleName}('$dslRef') already exists in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    }
+    fun getGatheredClassModifiers(dslRef: DslRef.IElementLevel): SharedGatheredClassModifiers =
+        sharedGatheredClassModifiers[dslRef] ?: throw DslCtxException("no ${SharedGatheredClassModifiers::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    fun gatheredClassModifiers(dslRef: DslRef.IElementLevel): SharedGatheredClassModifiers =
+        sharedGatheredClassModifiers[dslRef] ?: SharedGatheredClassModifiers(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredClassModifiers[dslRef] = it }
+
+    val sharedGatheredExtends: MutableMap<DslRef.IElementLevel, SharedGatheredExtends> = mutableMapOf()
+    fun createGatheredExtends(dslRef: DslRef.IElementLevel): SharedGatheredExtends {
+        val item = sharedGatheredExtends[dslRef]
+        return if (item == null) SharedGatheredExtends(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredExtends[dslRef] = it }
+            else throw DslCtxException("${SharedGatheredExtends::class.simpleName}('$dslRef') already exists in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    }
+    fun getGatheredExtends(dslRef: DslRef.IElementLevel): SharedGatheredExtends =
+        sharedGatheredExtends[dslRef] ?: throw DslCtxException("no ${SharedGatheredExtends::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    fun gatheredExtends(dslRef: DslRef.IElementLevel): SharedGatheredExtends =
+        sharedGatheredExtends[dslRef] ?: SharedGatheredExtends(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredExtends[dslRef] = it }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

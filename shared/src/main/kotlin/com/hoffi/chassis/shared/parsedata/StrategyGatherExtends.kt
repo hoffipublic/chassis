@@ -1,63 +1,63 @@
 package com.hoffi.chassis.shared.parsedata
 
 import com.hoffi.chassis.shared.dsl.DslRef
-import com.squareup.kotlinpoet.KModifier
+import com.hoffi.chassis.shared.shared.Extends
 
-class SharedGatheredClassModifiers(val dslRef: DslRef.IElementLevel, val dslRunIdentifier: String) {
+class SharedGatheredExtends(val dslRef: DslRef.IElementLevel, val dslRunIdentifier: String) {
     override fun toString() = "${this::class.simpleName}($dslRef, $dslRunIdentifier)"
-    val allFromGroup: MutableSet<KModifier> = mutableSetOf()
-    val allFromElement: MutableSet<KModifier> = mutableSetOf()
-    val allFromSubelement: MutableMap<String, MutableSet<KModifier>> = mutableMapOf()
+    val allFromGroup: MutableMap<String, Extends> = mutableMapOf()
+    val allFromElement: MutableMap<String, Extends> = mutableMapOf()
+    val allFromSubelement: MutableMap<String, MutableMap<String, Extends>> = mutableMapOf()
 }
 
-object StrategyGatherClassModifiers {
+object StrategyGatherExtends {
     enum class STRATEGY { UNION, SPECIAL_WINS, GENERAL_WINS }
 
     fun resolve(
-        strategy: StrategyGatherClassModifiers.STRATEGY,
+        strategy: StrategyGatherExtends.STRATEGY,
         dslRef: DslRef.ISubElementLevel,
-        sharedGatheredClassModifiers: SharedGatheredClassModifiers
-    ): Set<KModifier> {
+        sharedGatheredExtends: SharedGatheredExtends
+    ): Set<Extends> {
         return when (strategy) {
-            STRATEGY.UNION -> union(dslRef, sharedGatheredClassModifiers)
-            STRATEGY.SPECIAL_WINS -> specialWins(dslRef, sharedGatheredClassModifiers)
-            STRATEGY.GENERAL_WINS -> generalWins(dslRef, sharedGatheredClassModifiers)
+            STRATEGY.UNION -> union(dslRef, sharedGatheredExtends)
+            STRATEGY.SPECIAL_WINS -> specialWins(dslRef, sharedGatheredExtends)
+            STRATEGY.GENERAL_WINS -> generalWins(dslRef, sharedGatheredExtends)
         }
     }
 
-    private fun union(dslRef: DslRef.ISubElementLevel, sharedGatheredClassModifiers: SharedGatheredClassModifiers): Set<KModifier> {
-        val set = mutableSetOf<KModifier>()
-        with(sharedGatheredClassModifiers) {
-            set.addAll(allFromGroup)
-            set.addAll(allFromElement)
-            set.addAll(allFromSubelement[dslRef.simpleName] ?: emptySet())
+    private fun union(dslRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends): Set<Extends> {
+        val set = mutableSetOf<Extends>()
+        with(sharedGatheredExtends) {
+            set.addAll(allFromGroup.values)
+            set.addAll(allFromElement.values)
+            set.addAll(allFromSubelement[dslRef.simpleName]?.values ?: emptySet())
         }
         return set
     }
 
-    private fun specialWins(dslRef: DslRef.ISubElementLevel, sharedGatheredClassModifiers: SharedGatheredClassModifiers): Set<KModifier> {
-        val set = mutableSetOf<KModifier>()
-        with(sharedGatheredClassModifiers) {
+    private fun specialWins(dslRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends): Set<Extends> {
+        val set = mutableSetOf<Extends>()
+        with(sharedGatheredExtends) {
             if (allFromSubelement[dslRef.simpleName]?.isNotEmpty() ?: false) {
-                set.addAll(allFromSubelement[dslRef.simpleName]!!)
+                set.addAll(allFromSubelement[dslRef.simpleName]?.values ?: emptySet())
             } else if(allFromElement.isNotEmpty()) {
-                set.addAll(allFromElement)
+                set.addAll(allFromElement.values)
             } else {
-                set.addAll(allFromGroup)
+                set.addAll(allFromGroup.values)
             }
         }
         return set
     }
 
-    private fun generalWins(dslRef: DslRef.ISubElementLevel, sharedGatheredClassModifiers: SharedGatheredClassModifiers): Set<KModifier> {
-        val set = mutableSetOf<KModifier>()
-        with(sharedGatheredClassModifiers) {
+    private fun generalWins(dslRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends): Set<Extends> {
+        val set = mutableSetOf<Extends>()
+        with(sharedGatheredExtends) {
             if (allFromGroup.isNotEmpty()) {
-                set.addAll(allFromGroup)
+                set.addAll(allFromGroup.values)
             } else if (allFromElement.isNotEmpty()) {
-                set.addAll(allFromElement)
+                set.addAll(allFromElement.values)
             } else {
-                set.addAll(allFromSubelement[dslRef.simpleName] ?: emptySet())
+                set.addAll(allFromSubelement[dslRef.simpleName]?.values ?: emptySet())
             }
         }
         return set

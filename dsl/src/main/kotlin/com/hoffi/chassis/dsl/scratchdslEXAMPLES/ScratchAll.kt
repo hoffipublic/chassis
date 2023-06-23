@@ -4,6 +4,7 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.*
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
+import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.DslRefString
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.squareup.kotlinpoet.KModifier
@@ -14,6 +15,8 @@ const val SCRATCH__ROOT  = "ScratchBase"
 
 context(DslCtxWrapper)
 fun commonScratch() {
+    dslCtx.topLevelDslFunctionName = object{}.javaClass.enclosingMethod.name
+
     modelgroup(SCRATCH) {
         // property() in group itself?
         nameAndWhereto("TEST1") {
@@ -26,7 +29,7 @@ fun commonScratch() {
             }
         }
         model(SCRATCH__INTFC) {
-//            baseDir = "should fail!"
+            // baseDir("should fail!")
             nameAndWhereto("TEST2") {
                 baseDir("MODEL baseDir")
                 if (dslCtx.dslRun.runIdentifierEgEnvAndTime != "devRun") {
@@ -42,9 +45,9 @@ fun commonScratch() {
                 classPostfix(countInCommonBaseModels.toString())
             }
             kind = INTERFACE
-//            extends {
-//                + SCRATCH__ROOT
-//            }
+            //extends {
+            //    + SCRATCH__ROOT
+            //}
             propertiesOf(DslRefString.modelElementRef("disc:$dslDiscriminator};modelgroup:$SCRATCH;model:$SCRATCH__INTFC", dslDiscriminator), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
             showcase {
                 dslProp = 42
@@ -77,6 +80,14 @@ fun commonScratch() {
         }
         model(SCRATCH__ROOT) {
             classModifiers(KModifier.ABSTRACT)
+            //extends {
+            //    + SCRATCH__INTFC // throw, because don't know which concrete subelement
+            //}
+            extends("specialCase") {
+                if (dslCtx.dslRun.runIdentifierEgEnvAndTime != "devRun") {
+                    +((DslRef.model.MODELELEMENT.MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT))
+                }
+            }
             dto {
                 +KModifier.ABSTRACT
             }

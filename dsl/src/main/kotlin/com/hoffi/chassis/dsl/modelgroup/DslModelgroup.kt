@@ -8,6 +8,7 @@ import com.hoffi.chassis.dsl.modelgroup.allmodels.IApiAllModels
 import com.hoffi.chassis.dsl.whereto.DslNameAndWheretoWithSubelementsDelegateImpl
 import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoWithSubelements
 import com.hoffi.chassis.shared.dsl.DslRef
+import com.hoffi.chassis.shared.parsedata.SharedGatheredExtends
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedNameAndWhereto
 import org.slf4j.LoggerFactory
@@ -178,11 +179,34 @@ class DslModelgroup(
         }
 
         for (dslModel in dslModels) {
-            val gatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(dslModel.selfDslRef)
+            val gatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(dslModel.selfDslRef)
             gatheredNameAndWheretos.allFromDslRunConfigure.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromDslRunConfigure)
             gatheredNameAndWheretos.allFromDslRunConfigureForSubelement.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromDslRunConfigureForSubelement)
             gatheredNameAndWheretos.allFromGroup.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromGroup)
             gatheredNameAndWheretos.allFromGroupForSubelement.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromGroupForSubelement)
+        }
+    }
+
+    fun finishClassModifiers(dslCtx: DslCtx) {
+        for (dslModel in dslModels) {
+            val gatheredClassModifiers = dslCtx.gatheredClassModifiers(dslModel.selfDslRef)
+            gatheredClassModifiers.allFromGroup.addAll(classModifiersImpl.theClassModifiers)
+            gatheredClassModifiers.allFromElement.addAll(dslModel.classModifiersImpl.theClassModifiers)
+        }
+    }
+
+    fun finishExtends(dslCtx: DslCtx) {
+        for (dslModel in dslModels) {
+            val gatheredExtends: SharedGatheredExtends = dslCtx.gatheredExtends(dslModel.selfDslRef)
+            gatheredExtends.allFromElement.putAll(dslModel.extendsImpl.theExtendBlocks.map { entry -> entry.key to entry.value.extends })
+        }
+    }
+
+    fun finishGatherPropertys(dslCtx: DslCtx) {
+        for (dslModel in dslModels) {
+            val gatheredGatherPropertys = dslCtx.gatheredGatherPropertys(dslModel.selfDslRef)
+            gatheredGatherPropertys.allFromGroup.addAll(gatherPropertiesImpl.theGatherPropertys)
+            gatheredGatherPropertys.allFromElement.addAll(dslModel.gatherPropertiesImpl.theGatherPropertys)
         }
     }
 }

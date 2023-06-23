@@ -13,8 +13,8 @@ import com.hoffi.chassis.shared.strategies.TableNameStrategy
 import okio.Path
 
 /** all nameAndWhereto { } information from viewpoint of one(!) Element (e.g. model or api) */
-class SharedGatheredNameAndWheretos(val  dslRef: DslRef.IElementLevel, val dslRunIdentifier: String) {
-    override fun toString() = "${SharedGatheredNameAndWheretos::class.simpleName}($dslRef, $dslRunIdentifier)"
+class SharedGatheredNameAndWheretos(val dslRef: DslRef.IElementLevel, val dslRunIdentifier: String) {
+    override fun toString() = "${this::class.simpleName}($dslRef, $dslRunIdentifier)"
     enum class THINGSWITHNAMEANDWHERETOS { DslRunConfigure, Modelgroup, model }
     var fromDslRunConfigure: SharedNameAndWhereto
         get() = allFromDslRunConfigure[C.DEFAULT] ?: throw DslException("no '${C.DEFAULT}' nameAndWhereto in DslRun.configure { }")

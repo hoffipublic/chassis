@@ -1,16 +1,32 @@
 package com.hoffi.chassis.dsl.internal
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.dsl.DslException
 import org.slf4j.LoggerFactory
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 sealed class DSLPASS(val index: Int, protected val nextDSLPASS: DSLPASS?, protected val dslCtx: DslCtx) {
     override fun toString() = this::class.simpleName!!
     private val log = LoggerFactory.getLogger(javaClass)
     var execStart: Long = 0L
     var execEnd: Long = -1L
-    fun start(): DSLPASS { execStart = System.currentTimeMillis() ; log.info("started {}", this::class.simpleName) ; return this }
-    fun nextPass(): DSLPASS? { execEnd = System.currentTimeMillis() ; return nextDSLPASS?.start() }
-    fun finish() { execEnd = System.currentTimeMillis() ; log.info("chassis DSL Parsing finished completely.") }
+    var execTimes: MutableMap<String, Pair<Long, Long>> = mutableMapOf()
+    fun start(): DSLPASS {
+        execStart = System.currentTimeMillis()
+        log.info("||--> started {}", this::class.simpleName)
+        return this
+    }
+    fun nextPass(): DSLPASS? {
+        return nextDSLPASS
+    }
+    fun finish() {
+        execEnd = System.currentTimeMillis()
+        if (dslCtx.topLevelDslFunctionName == C.NULLSTRING) throw DslException("Forgot to set dslCtx.topLevelDslFunctionName (currently in PASS ${this::class.simpleName})") // TODO can this happen at all???
+        if (execTimes.containsKey(dslCtx.topLevelDslFunctionName)) throw DslException("${this::class.simpleName} execTimes already contains a startTime/endTime for ${dslCtx.topLevelDslFunctionName}. You probably forgot to set topLevelDslFunctionName as first line of the next(!) topLevel DSL function called in closure of DslRun.start { } -> Set it with something like: dslCtx.topLevelDslFunctionName = object{}.javaClass.enclosingMethod.name")
+        execTimes[dslCtx.topLevelDslFunctionName] = Pair(execStart, execEnd)
+        log.info("||<-- finished {} of {}() (which was last in its dslRun.start{ } closure) in {}", this::class.simpleName, dslCtx.topLevelDslFunctionName, (execEnd - execStart).toDuration(DurationUnit.MILLISECONDS))
+    }
 
     companion object {
         val NULL: DSLPASS = PASS_ERROR(DslCtx._create(DslRun(C.NULLSTRING)))

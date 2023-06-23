@@ -6,6 +6,8 @@ import com.hoffi.chassis.dsl.whereto.DslNameAndWheretoWithSubelementsDelegateImp
 import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoWithSubelements
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.dsl.DslRef
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 /** a DslRun starts parsing multiple DSLs into the same DslCtx */
 class DslRun(var runIdentifierEgEnvAndTime: String) : IDslClass {
@@ -30,22 +32,35 @@ class DslRun(var runIdentifierEgEnvAndTime: String) : IDslClass {
         while (true) {
             dslCtxWrapper.apply(dslRunBlock)
 
-            val nextPass: DSLPASS? = dslCtx.currentPASS.nextPass()
-            if (nextPass != null) {
-                if (nextPass !is DSLPASS.PASS_FINISH) {
-                    dslCtx.currentPASS = nextPass
+//            val nextPass: DSLPASS? = dslCtx.currentPASS.nextPass()
+//            if (nextPass != null) {
+//                if (nextPass !is DSLPASS.PASS_FINISH) {
+//                    dslCtx.currentPASS = nextPass
+//                } else {
+//                    if (dslCtx.errors.isEmpty()) {
+//                        dslCtx.currentPASS = nextPass
+//                    } else {
+//                        dslCtx.currentPASS = dslCtx.PASS_ERROR
+//                    }
+//                }
+//            } else {
+//                dslCtx.currentPASS.finish() // execEnd Time of last PASS (predecessors have been finished by call to nextPass()
+//                break
+//            }
+            dslCtx.nextPass() ?: break
+        }
+        println("\ninfo summary on ${this::class.simpleName}(${this.runIdentifierEgEnvAndTime}):")
+        val fs=20
+        for (pass in listOf(dslCtx.PASS_0_CONFIGURE, dslCtx.PASS_1_BASEMODELS, dslCtx.PASS_2_TABLEMODELS, dslCtx.PASS_3_ALLMODELS, dslCtx.PASS_4_REFERENCING, dslCtx.PASS_FINISH, dslCtx.PASS_ERROR) ) {
+            if (pass.execStart != 0L) {
+                if (pass.execEnd == -1L) {
+                    println(String.format("%-${fs}s execEnd was never set", pass::class.simpleName))
                 } else {
-                    if (dslCtx.errors.isEmpty()) {
-                        dslCtx.currentPASS = nextPass
-                    } else {
-                        dslCtx.currentPASS = dslCtx.PASS_ERROR
-                    }
+                    println(String.format("%-${fs}s took %9s", pass::class.simpleName, (pass.execEnd - pass.execStart).toDuration(DurationUnit.MILLISECONDS)))
                 }
-            } else {
-                dslCtx.currentPASS.finish() // execEnd Time of last PASS (predecessors have been finished by call to nextPass()
-                break
             }
         }
+        println()
         return this
     }
 

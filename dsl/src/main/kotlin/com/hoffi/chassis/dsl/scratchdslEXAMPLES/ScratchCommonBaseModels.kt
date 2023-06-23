@@ -18,6 +18,7 @@ const val COMMON__PERSISTENT_OPTIMISTIC = "PersistentOptimistic"
 
 context(DslCtxWrapper)
 fun commonBaseModels() {
+    dslCtx.topLevelDslFunctionName = object{}.javaClass.enclosingMethod.name
     modelgroup(COMMON) {
         // property() in group itself?
         nameAndWhereto("TEST") {

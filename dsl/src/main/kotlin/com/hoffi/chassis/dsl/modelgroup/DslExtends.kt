@@ -10,19 +10,12 @@ import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.shared.EitherTypeOrDslRef
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
+import com.hoffi.chassis.shared.shared.Extends
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
-
-data class Extends(
-    var replaceSuperclass: Boolean = false,
-    var replaceSuperInterfaces: Boolean  = false,
-    var typeClassOrDslRef: EitherTypeOrDslRef = EitherTypeOrDslRef.NOTHING,
-    val superInterfaces: MutableSet<EitherTypeOrDslRef> = mutableSetOf()
-) { override fun toString() = "${Extends::class.simpleName}(${typeClassOrDslRef}, interfaces: '${superInterfaces.joinToString()}')" }
-
 
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
 
@@ -107,9 +100,13 @@ class DslExtendsDelegateImpl(
 context(DslCtxWrapper)
 class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: DslExtendsDelegateImpl) : IDslImplExtendsBlock {
     override fun toString() = "(replaceSuperclass=$replaceSuperclass,replaceSuperInterfaces=$replaceSuperInterfaces,$extends"
-    override var extends: Extends = Extends()
-    override var replaceSuperclass: Boolean = false
-    override var replaceSuperInterfaces: Boolean = false
+    override var extends: Extends = Extends(simpleName)
+    override var replaceSuperclass: Boolean
+        get() = extends.replaceSuperclass
+        set(value) { extends.replaceSuperclass }
+    override var replaceSuperInterfaces: Boolean
+        get() = extends.replaceSuperInterfaces
+        set(value) { extends.replaceSuperInterfaces }
 
     override fun KClass<*>.unaryPlus() {
         if (this.java.isInterface) { throw DslException("extends { unaryPlus(+) Some::class only is for classes, NOT for interfaces!") }
@@ -306,7 +303,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
     override fun OtherModelgroupSubelementDefault.withModelName(modelName: String): DslRef {
         val modelgroupDslClass = this.dslModelgroup
         // TODO hardcoded: possible only on modelgroup by now
-        val dslModel = modelgroupDslClass.dslModels.firstOrNull { it.simpleName == modelName } ?: throw DslException("ref: '${dslExtendsDelegateImpl.parentRef} +\"$this\" no model with simpleName \"$this\" found in modelgroup '$modelName'")
+        val dslModel = modelgroupDslClass.dslModels.firstOrNull { it.simpleName == modelName } ?: throw DslException("ref: '${dslExtendsDelegateImpl.parentRef} +\"${this.dslModelgroup}\" extends '${this.defaultOfModelelement}' with simplename '$modelName' ref not found in dslCtx!")
         //// parent DslClass of extends { }
         //val elementLevelDslClass = dslExtendsDelegateImpl.dslCtxWrapper.dslCtx.getDslClass(dslExtendsDelegateImpl.parentRef.parentRef)
         val elementLevelDslClass = dslModel
