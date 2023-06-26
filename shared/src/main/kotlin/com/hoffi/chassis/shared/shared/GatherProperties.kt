@@ -1,6 +1,6 @@
 package com.hoffi.chassis.shared.shared
 
-import com.hoffi.chassis.shared.dsl.DslRef
+import com.hoffi.chassis.shared.dsl.IDslRef
 
 enum class GatherPropertiesEnum {
     NONE,
@@ -10,6 +10,6 @@ enum class GatherPropertiesEnum {
 }
 
 data class GatherPropertys(
-    var modelOrModelSubelementRef: DslRef.IModelOrModelSubElement,
+    var modelOrModelSubelementRef: IDslRef,
     var gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES
 ) { override fun toString() = "$gatherPropertiesEnum of $modelOrModelSubelementRef" }

@@ -7,7 +7,7 @@ class SharedGatheredGatherPropertys(val dslRef: DslRef.IElementLevel, val dslRun
     override fun toString() = "${this::class.simpleName}($dslRef, $dslRunIdentifier)"
     val allFromGroup: MutableSet<GatherPropertys> = mutableSetOf()
     val allFromElement: MutableSet<GatherPropertys> = mutableSetOf()
-    val allFromSubelement: MutableMap<String, MutableSet<GatherPropertys>> = mutableMapOf()
+    val allFromSubelements: MutableMap<DslRef.ISubElementLevel, MutableMap<String, MutableSet<GatherPropertys>>> = mutableMapOf()
 }
 
 object StrategyGatherProperties {
@@ -29,7 +29,7 @@ object StrategyGatherProperties {
         with(sharedGatheredGatherPropertys) {
             set.addAll(allFromGroup)
             set.addAll(allFromElement)
-            set.addAll(allFromSubelement[dslRef.simpleName] ?: emptySet())
+            set.addAll(allFromSubelements[dslRef]?.get(dslRef.simpleName) ?: emptySet())
         }
         return set
     }
@@ -37,8 +37,8 @@ object StrategyGatherProperties {
     private fun specialWins(dslRef: DslRef.ISubElementLevel, sharedGatheredGatherPropertys: SharedGatheredGatherPropertys): Set<GatherPropertys> {
         val set = mutableSetOf<GatherPropertys>()
         with(sharedGatheredGatherPropertys) {
-            if (allFromSubelement[dslRef.simpleName]?.isNotEmpty() ?: false) {
-                set.addAll(allFromSubelement[dslRef.simpleName]!!)
+            if (allFromSubelements[dslRef]?.get(dslRef.simpleName)?.isNotEmpty() ?: false) {
+                set.addAll(allFromSubelements[dslRef]?.get(dslRef.simpleName) ?: emptySet())
             } else if(allFromElement.isNotEmpty()) {
                 set.addAll(allFromElement)
             } else {

@@ -38,12 +38,13 @@ sealed class DSLPASS(val index: Int, protected val nextDSLPASS: DSLPASS?, protec
     //    internal fun <T: DSLPASS> after(dslCtx: DslCtx, pass: KClass<T>, block: () -> Unit) {
 //        if (dslCtx.pass.index > pass.index) {}
 //    }
-    class PASS_0_CONFIGURE  (nextPASS: DSLPASS, dslCtx: DslCtx) : DSLPASS(1, nextPASS, dslCtx) /* normal models like DTOs */
+    class PASS_0_CONFIGURE  (nextPASS: DSLPASS, dslCtx: DslCtx) : DSLPASS(1, nextPASS, dslCtx) /* DslRun configure */
     class PASS_1_BASEMODELS (nextPASS: DSLPASS, dslCtx: DslCtx) : DSLPASS(1, nextPASS, dslCtx) /* normal models like DTOs */
     class PASS_2_TABLEMODELS(nextPASS: DSLPASS, dslCtx: DslCtx) : DSLPASS(2, nextPASS, dslCtx) // TABLE models (probably gathering propertys and stuff from above models)
     class PASS_3_ALLMODELS  (nextPASS: DSLPASS, dslCtx: DslCtx) : DSLPASS(3, nextPASS, dslCtx) // allModels { } at the end of DSLPASS.TWO_TABLEMODELS
     class PASS_4_REFERENCING(nextPASS: DSLPASS, dslCtx: DslCtx) : DSLPASS(4, nextPASS, dslCtx) // things that potentially reference other Models, like extends { } clauses
-    class PASS_FINISH       (                   dslCtx: DslCtx) : DSLPASS(5, nextDSLPASS = null, dslCtx) // optional cleanup for specific models
+    class PASS_FINISH       (nextPASS: DSLPASS, dslCtx: DslCtx) : DSLPASS(5, nextPASS, dslCtx) // create Gen Models and cleanup for specific models
+    class PASS_INHERITANCE  (                   dslCtx: DslCtx) : DSLPASS(6, nextDSLPASS = null, dslCtx) // things after finish, e.g. gather propertiesOf
     class PASS_ERROR        (                   dslCtx: DslCtx) : DSLPASS(99, nextDSLPASS = null, dslCtx)
 
     //region equals and hashCode ...

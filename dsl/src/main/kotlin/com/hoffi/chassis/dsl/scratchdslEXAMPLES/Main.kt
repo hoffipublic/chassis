@@ -79,6 +79,7 @@ fun main() {
         with(withDslDiscriminator("commonBaseModelsDisc")) {
             commonBaseModels()
         }
+        this.dslDiscriminator = DslDiscriminator("simpleEntities")
         simpleEntities()
     }
 

@@ -18,7 +18,7 @@ import kotlin.reflect.KClass
 
 /** props/fields and "direct/non-inner-dsl-block" funcs inside dsl block */
 @ChassisDslMarker
-interface IDslApiExtendsProps : IDslApiModelRefing {
+interface IDslApiExtendsProps : IDslApiModelReffing { // TODO ModelReffing via delegated class (see DslGatherPropertiesDelegateImpl)
     var replaceSuperclass: Boolean
     var replaceSuperInterfaces: Boolean
     operator fun KClass<*>.unaryPlus()  // + for super class
@@ -220,7 +220,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
     // === ModelRefing ===
     // ===================
 
-    override fun DslRef.model.MODELELEMENT.of(thisModelgroupSubElementSimpleName: String): DslRef {
+    override fun DslRef.model.MODELELEMENT.of(thisModelgroupSubElementSimpleName: String): IDslRef {
         if (dslExtendsDelegateImpl.parentRef.parentRef is DslRef.IElementLevel && this == DslRef.model.MODELELEMENT.MODEL) {
             throw DslException("extends directly on model|api|..., we cannot determine what subelement (dto, table, ...) to extend! (use e.g.: '+ (DTO of $this)'")
         }
@@ -281,7 +281,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         return OtherModelgroupSubelementDefault(this, dslModelgroup)
     }
 
-    override fun OtherModelgroupSubelementDefault.withModelName(modelName: String): DslRef {
+    override fun OtherModelgroupSubelementDefault.withModelName(modelName: String): IDslRef {
         val modelgroupDslClass = this.dslModelgroup
         // TODO hardcoded: possible only on modelgroup by now
         val dslModel = modelgroupDslClass.dslModels.firstOrNull { it.simpleName == modelName } ?: throw DslException("ref: '${dslExtendsDelegateImpl.parentRef} +\"${this.dslModelgroup}\" extends '${this.defaultOfModelelement}' with simplename '$modelName' ref not found in dslCtx!")

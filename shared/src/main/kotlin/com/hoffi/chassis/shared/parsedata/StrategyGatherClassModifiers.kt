@@ -7,7 +7,7 @@ class SharedGatheredClassModifiers(val dslRef: DslRef.IElementLevel, val dslRunI
     override fun toString() = "${this::class.simpleName}($dslRef, $dslRunIdentifier)"
     val allFromGroup: MutableSet<KModifier> = mutableSetOf()
     val allFromElement: MutableSet<KModifier> = mutableSetOf()
-    val allFromSubelement: MutableMap<String, MutableSet<KModifier>> = mutableMapOf()
+    val allFromSubelements: MutableMap<DslRef.ISubElementLevel, MutableMap<String, MutableSet<KModifier>>> = mutableMapOf()
 }
 
 object StrategyGatherClassModifiers {
@@ -30,7 +30,7 @@ object StrategyGatherClassModifiers {
         with(sharedGatheredClassModifiers) {
             set.addAll(allFromGroup)
             set.addAll(allFromElement)
-            set.addAll(allFromSubelement[dslRef.simpleName] ?: emptySet())
+            set.addAll(allFromSubelements[dslRef]?.get(dslRef.simpleName) ?: emptySet())
         }
         return set
     }
@@ -38,8 +38,8 @@ object StrategyGatherClassModifiers {
     private fun specialWins(dslRef: DslRef.ISubElementLevel, sharedGatheredClassModifiers: SharedGatheredClassModifiers): Set<KModifier> {
         val set = mutableSetOf<KModifier>()
         with(sharedGatheredClassModifiers) {
-            if (allFromSubelement[dslRef.simpleName]?.isNotEmpty() ?: false) {
-                set.addAll(allFromSubelement[dslRef.simpleName]!!)
+            if (allFromSubelements[dslRef]?.get(dslRef.simpleName)?.isNotEmpty() ?: false) {
+                set.addAll(allFromSubelements[dslRef]?.get(dslRef.simpleName) ?: emptySet())
             } else if(allFromElement.isNotEmpty()) {
                 set.addAll(allFromElement)
             } else {
@@ -57,7 +57,7 @@ object StrategyGatherClassModifiers {
             } else if (allFromElement.isNotEmpty()) {
                 set.addAll(allFromElement)
             } else {
-                set.addAll(allFromSubelement[dslRef.simpleName] ?: emptySet())
+                set.addAll(allFromSubelements[dslRef]?.get(dslRef.simpleName) ?: emptySet())
             }
         }
         return set

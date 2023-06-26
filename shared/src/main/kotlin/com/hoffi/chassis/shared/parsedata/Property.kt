@@ -10,4 +10,5 @@ class Property(
     val mutable: Mutable = Mutable(false),
     val tags: Tags = Tags.NONE,
 ) {
+    override fun toString() = "$name${if(mutable.bool) " mutable" else ""} $tags"
 }

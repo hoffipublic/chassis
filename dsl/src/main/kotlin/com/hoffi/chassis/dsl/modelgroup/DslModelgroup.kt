@@ -1,16 +1,24 @@
 package com.hoffi.chassis.dsl.modelgroup
 
+import arrow.core.Either
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.chassismodel.padForHeader
 import com.hoffi.chassis.dsl.internal.*
 import com.hoffi.chassis.dsl.modelgroup.allmodels.AllModels
 import com.hoffi.chassis.dsl.modelgroup.allmodels.IApiAllModels
 import com.hoffi.chassis.dsl.whereto.DslNameAndWheretoWithSubelementsDelegateImpl
 import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoWithSubelements
+import com.hoffi.chassis.shared.EitherTypeOrDslRef
 import com.hoffi.chassis.shared.dsl.DslRef
+import com.hoffi.chassis.shared.helpers.onThrow
+import com.hoffi.chassis.shared.helpers.tryCatch
+import com.hoffi.chassis.shared.parsedata.ModelClassData
 import com.hoffi.chassis.shared.parsedata.SharedGatheredExtends
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedNameAndWhereto
+import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
+import com.hoffi.chassis.shared.shared.GatherPropertys
 import org.slf4j.LoggerFactory
 
 context(DslCtxWrapper)
@@ -50,14 +58,14 @@ globalDslCtx = dslCtx // TODO remove workaround
         when (dslCtx.currentPASS) {
             dslCtx.PASS_0_CONFIGURE -> {}
             dslCtx.PASS_1_BASEMODELS -> {
-                val allModelsImpl: AllModels = dslCtx.ctxObjCreateNonDelegate { AllModels(simpleName, DslRef.allModels(C.DEFAULTSTRING, modelgroupRef)) }
+                val allModelsImpl: AllModels = dslCtx.ctxObjCreateNonDelegate { AllModels(simpleName, DslRef.allModels(C.DEFAULT, modelgroupRef)) }
                 allModelsBlockImpls.add(allModelsImpl)
                 allModelsImpl.apply(allModelsBlock)
             }
             dslCtx.PASS_ERROR -> TODO()
             dslCtx.PASS_FINISH -> { /* TODO implement me! */ }
             else -> {
-                val allModelsRef = DslRef.allModels(C.DEFAULTSTRING, modelgroupRef)
+                val allModelsRef = DslRef.allModels(C.DEFAULT, modelgroupRef)
                 allModelsBlockImpls.first{it.selfDslRef == allModelsRef}.apply(allModelsBlock)
             }
         }
@@ -204,11 +212,95 @@ globalDslCtx = dslCtx // TODO remove workaround
         }
     }
 
+    /** gather dslRefs to gather from */
     fun finishGatherPropertys(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
             val gatheredGatherPropertys = dslCtx.gatheredGatherPropertys(dslModel.selfDslRef)
             gatheredGatherPropertys.allFromGroup.addAll(gatherPropertiesImpl.theGatherPropertys)
             gatheredGatherPropertys.allFromElement.addAll(dslModel.gatherPropertiesImpl.theGatherPropertys)
+        }
+    }
+
+    /** actually gather the reffed propertys */
+    fun gatherInheritedPropertys(dslCtx: DslCtx) {
+        for (dslModel in dslModels) {
+            for (dslDto in dslModel.dslDtos.values) {
+                val model: ModelClassData = dslCtx.genCtx.genModels[dslDto.selfDslRef]!!
+                val refsToGatherPropsFrom: MutableList<GatherPropertys> = mutableListOf<GatherPropertys>().also { it.addAll(model.gatheredFromDslRefs) }
+                while (refsToGatherPropsFrom.isNotEmpty()) {
+                    val reffedGatherPropertys: GatherPropertys = refsToGatherPropsFrom.removeFirst()
+                    val otherDslModelOrModelSubelement: ADslClass = Either.tryCatch { dslCtx.ctxObj<ADslClass>(reffedGatherPropertys.modelOrModelSubelementRef) }.onThrow { throw DslException("$selfDslRef tries to gather propertiesOf(...) non-existing ${reffedGatherPropertys.modelOrModelSubelementRef}") }
+                    when (otherDslModelOrModelSubelement) {
+                        is DslModel -> {
+                            TODO()
+                        }
+                        is DslDto, is DslTable -> {
+                            val reffedModel: ModelClassData = dslCtx.genCtx.genModels[otherDslModelOrModelSubelement.selfDslRef]!!
+
+                            when (reffedGatherPropertys.gatherPropertiesEnum) {
+                                GatherPropertiesEnum.NONE -> { }
+                                GatherPropertiesEnum.PROPERTIES, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES -> {
+                                    val itsProps = reffedModel.propertys
+                                    model.gatheredPropertys.putAll(itsProps)
+                                }
+                                GatherPropertiesEnum.SUPERCLASS_PROPERTIES_ONLY -> { }
+                            }
+                            when (reffedGatherPropertys.gatherPropertiesEnum) {
+                                GatherPropertiesEnum.NONE -> { }
+                                GatherPropertiesEnum.PROPERTIES -> { }
+                                GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES, GatherPropertiesEnum.SUPERCLASS_PROPERTIES_ONLY -> {
+                                    refsToGatherPropsFrom.addAll(reffedModel.extends.filter {
+                                        it.typeClassOrDslRef is EitherTypeOrDslRef.EitherDslRef
+                                    }.map {
+                                        gatherSuperclassPropertiesFor(it.typeClassOrDslRef as EitherTypeOrDslRef.EitherDslRef, reffedGatherPropertys.gatherPropertiesEnum, otherDslModelOrModelSubelement)
+                                    })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            for (dslTable in dslModel.dslTables.values) {
+                val model: ModelClassData = dslCtx.genCtx.genModels[dslTable.selfDslRef]!!
+                val refsToGatherPropsFrom: MutableList<GatherPropertys> = mutableListOf<GatherPropertys>().also { it.addAll(model.gatheredFromDslRefs) }
+                while (refsToGatherPropsFrom.isNotEmpty()) {
+                    val reffedGatherPropertys: GatherPropertys = refsToGatherPropsFrom.removeFirst()
+                    val otherDslModelOrModelSubelement: ADslClass = Either.tryCatch { dslCtx.ctxObj<ADslClass>(reffedGatherPropertys.modelOrModelSubelementRef) }.onThrow { throw DslException("$selfDslRef tries to gather propertiesOf(...) non-existing ${reffedGatherPropertys.modelOrModelSubelementRef}") }
+                    when (otherDslModelOrModelSubelement) {
+                        is DslModel -> {
+                            TODO()
+                        }
+                        is DslDto, is DslTable -> {
+                            val reffedModel: ModelClassData = dslCtx.genCtx.genModels[otherDslModelOrModelSubelement.selfDslRef]!!
+
+                            when (reffedGatherPropertys.gatherPropertiesEnum) {
+                                GatherPropertiesEnum.NONE -> { }
+                                GatherPropertiesEnum.PROPERTIES, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES -> {
+                                    val itsProps = reffedModel.propertys
+                                    model.gatheredPropertys.putAll(itsProps)
+                                }
+                                GatherPropertiesEnum.SUPERCLASS_PROPERTIES_ONLY -> { }
+                            }
+                            when (reffedGatherPropertys.gatherPropertiesEnum) {
+                                GatherPropertiesEnum.NONE -> { }
+                                GatherPropertiesEnum.PROPERTIES -> { }
+                                GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES, GatherPropertiesEnum.SUPERCLASS_PROPERTIES_ONLY -> {
+                                    refsToGatherPropsFrom.addAll(reffedModel.gatheredFromDslRefs)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun gatherSuperclassPropertiesFor(eitherDslRef: EitherTypeOrDslRef.EitherDslRef, gatherPropertiesEnum: GatherPropertiesEnum, otherDslModelOrModelSubelement: ADslClass): GatherPropertys {
+        return when (otherDslModelOrModelSubelement) {
+            is DslModel -> GatherPropertys(eitherDslRef.dslRef, gatherPropertiesEnum)
+            is DslDto ->   GatherPropertys(DslRef.dto(C.DEFAULT, eitherDslRef.dslRef), gatherPropertiesEnum)
+            is DslTable ->   GatherPropertys(DslRef.table(C.DEFAULT, eitherDslRef.dslRef), gatherPropertiesEnum)
+            else -> throw DslException("unknown")
         }
     }
 }

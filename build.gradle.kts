@@ -59,6 +59,7 @@ allprojects {
             //runtimeOnly("ch.qos.logback:logback-classic:${libs.versions.logback.v()}")
             implementation("ch.qos.logback:logback-classic:${libs.versions.logback.get()}")
             implementation("com.squareup.okio:okio:${libs.versions.okio.get()}")
+            implementation("io.arrow-kt:arrow-core:${libs.versions.arrow.get()}")
             //implementation("org.apache.commons:commons-lang3".depAndVersion())
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.versions.kotlinx.coroutines.get()}")
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.get()}")

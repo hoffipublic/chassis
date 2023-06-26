@@ -15,6 +15,7 @@ abstract class ModelClassData(
 ) : Comparable<ModelClassData>,
     IModelClassName by modelClassName
 {
+    override fun toString() = "${this::class.simpleName} ${classModifiers.joinToString(" ")} $kind $modelClassName"
     var kind: TypeSpec.Kind = TypeSpec.Kind.CLASS
     val classModifiers = mutableSetOf<KModifier>()
     val extends = mutableSetOf<Extends>()
@@ -65,7 +66,6 @@ abstract class ModelClassData(
 //        return superModelsAndClasses
 //    }
 
-    override fun toString() = "${this::class.simpleName}($modelSubElRef)"
     override fun compareTo(other: ModelClassData): Int = modelSubElRef.refList.last().simpleName.compareTo(other.modelSubElRef.refList.last().simpleName)
     //region equals and hashCode ...
     override fun equals(other: Any?): Boolean {

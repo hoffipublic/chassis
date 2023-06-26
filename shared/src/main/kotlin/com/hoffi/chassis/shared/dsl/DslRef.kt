@@ -354,8 +354,8 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
     //endregion companion
 
     //region DslRefAtom
-    data class DslRefAtom(val functionName: String, val simpleName: String = C.DEFAULTSTRING) {
-        override fun toString() = "$functionName${ if (simpleName in listOf(C.DEFAULTSTRING, C.DEFAULT)) "" else ":$simpleName"}"
+    data class DslRefAtom(val functionName: String, val simpleName: String = C.DEFAULT) {
+        override fun toString() = "$functionName${ if (simpleName == C.DEFAULT) "" else ":$simpleName"}"
         fun debugToString() = "$functionName:$simpleName"
         companion object {
             fun from(refString: String) = refString.split(DslRef.ATOMSEP).let { if(it.size == 2) DslRefAtom(it[0], it[1]) else DslRefAtom(it[0]) }

@@ -20,6 +20,7 @@ interface IModelClassName {
 class ModelClassName(
     val modelSubElRef: IDslRef
 ) : IModelClassName {
+    override fun toString() = poetType.toString()
     var classNameStrategy = ClassNameStrategy.get(IClassNameStrategy.STRATEGY.DEFAULT)
     var tableNameStrategy = TableNameStrategy.get(ITableNameStrategy.STRATEGY.DEFAULT)
     var basePath: Path = "./generated".toPath()

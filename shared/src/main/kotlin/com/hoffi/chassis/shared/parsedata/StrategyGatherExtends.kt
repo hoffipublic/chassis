@@ -7,7 +7,7 @@ class SharedGatheredExtends(val dslRef: DslRef.IElementLevel, val dslRunIdentifi
     override fun toString() = "${this::class.simpleName}($dslRef, $dslRunIdentifier)"
     val allFromGroup: MutableMap<String, Extends> = mutableMapOf()
     val allFromElement: MutableMap<String, Extends> = mutableMapOf()
-    val allFromSubelement: MutableMap<String, MutableMap<String, Extends>> = mutableMapOf()
+    val allFromSubelements: MutableMap<DslRef.ISubElementLevel, MutableMap<String, MutableMap<String, Extends>>> = mutableMapOf()
 }
 
 object StrategyGatherExtends {
@@ -30,7 +30,7 @@ object StrategyGatherExtends {
         with(sharedGatheredExtends) {
             set.addAll(allFromGroup.values)
             set.addAll(allFromElement.values)
-            set.addAll(allFromSubelement[dslRef.simpleName]?.values ?: emptySet())
+            set.addAll(allFromSubelements[dslRef]?.get(dslRef.simpleName)?.values ?: emptySet())
         }
         return set
     }
@@ -38,8 +38,8 @@ object StrategyGatherExtends {
     private fun specialWins(dslRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends): Set<Extends> {
         val set = mutableSetOf<Extends>()
         with(sharedGatheredExtends) {
-            if (allFromSubelement[dslRef.simpleName]?.isNotEmpty() ?: false) {
-                set.addAll(allFromSubelement[dslRef.simpleName]?.values ?: emptySet())
+            if (allFromSubelements[dslRef]?.get(dslRef.simpleName)?.isNotEmpty() ?: false) {
+                set.addAll(allFromSubelements[dslRef]?.get(dslRef.simpleName)?.values ?: emptySet())
             } else if(allFromElement.isNotEmpty()) {
                 set.addAll(allFromElement.values)
             } else {
@@ -57,7 +57,7 @@ object StrategyGatherExtends {
             } else if (allFromElement.isNotEmpty()) {
                 set.addAll(allFromElement.values)
             } else {
-                set.addAll(allFromSubelement[dslRef.simpleName]?.values ?: emptySet())
+                set.addAll(allFromSubelements[dslRef]?.get(dslRef.simpleName)?.values ?: emptySet())
             }
         }
         return set
