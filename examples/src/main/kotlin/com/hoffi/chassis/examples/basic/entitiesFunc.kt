@@ -25,9 +25,9 @@ fun entities() {
 //    }
     modelgroup(ENTITYGROUP) {
         nameAndWhereto {
-            packageName("entity")
             classPrefix("Simple")
             classPostfix("Dto")
+            packageName("entity")
         }
 
         // ================================================================================================================================

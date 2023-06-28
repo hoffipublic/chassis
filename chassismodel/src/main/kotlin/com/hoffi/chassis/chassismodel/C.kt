@@ -10,6 +10,8 @@ object C {
     val NULLSTRING = "<NULL>"
     val DEFAULTSTRING = "<DEFAULT>"
     val DEFAULT = "default"
+    val DSLRUNREFSIMPLENAME = "<DslRun>"
+    val GENRUNREFSIMPLENAME = "<GenRun>"
 
     val DEFAULT_INT = -1
     val DEFAULT_LONG = -1L

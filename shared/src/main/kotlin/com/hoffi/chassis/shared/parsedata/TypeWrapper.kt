@@ -1,8 +1,9 @@
 package com.hoffi.chassis.shared.parsedata
 
 import com.squareup.kotlinpoet.*
+import kotlin.reflect.KClass
 
-data class TypeWrapper(val typeName: TypeName, val gentypePrefix: String, val gentypePostfix: String) {
+data class TypeWrapper(val typeName: TypeName, var isInterface: Boolean) {
     val packageName: String
         get() = className.packageName
     val simpleName: String
@@ -17,4 +18,7 @@ data class TypeWrapper(val typeName: TypeName, val gentypePrefix: String, val ge
             is TypeVariableName -> TODO()
             is WildcardTypeName -> TODO()
         }
+    companion object {
+        fun KClass<*>.typeWrapper() = TypeWrapper(this.asClassName(), this.java.isInterface)
+    }
 }

@@ -5,11 +5,11 @@ import com.hoffi.chassis.chassismodel.dsl.DslCtxException
 import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.dsl.internal.*
 import com.hoffi.chassis.shared.EitherTypeOrDslRef
+import com.hoffi.chassis.shared.EitherTypeOrDslRef.Companion.createEitherKClass
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.shared.Extends
 import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
@@ -28,6 +28,7 @@ interface IDslApiExtendsProps : IDslApiModelReffing { // TODO ModelReffing via d
     //operator fun DslRef.model.MODELELEMENT.unaryPlus() // + for super class
     operator fun KClass<*>.unaryMinus() // - for super interfaces
     operator fun IDslRef.unaryMinus() // - for super interfaces
+    operator fun String.unaryMinus() // - for super interfaces
     operator fun IDslApiExtendsProps.minusAssign(kClass: KClass<*>) // exclude from super class/interfaces
     operator fun IDslApiExtendsProps.minusAssign(dslRef: DslRef) // exclude from super class/interfaces
     operator fun String.not()
@@ -106,12 +107,13 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         set(value) { extends.replaceSuperInterfaces = value }
 
     override fun KClass<*>.unaryPlus() {
-        if (this.java.isInterface) { throw DslException("extends { unaryPlus(+) Some::class only is for classes, NOT for interfaces!") }
+        if (this.java.isInterface) throw DslException("extends { unaryPlus(+) Some::class only is for classes, NOT for interfaces!")
+        extends.superclassHasBeenSet = true
         if (extends.replaceSuperclass) {
-            extends.typeClassOrDslRef = EitherTypeOrDslRef.EitherKClass(this.asClassName(), false)
+            extends.typeClassOrDslRef = this.createEitherKClass()
         } else {
             if (extends.typeClassOrDslRef is EitherTypeOrDslRef.ExtendsNothing) {
-                extends.typeClassOrDslRef = EitherTypeOrDslRef.EitherKClass(this.asClassName(), false)
+                extends.typeClassOrDslRef = this.createEitherKClass()
             } else {
                 throw DslException("${dslExtendsDelegateImpl.parentRef} already extends ${extends.typeClassOrDslRef}")
             }
@@ -119,12 +121,14 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
     }
 
     override fun IDslRef.unaryPlus() {
-        // TODO make sure DslRef is a class and NOT an interface
+        val isInterface = dslCtx.isInterface(this)
+        if (isInterface) throw DslException("extends { unaryPlus(+) Some::class only is for class, NOT for interfaces!")
+        extends.superclassHasBeenSet = true
         if (extends.replaceSuperclass) {
-            extends.typeClassOrDslRef = EitherTypeOrDslRef.EitherDslRef(this)
+            extends.typeClassOrDslRef = EitherTypeOrDslRef.EitherDslRef(this, isInterface)
         } else {
             if (extends.typeClassOrDslRef is EitherTypeOrDslRef.ExtendsNothing) {
-                extends.typeClassOrDslRef = EitherTypeOrDslRef.EitherDslRef(this)
+                extends.typeClassOrDslRef = EitherTypeOrDslRef.EitherDslRef(this, isInterface)
             } else {
                 throw DslException("${dslExtendsDelegateImpl.parentRef} already extends ${extends.typeClassOrDslRef}")
             }
@@ -133,6 +137,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
 
     /** inherit from same SubElement Type (e.g. dto/table/...) with simpleName C.DEFAULT, of an element (e.g. model) in the same group which has this name */
     override operator fun String.unaryPlus() {
+        extends.superclassHasBeenSet = true
         val (dslModelgroup: DslModelgroup, dslModel: DslModel, onSubelementClass: ADslClass?) = when (dslExtendsDelegateImpl.parentRef) {
             is DslRef.ISubElementLevel -> Triple(dslCtx.ctxObj<DslModelgroup>(dslExtendsDelegateImpl.parentRef.parentRef.parentRef), dslCtx.ctxObj<DslModel>(dslExtendsDelegateImpl.parentRef.parentRef), dslCtx.ctxObj<ADslClass>(dslExtendsDelegateImpl.parentRef))
             is DslRef.IElementLevel    -> Triple(dslCtx.ctxObj<DslModelgroup>(dslExtendsDelegateImpl.parentRef.parentRef), dslCtx.ctxObj<DslModel>(dslExtendsDelegateImpl.parentRef), null)
@@ -152,22 +157,43 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
     }
 
     override fun KClass<*>.unaryMinus() {
-        if ( ! this.java.isInterface) { throw DslException("extends { unaryMinus(-) Some::class only is for interfaces, NOT for classes!") }
+        if ( ! this.java.isInterface) throw DslException("extends { unaryMinus(-) Some::class only is for interfaces, NOT for classes!")
         if (extends.replaceSuperInterfaces) {
             extends.superInterfaces.clear()
-            extends.superInterfaces.add(EitherTypeOrDslRef.EitherKClass(this.asClassName(), true))
+            extends.superInterfaces.add(this.createEitherKClass())
         } else {
-            extends.superInterfaces.add(EitherTypeOrDslRef.EitherKClass(this.asClassName(), true))
+            extends.superInterfaces.add(this.createEitherKClass())
         }
     }
 
     override fun IDslRef.unaryMinus() {
-        // TODO make sure DslRef is an interface and NOT a class
+        val isInterface = dslCtx.isInterface(this)
+        if ( ! isInterface) throw DslException("extends { unaryMinus(-) Some::class only is for interfaces, NOT for classes!")
         if (extends.replaceSuperInterfaces) {
             extends.superInterfaces.clear()
-            extends.superInterfaces.add(EitherTypeOrDslRef.EitherDslRef(this))
+            extends.superInterfaces.add(EitherTypeOrDslRef.EitherDslRef(this, isInterface))
         } else {
-            extends.superInterfaces.add(EitherTypeOrDslRef.EitherDslRef(this))
+            extends.superInterfaces.add(EitherTypeOrDslRef.EitherDslRef(this, isInterface))
+        }
+    }
+
+    /** inherit from same SubElement Type (e.g. dto/table/...) with simpleName C.DEFAULT, of an element (e.g. model) in the same group which has this name */
+    override operator fun String.unaryMinus() {
+        val (dslModelgroup: DslModelgroup, dslModel: DslModel, onSubelementClass: ADslClass?) = when (dslExtendsDelegateImpl.parentRef) {
+            is DslRef.ISubElementLevel -> Triple(dslCtx.ctxObj<DslModelgroup>(dslExtendsDelegateImpl.parentRef.parentRef.parentRef), dslCtx.ctxObj<DslModel>(dslExtendsDelegateImpl.parentRef.parentRef), dslCtx.ctxObj<ADslClass>(dslExtendsDelegateImpl.parentRef))
+            is DslRef.IElementLevel    -> Triple(dslCtx.ctxObj<DslModelgroup>(dslExtendsDelegateImpl.parentRef.parentRef), dslCtx.ctxObj<DslModel>(dslExtendsDelegateImpl.parentRef), null)
+            else -> throw DslException("extends on neither IElementLevel nor on ISubElementLevel")
+        }
+        // TODO hardcoded: possible only on modelgroup by now
+        val reffedModel = dslModelgroup.dslModels.firstOrNull { it.simpleName == this }
+        if (reffedModel != null) {
+            reffedModel.selfDslRef.unaryMinus()
+        } else {
+            if (onSubelementClass == null) throw DslException("as extends on Element (model) I cannot deduce which subelement type you want to reference")
+            else when (onSubelementClass) {
+                is DslDto -> dslModel.dslDtos[this]?.selfDslRef?.unaryMinus() ?: throw DslException("no '$this' dto found in $dslModel")
+                is DslTable -> dslModel.dslTables[this]?.selfDslRef?.unaryMinus() ?: throw DslException("no '$this' table found in $dslModel")
+            }
         }
     }
 
@@ -176,10 +202,10 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         when (this@DslExtendsBlockImpl.extends.typeClassOrDslRef) {
             is EitherTypeOrDslRef.EitherDslRef -> { }
             is EitherTypeOrDslRef.EitherKClass -> {
-                if ((this@DslExtendsBlockImpl.extends.typeClassOrDslRef as EitherTypeOrDslRef.EitherKClass).typeName == kClass) {
+                if ((this@DslExtendsBlockImpl.extends.typeClassOrDslRef as EitherTypeOrDslRef.EitherKClass).typeWrapper.typeName == kClass) {
                     this@DslExtendsBlockImpl.extends.typeClassOrDslRef = EitherTypeOrDslRef.NOTHING
                 } else {
-                    val superInterface = this@DslExtendsBlockImpl.extends.superInterfaces.firstOrNull { it is EitherTypeOrDslRef.EitherKClass && it.isInterface && it.typeName == kClass.asTypeName() }
+                    val superInterface = this@DslExtendsBlockImpl.extends.superInterfaces.firstOrNull { it is EitherTypeOrDslRef.EitherKClass && it.isInterface && it.typeWrapper.typeName == kClass.asTypeName() }
                     if ( superInterface != null ) {
                         this@DslExtendsBlockImpl.extends.superInterfaces.remove(superInterface)
                     }

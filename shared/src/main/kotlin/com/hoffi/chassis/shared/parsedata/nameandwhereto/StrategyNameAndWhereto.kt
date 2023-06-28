@@ -27,12 +27,12 @@ class SharedGatheredNameAndWheretos(val dslRef: DslRef.IElementLevel, val dslRun
         private set(value) { allFromElement[C.DEFAULT] = value }
 
     val allFromDslRunConfigure: MutableMap<String, SharedNameAndWhereto> = mutableMapOf()
-    val allFromDslRunConfigureForSubelement: MutableMap<DslRef.ISubElementLevel, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
+    val allFromDslRunConfigureForSubelement: MutableMap<DslRef.model.MODELELEMENT, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
     val allFromGroup: MutableMap<String, SharedNameAndWhereto> = mutableMapOf()
-    val allFromGroupForSubelement: MutableMap<DslRef.ISubElementLevel, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
+    val allFromGroupForSubelement: MutableMap<DslRef.model.MODELELEMENT, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
 
     val allFromElement: MutableMap<String, SharedNameAndWhereto> = mutableMapOf()
-    val allFromElementForSubelement: MutableMap<DslRef.ISubElementLevel, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
+    val allFromElementForSubelement: MutableMap<DslRef.model.MODELELEMENT, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
     val allFromSubelements: MutableMap<DslRef.ISubElementLevel, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
 
     fun createFor(thing: THINGSWITHNAMEANDWHERETOS, sharedNameAndWhereto: SharedNameAndWhereto) {
@@ -50,31 +50,31 @@ class SharedGatheredNameAndWheretos(val dslRef: DslRef.IElementLevel, val dslRun
             THINGSWITHNAMEANDWHERETOS.model -> allFromElement[sharedNameAndWhereto.simpleName] = sharedNameAndWhereto
         }
     }
-    fun createFor(subElementRef: DslRef.ISubElementLevel, sharedNameAndWhereto: SharedNameAndWhereto) {
+    fun createForSubelement(subElementRef: DslRef.ISubElementLevel, sharedNameAndWhereto: SharedNameAndWhereto) {
         val subelementsNameAndWheretosMap = allFromSubelements.getOrPut(subElementRef) { mutableMapOf() }
         if (subelementsNameAndWheretosMap.containsKey(sharedNameAndWhereto.simpleName)) {
             throw DslException("${subElementRef} has more than one nameAndWhereto with simpleName: '${sharedNameAndWhereto.simpleName}'")
         }
         subelementsNameAndWheretosMap[sharedNameAndWhereto.simpleName] = sharedNameAndWhereto
     }
-    fun createFromElementForSubelement(subElementRef: DslRef.ISubElementLevel, sharedNameAndWhereto: SharedNameAndWhereto) {
-        val subelementsNameAndWheretosMap = allFromElementForSubelement.getOrPut(subElementRef) { mutableMapOf() }
+    fun createFromElementForSubelement(modelelement: DslRef.model.MODELELEMENT, sharedNameAndWhereto: SharedNameAndWhereto) {
+        val subelementsNameAndWheretosMap = allFromElementForSubelement.getOrPut(modelelement) { mutableMapOf() }
         if (subelementsNameAndWheretosMap.containsKey(sharedNameAndWhereto.simpleName)) {
-            throw DslException("${subElementRef.parentRef} has more than one nameAndWhereto for '${subElementRef.refList.last().functionName}' with simpleName: '${sharedNameAndWhereto.simpleName}'")
+            throw DslException("$modelelement has more than one nameAndWhereto with simpleName: '${sharedNameAndWhereto.simpleName}'")
         }
         subelementsNameAndWheretosMap[sharedNameAndWhereto.simpleName] = sharedNameAndWhereto
     }
-    fun createFromGroupForSubelement(subElementRef: DslRef.ISubElementLevel, sharedNameAndWhereto: SharedNameAndWhereto) {
-        val subelementsNameAndWheretosMap = allFromGroupForSubelement.getOrPut(subElementRef) { mutableMapOf() }
+    fun createFromGroupForSubelement(modelelement: DslRef.model.MODELELEMENT, sharedNameAndWhereto: SharedNameAndWhereto) {
+        val subelementsNameAndWheretosMap = allFromGroupForSubelement.getOrPut(modelelement) { mutableMapOf() }
         if (subelementsNameAndWheretosMap.containsKey(sharedNameAndWhereto.simpleName)) {
-            throw DslException("${subElementRef.parentRef} has more than one nameAndWhereto for '${subElementRef.refList.last().functionName}' with simpleName: '${sharedNameAndWhereto.simpleName}'")
+            throw DslException("$modelelement has more than one nameAndWhereto with simpleName: '${sharedNameAndWhereto.simpleName}'")
         }
         subelementsNameAndWheretosMap[sharedNameAndWhereto.simpleName] = sharedNameAndWhereto
     }
-    fun createFromDslRunForSubelement(subElementRef: DslRef.ISubElementLevel, sharedNameAndWhereto: SharedNameAndWhereto) {
-        val subelementsNameAndWheretosMap = allFromDslRunConfigureForSubelement.getOrPut(subElementRef) { mutableMapOf() }
+    fun createFromDslRunForSubelement(modelelement: DslRef.model.MODELELEMENT, sharedNameAndWhereto: SharedNameAndWhereto) {
+        val subelementsNameAndWheretosMap = allFromDslRunConfigureForSubelement.getOrPut(modelelement) { mutableMapOf() }
         if (subelementsNameAndWheretosMap.containsKey(sharedNameAndWhereto.simpleName)) {
-            throw DslException("${subElementRef.parentRef} has more than one nameAndWhereto for '${subElementRef.refList.last().functionName}' with simpleName: '${sharedNameAndWhereto.simpleName}'")
+            throw DslException("$modelelement has more than one nameAndWhereto with simpleName: '${sharedNameAndWhereto.simpleName}'")
         }
         subelementsNameAndWheretosMap[sharedNameAndWhereto.simpleName] = sharedNameAndWhereto
     }
@@ -109,7 +109,7 @@ open class SharedNameAndWhereto(
     override var basePackageAbsolute : String, override var basePackageAddendum : String,
     override var packageNameAbsolute : String, override var packageNameAddendum : String,
 ) : ISharedNameAndWheretoProps {
-    override fun toString() = "SharedNameAndWhereto(dslRef=$dslRef)"
+    override fun toString() = "SharedNameAndWhereto(clPre=${classPrefixAddendum},clPost=${classPostfixAddendum},pack=${packageNameAddendum},path=+${pathAddendum} for $dslRef)"
 }
 class EventualSharedNameAndWhereto(
     simpleName: String,
@@ -141,64 +141,96 @@ class EventualSharedNameAndWhereto(
 }
 
 object StrategyNameAndWhereto {
-    enum class STRATEGY { SPECIAL_WINS }
+    enum class STRATEGY { SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS }
 
     fun resolve(strategy: STRATEGY, dslRef: DslRef.ISubElementLevel, gatheredNameAndWheretos: SharedGatheredNameAndWheretos): ModelClassName {
         return when (strategy) {
-            STRATEGY.SPECIAL_WINS -> specialWins(dslRef, gatheredNameAndWheretos)
+            STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS -> specialWins(dslRef, gatheredNameAndWheretos)
         }
     }
 
     private fun specialWins(dslRef: DslRef.ISubElementLevel, gatheredNameAndWheretos: SharedGatheredNameAndWheretos): ModelClassName {
-        val modelClassName = ModelClassName(dslRef)
-        modelClassName.apply {
-            val g = gatheredNameAndWheretos
-            val eventualSharedNameAndWhereto = EventualSharedNameAndWhereto(
-                dslRef.simpleName,
-                dslRef,
-                IClassNameStrategy.STRATEGY.DEFAULT,
-                ITableNameStrategy.STRATEGY.DEFAULT,
-                baseDirAbsolute = NameAndWheretoDefaults.basePath,
-                baseDirAddendum = NameAndWheretoDefaults.path,
-                pathAbsolute = NameAndWheretoDefaults.path,
-                pathAddendum = NameAndWheretoDefaults.path,
-                classPrefixAbsolute = NameAndWheretoDefaults.classPrefix,
-                classPrefixAddendum = NameAndWheretoDefaults.classPrefix,
-                classPostfixAbsolute = NameAndWheretoDefaults.classPostfix,
-                classPostfixAddendum = NameAndWheretoDefaults.classPostfix,
-                basePackageAbsolute = NameAndWheretoDefaults.basePackage,
-                basePackageAddendum = NameAndWheretoDefaults.packageName,
-                packageNameAbsolute = NameAndWheretoDefaults.packageName,
-                packageNameAddendum = NameAndWheretoDefaults.packageName,
-            )
-            val sharedNameAndWheretoSE = g.allFromSubelements[dslRef]?.get(C.DEFAULT) ?: g.allFromSubelements[dslRef]?.values?.firstOrNull()
-            if (sharedNameAndWheretoSE != null) takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoSE, eventualSharedNameAndWhereto)
-            val sharedNameAndWheretoESE = g.allFromElementForSubelement[dslRef]?.get(C.DEFAULT) ?: g.allFromElementForSubelement[dslRef]?.values?.firstOrNull()
-            if (sharedNameAndWheretoESE != null) takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoESE, eventualSharedNameAndWhereto)
-            val sharedNameAndWheretoE = g.allFromElement[C.DEFAULT] ?: g.allFromElement.values.firstOrNull()
-            if (sharedNameAndWheretoE != null) takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoE, eventualSharedNameAndWhereto)
-            val sharedNameAndWheretoGSE = g.allFromGroupForSubelement[dslRef]?.get(C.DEFAULT) ?: g.allFromGroupForSubelement[dslRef]?.values?.firstOrNull()
-            if (sharedNameAndWheretoGSE != null) takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoGSE, eventualSharedNameAndWhereto)
-            val sharedNameAndWheretoG = g.allFromGroup[C.DEFAULT] ?: g.allFromGroup.values.firstOrNull()
-            if (sharedNameAndWheretoG != null) takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoG, eventualSharedNameAndWhereto)
-            val sharedNameAndWheretoRSE = g.allFromDslRunConfigureForSubelement[dslRef]?.get(C.DEFAULT) ?: g.allFromDslRunConfigureForSubelement[dslRef]?.values?.firstOrNull()
-            if (sharedNameAndWheretoRSE != null) takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoRSE, eventualSharedNameAndWhereto)
-            val sharedNameAndWheretoR = g.allFromDslRunConfigure[C.DEFAULT] ?: g.allFromDslRunConfigure.values.firstOrNull()
-            if (sharedNameAndWheretoR != null) takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoR, eventualSharedNameAndWhereto)
-            classNameStrategy = ClassNameStrategy.get(eventualSharedNameAndWhereto.strategyClassName)
-            tableNameStrategy = TableNameStrategy.get(eventualSharedNameAndWhereto.strategyTableName)
-            basePath = eventualSharedNameAndWhereto.baseDirAbsolute / eventualSharedNameAndWhereto.baseDirAddendum
-            path = eventualSharedNameAndWhereto.pathAbsolute / eventualSharedNameAndWhereto.pathAddendum
-            basePackage = eventualSharedNameAndWhereto.basePackageAbsolute +
-                    if (eventualSharedNameAndWhereto.basePackageAbsolute.isNotBlank()) "." else "" +
-                    eventualSharedNameAndWhereto.basePackageAddendum
-            packageName = eventualSharedNameAndWhereto.packageNameAbsolute +
-                    if (eventualSharedNameAndWhereto.packageNameAbsolute.isNotBlank()) "." else "" +
-                            eventualSharedNameAndWhereto.packageNameAddendum
-            classPrefix = eventualSharedNameAndWhereto.classPrefixAbsolute + eventualSharedNameAndWhereto.classPrefixAddendum
-            classPostfix = eventualSharedNameAndWhereto.classPostfixAbsolute + eventualSharedNameAndWhereto.classPostfixAddendum
+        val modelelement = when (dslRef as DslRef) {
+            is DslRef.DslRun -> TODO()
+            is DslRef.allModels -> TODO()
+            is DslRef.api -> TODO()
+            is DslRef.apifun -> TODO()
+            is DslRef.apigroup -> TODO()
+            is DslRef.classMods -> TODO()
+            is DslRef.dto -> DslRef.model.MODELELEMENT.DTO
+            is DslRef.extends -> TODO()
+            is DslRef.filler -> TODO()
+            is DslRef.model -> TODO()
+            is DslRef.modelgroup -> TODO()
+            is DslRef.nameAndWhereto -> TODO()
+            is DslRef.prop -> TODO()
+            is DslRef.properties -> TODO()
+            is DslRef.propertiesOf -> TODO()
+            is DslRef.showcase -> TODO()
+            is DslRef.table -> DslRef.model.MODELELEMENT.TABLE
         }
-        return modelClassName
+        val eventualModelClassName = ModelClassName(dslRef)
+        val g = gatheredNameAndWheretos
+        val eventualSharedNameAndWhereto = EventualSharedNameAndWhereto(
+            dslRef.simpleName,
+            dslRef,
+            IClassNameStrategy.STRATEGY.DEFAULT,
+            ITableNameStrategy.STRATEGY.DEFAULT,
+            baseDirAbsolute = NameAndWheretoDefaults.basePath,
+            baseDirAddendum = NameAndWheretoDefaults.path,
+            pathAbsolute = NameAndWheretoDefaults.path,
+            pathAddendum = NameAndWheretoDefaults.path,
+            classPrefixAbsolute = NameAndWheretoDefaults.classPrefix,
+            classPrefixAddendum = NameAndWheretoDefaults.classPrefix,
+            classPostfixAbsolute = NameAndWheretoDefaults.classPostfix,
+            classPostfixAddendum = NameAndWheretoDefaults.classPostfix,
+            basePackageAbsolute = NameAndWheretoDefaults.basePackage,
+            basePackageAddendum = NameAndWheretoDefaults.packageName,
+            packageNameAbsolute = NameAndWheretoDefaults.packageName,
+            packageNameAddendum = NameAndWheretoDefaults.packageName,
+        )
+        val sharedNameAndWheretoSE = g.allFromSubelements[dslRef]?.get(C.DEFAULT) ?: g.allFromSubelements[dslRef]?.values?.firstOrNull()
+        if (sharedNameAndWheretoSE != null) {
+            takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoSE, eventualSharedNameAndWhereto)
+        }
+        val sharedNameAndWheretoESE = g.allFromElementForSubelement[modelelement]?.get(C.DEFAULT) ?: g.allFromElementForSubelement[modelelement]?.values?.firstOrNull()
+        if (sharedNameAndWheretoESE != null) {
+            takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoESE, eventualSharedNameAndWhereto)
+        }
+        val sharedNameAndWheretoE = g.allFromElement[C.DEFAULT] ?: g.allFromElement.values.firstOrNull()
+        if (sharedNameAndWheretoE != null) {
+            takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoE, eventualSharedNameAndWhereto)
+        }
+        val sharedNameAndWheretoGSE = g.allFromGroupForSubelement[modelelement]?.get(C.DEFAULT) ?: g.allFromGroupForSubelement[modelelement]?.values?.firstOrNull()
+        if (sharedNameAndWheretoGSE != null) {
+            takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoGSE, eventualSharedNameAndWhereto)
+        }
+        val sharedNameAndWheretoG = g.allFromGroup[C.DEFAULT] ?: g.allFromGroup.values.firstOrNull()
+        if (sharedNameAndWheretoG != null) {
+            takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoG, eventualSharedNameAndWhereto)
+        }
+        val sharedNameAndWheretoRSE = g.allFromDslRunConfigureForSubelement[modelelement]?.get(C.DEFAULT) ?: g.allFromDslRunConfigureForSubelement[modelelement]?.values?.firstOrNull()
+        if (sharedNameAndWheretoRSE != null) {
+            takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoRSE, eventualSharedNameAndWhereto)
+        }
+        val sharedNameAndWheretoR = g.allFromDslRunConfigure[C.DEFAULT] ?: g.allFromDslRunConfigure.values.firstOrNull()
+        if (sharedNameAndWheretoR != null) {
+            takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWheretoR, eventualSharedNameAndWhereto)
+        }
+        eventualModelClassName.classNameStrategy = ClassNameStrategy.get(eventualSharedNameAndWhereto.strategyClassName)
+        eventualModelClassName.tableNameStrategy = TableNameStrategy.get(eventualSharedNameAndWhereto.strategyTableName)
+        eventualModelClassName.basePath = eventualSharedNameAndWhereto.baseDirAbsolute / eventualSharedNameAndWhereto.baseDirAddendum
+        eventualModelClassName.path = eventualSharedNameAndWhereto.pathAbsolute / eventualSharedNameAndWhereto.pathAddendum
+        eventualModelClassName.basePackage = eventualSharedNameAndWhereto.basePackageAbsolute +
+                if (eventualSharedNameAndWhereto.basePackageAbsolute.isNotBlank()) { "." } else { "" } +
+                eventualSharedNameAndWhereto.basePackageAddendum
+        eventualModelClassName.packageName = eventualSharedNameAndWhereto.packageNameAbsolute +
+                if (eventualSharedNameAndWhereto.packageNameAbsolute.isNotBlank()) { "." } else { "" } +
+                        eventualSharedNameAndWhereto.packageNameAddendum
+        eventualModelClassName.classPrefix = eventualSharedNameAndWhereto.classPrefixAbsolute + eventualSharedNameAndWhereto.classPrefixAddendum
+        eventualModelClassName.classPostfix = eventualSharedNameAndWhereto.classPostfixAbsolute + eventualSharedNameAndWhereto.classPostfixAddendum
+
+        return eventualModelClassName
     }
 
     private fun takeNonDefaultsIfEventualStillIsDefault(sharedNameAndWhereto: SharedNameAndWhereto, eventualSharedNameAndWhereto: EventualSharedNameAndWhereto) {
@@ -214,8 +246,11 @@ object StrategyNameAndWhereto {
             eventualSharedNameAndWhereto.baseDirAbsolute = sharedNameAndWhereto.baseDirAbsolute
             absolute = true
         }
-        if ( (!eventualSharedNameAndWhereto.baseDirAbsoluteBool) &&
-            (sharedNameAndWhereto.baseDirAddendum != NameAndWheretoDefaults.path) && (eventualSharedNameAndWhereto.baseDirAddendum == NameAndWheretoDefaults.path) ) {
+        //if ( (!eventualSharedNameAndWhereto.baseDirAbsoluteBool) &&
+        //    (sharedNameAndWhereto.baseDirAddendum != NameAndWheretoDefaults.path) && (eventualSharedNameAndWhereto.baseDirAddendum == NameAndWheretoDefaults.path) ) {
+        //    eventualSharedNameAndWhereto.baseDirAddendum /= sharedNameAndWhereto.baseDirAddendum
+        //}
+        if ( (sharedNameAndWhereto.baseDirAddendum != NameAndWheretoDefaults.path) ) {
             eventualSharedNameAndWhereto.baseDirAddendum /= sharedNameAndWhereto.baseDirAddendum
         }
         if (absolute) eventualSharedNameAndWhereto.baseDirAbsoluteBool = true
@@ -225,8 +260,11 @@ object StrategyNameAndWhereto {
             eventualSharedNameAndWhereto.pathAbsolute = sharedNameAndWhereto.pathAbsolute
             absolute = true
         }
-        if ( (!eventualSharedNameAndWhereto.pathAbsoluteBool)  &&
-            (sharedNameAndWhereto.pathAddendum != NameAndWheretoDefaults.path) && (eventualSharedNameAndWhereto.pathAddendum == NameAndWheretoDefaults.path) ) {
+        //if ( (!eventualSharedNameAndWhereto.pathAbsoluteBool)  &&
+        //    (sharedNameAndWhereto.pathAddendum != NameAndWheretoDefaults.path) && (eventualSharedNameAndWhereto.pathAddendum == NameAndWheretoDefaults.path) ) {
+        //    eventualSharedNameAndWhereto.pathAddendum /= sharedNameAndWhereto.pathAddendum
+        //}
+        if ( (sharedNameAndWhereto.pathAddendum != NameAndWheretoDefaults.path) ) {
             eventualSharedNameAndWhereto.pathAddendum /= sharedNameAndWhereto.pathAddendum
         }
         if (absolute) eventualSharedNameAndWhereto.pathAbsoluteBool = true
@@ -236,8 +274,11 @@ object StrategyNameAndWhereto {
             eventualSharedNameAndWhereto.classPrefixAbsolute = sharedNameAndWhereto.classPrefixAbsolute
             absolute = true
         }
-        if ( (!eventualSharedNameAndWhereto.classPrefixAbsoluteBool)  &&
-            (sharedNameAndWhereto.classPrefixAddendum != NameAndWheretoDefaults.classPrefix) && (eventualSharedNameAndWhereto.classPrefixAddendum == NameAndWheretoDefaults.classPrefix) ) {
+        //if ( (!eventualSharedNameAndWhereto.classPrefixAbsoluteBool)  &&
+        //    (sharedNameAndWhereto.classPrefixAddendum != NameAndWheretoDefaults.classPrefix) && (eventualSharedNameAndWhereto.classPrefixAddendum == NameAndWheretoDefaults.classPrefix) ) {
+        //    eventualSharedNameAndWhereto.classPrefixAddendum += sharedNameAndWhereto.classPrefixAddendum
+        //}
+        if ( (sharedNameAndWhereto.classPrefixAddendum != NameAndWheretoDefaults.classPrefix) ) {
             eventualSharedNameAndWhereto.classPrefixAddendum += sharedNameAndWhereto.classPrefixAddendum
         }
         if (absolute) eventualSharedNameAndWhereto.classPrefixAbsoluteBool = true
@@ -247,19 +288,25 @@ object StrategyNameAndWhereto {
             eventualSharedNameAndWhereto.classPostfixAbsolute = sharedNameAndWhereto.classPostfixAbsolute
             absolute = true
         }
-        if ( (!eventualSharedNameAndWhereto.classPostfixAbsoluteBool)  &&
-            (sharedNameAndWhereto.classPostfixAddendum != NameAndWheretoDefaults.classPostfix) && (eventualSharedNameAndWhereto.classPostfixAddendum == NameAndWheretoDefaults.classPostfix) ) {
+        //if ( (!eventualSharedNameAndWhereto.classPostfixAbsoluteBool)  &&
+        //    (sharedNameAndWhereto.classPostfixAddendum != NameAndWheretoDefaults.classPostfix) && (eventualSharedNameAndWhereto.classPostfixAddendum == NameAndWheretoDefaults.classPostfix) ) {
+        //    eventualSharedNameAndWhereto.classPostfixAddendum = eventualSharedNameAndWhereto.classPostfixAddendum + sharedNameAndWhereto.classPostfixAddendum
+        //}
+        if ( (sharedNameAndWhereto.classPostfixAddendum != NameAndWheretoDefaults.classPostfix) ) {
             eventualSharedNameAndWhereto.classPostfixAddendum = eventualSharedNameAndWhereto.classPostfixAddendum + sharedNameAndWhereto.classPostfixAddendum
         }
         if (absolute) eventualSharedNameAndWhereto.classPostfixAbsoluteBool = true
         absolute = false
         if ( (!eventualSharedNameAndWhereto.basePackageAbsoluteBool)  &&
-            (sharedNameAndWhereto.basePackageAbsolute != NameAndWheretoDefaults.packageName) && (eventualSharedNameAndWhereto.basePackageAbsolute == NameAndWheretoDefaults.packageName) ) {
+            (sharedNameAndWhereto.basePackageAbsolute != NameAndWheretoDefaults.basePackage) && (eventualSharedNameAndWhereto.basePackageAbsolute == NameAndWheretoDefaults.basePackage) ) {
             eventualSharedNameAndWhereto.basePackageAbsolute = sharedNameAndWhereto.basePackageAbsolute
             absolute = true
         }
-        if ( (!eventualSharedNameAndWhereto.basePackageAbsoluteBool)  &&
-            (sharedNameAndWhereto.basePackageAddendum != NameAndWheretoDefaults.packageName) && (eventualSharedNameAndWhereto.basePackageAddendum == NameAndWheretoDefaults.packageName) ) {
+        //if ( (!eventualSharedNameAndWhereto.basePackageAbsoluteBool)  &&
+        //    (sharedNameAndWhereto.basePackageAddendum != NameAndWheretoDefaults.packageName) && (eventualSharedNameAndWhereto.basePackageAddendum == NameAndWheretoDefaults.packageName) ) {
+        //    eventualSharedNameAndWhereto.basePackageAddendum = eventualSharedNameAndWhereto.basePackageAddendum.ifNotBlank { "${eventualSharedNameAndWhereto.basePackageAddendum}." } + sharedNameAndWhereto.basePackageAddendum.replace(pathSepRE, ".")
+        //}
+        if ( (sharedNameAndWhereto.basePackageAddendum != NameAndWheretoDefaults.packageName) ) {
             eventualSharedNameAndWhereto.basePackageAddendum = eventualSharedNameAndWhereto.basePackageAddendum.ifNotBlank { "${eventualSharedNameAndWhereto.basePackageAddendum}." } + sharedNameAndWhereto.basePackageAddendum.replace(pathSepRE, ".")
         }
         if (absolute) eventualSharedNameAndWhereto.basePackageAbsoluteBool = true
@@ -269,8 +316,11 @@ object StrategyNameAndWhereto {
             eventualSharedNameAndWhereto.packageNameAbsolute = sharedNameAndWhereto.packageNameAbsolute
             absolute = true
         }
-        if ( (!eventualSharedNameAndWhereto.packageNameAbsoluteBool)  &&
-            (sharedNameAndWhereto.packageNameAddendum != NameAndWheretoDefaults.packageName) && (eventualSharedNameAndWhereto.packageNameAddendum == NameAndWheretoDefaults.packageName) ) {
+        //if ( (!eventualSharedNameAndWhereto.packageNameAbsoluteBool)  &&
+        //    (sharedNameAndWhereto.packageNameAddendum != NameAndWheretoDefaults.packageName) && (eventualSharedNameAndWhereto.packageNameAddendum == NameAndWheretoDefaults.packageName) ) {
+        //    eventualSharedNameAndWhereto.packageNameAddendum = eventualSharedNameAndWhereto.packageNameAddendum.ifNotBlank { "${eventualSharedNameAndWhereto.packageNameAddendum}." } + sharedNameAndWhereto.packageNameAddendum.replace(pathSepRE, ".")
+        //}
+        if ( (sharedNameAndWhereto.packageNameAddendum != NameAndWheretoDefaults.packageName) ) {
             eventualSharedNameAndWhereto.packageNameAddendum = eventualSharedNameAndWhereto.packageNameAddendum.ifNotBlank { "${eventualSharedNameAndWhereto.packageNameAddendum}." } + sharedNameAndWhereto.packageNameAddendum.replace(pathSepRE, ".")
         }
     }

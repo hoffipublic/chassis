@@ -91,7 +91,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                 println("now finishing modelgroup '${this@DslModelgroup.simpleName}'s model '${dslCtx.ctxObj<DslModel>(modelRef).simpleName}'".
                     padForHeader(120, 3, spacesAround = 5))
                 val dslModel = dslCtx.getModel(modelRef).apply(dslModelBlock) // first let all the subtree finish
-                dslModel.finish(dslCtx)
+                dslModel.finish(dslCtx) // this happens AFTER all its Subelements have finish()ed
             }
             else -> {
                 val modelRef = DslRef.model(simpleName, modelgroupRef)
@@ -105,7 +105,7 @@ globalDslCtx = dslCtx // TODO remove workaround
     }
     fun prepareNameAndWheretos(dslCtx: DslCtx) {
         val gatheredNameAndWheretosFakeOfDslRun = SharedGatheredNameAndWheretos(DslRef.model("Fake", DslRef.NULL), "Fake")
-        val nameAndWheretoWithSubelementsDevRun: DslNameAndWheretoWithSubelementsDelegateImpl = dslCtx.ctxObj(DslRef.nameAndWhereto("<DslRun>", dslCtx.dslRun.runRef))
+        val nameAndWheretoWithSubelementsDevRun: DslNameAndWheretoWithSubelementsDelegateImpl = dslCtx.ctxObj(DslRef.nameAndWhereto(C.DSLRUNREFSIMPLENAME, dslCtx.dslRun.runRef))
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.nameAndWheretos) {
             gatheredNameAndWheretosFakeOfDslRun.createFor(SharedGatheredNameAndWheretos.THINGSWITHNAMEANDWHERETOS.DslRunConfigure, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
@@ -120,7 +120,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.dtoNameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(DslRef.dto(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
+            gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(DslRef.model.MODELELEMENT.DTO, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
@@ -133,7 +133,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.tableNameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(DslRef.table(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
+            gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(DslRef.model.MODELELEMENT.TABLE, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
@@ -160,7 +160,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.dtoNameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(DslRef.dto(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
+            gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(DslRef.model.MODELELEMENT.DTO, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
@@ -173,7 +173,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.tableNameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(DslRef.table(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
+            gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(DslRef.model.MODELELEMENT.TABLE, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
@@ -192,6 +192,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             gatheredNameAndWheretos.allFromDslRunConfigureForSubelement.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromDslRunConfigureForSubelement)
             gatheredNameAndWheretos.allFromGroup.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromGroup)
             gatheredNameAndWheretos.allFromGroupForSubelement.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromGroupForSubelement)
+            dslModel.prepareNameAndWheretos(dslCtx)
         }
     }
 
@@ -247,7 +248,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                                 GatherPropertiesEnum.NONE -> { }
                                 GatherPropertiesEnum.PROPERTIES -> { }
                                 GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES, GatherPropertiesEnum.SUPERCLASS_PROPERTIES_ONLY -> {
-                                    refsToGatherPropsFrom.addAll(reffedModel.extends.filter {
+                                    refsToGatherPropsFrom.addAll(reffedModel.extends.values.filter {
                                         it.typeClassOrDslRef is EitherTypeOrDslRef.EitherDslRef
                                     }.map {
                                         gatherSuperclassPropertiesFor(it.typeClassOrDslRef as EitherTypeOrDslRef.EitherDslRef, reffedGatherPropertys.gatherPropertiesEnum, otherDslModelOrModelSubelement)

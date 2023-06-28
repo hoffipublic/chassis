@@ -8,6 +8,12 @@ import com.hoffi.chassis.shared.shared.GatherPropertys
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 
+sealed class EitherModel(modelSubElRef: DslRef.IModelSubelement, modelClassName: ModelClassName)
+    : ModelClassData(modelSubElRef, modelClassName) {
+    class DtoModel(dtoRef: DslRef.dto, modelClassName: ModelClassName) : EitherModel(dtoRef, modelClassName)
+    class TableModel(tableRef: DslRef.table, modelClassName: ModelClassName) : EitherModel(tableRef, modelClassName)
+}
+
 /** all props and sub-props are set on chassis DSL PASS_FINISH */
 abstract class ModelClassData(
     var modelSubElRef: DslRef.IModelSubelement,
@@ -18,7 +24,7 @@ abstract class ModelClassData(
     override fun toString() = "${this::class.simpleName} ${classModifiers.joinToString(" ")} $kind $modelClassName"
     var kind: TypeSpec.Kind = TypeSpec.Kind.CLASS
     val classModifiers = mutableSetOf<KModifier>()
-    val extends = mutableSetOf<Extends>()
+    val extends = mutableMapOf<String, Extends>()
     var constructorVisibility = true
     val propertys = mutableMapOf<String, Property>()
     val gatheredPropertys = mutableMapOf<String, Property>()
@@ -80,10 +86,4 @@ abstract class ModelClassData(
         return modelSubElRef.hashCode()
     }
     //endregion
-}
-
-sealed class EitherModel(modelSubElRef: DslRef.IModelSubelement, modelClassName: ModelClassName)
-    : ModelClassData(modelSubElRef, modelClassName) {
-    class DtoModel(dtoRef: DslRef.dto, modelClassName: ModelClassName) : EitherModel(dtoRef, modelClassName)
-    class TableModel(tableRef: DslRef.table, modelClassName: ModelClassName) : EitherModel(tableRef, modelClassName)
 }

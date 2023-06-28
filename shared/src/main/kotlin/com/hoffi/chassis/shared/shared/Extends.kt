@@ -7,5 +7,9 @@ data class Extends(
     var replaceSuperclass: Boolean = false,
     var replaceSuperInterfaces: Boolean  = false,
     var typeClassOrDslRef: EitherTypeOrDslRef = EitherTypeOrDslRef.NOTHING,
-    val superInterfaces: MutableSet<EitherTypeOrDslRef> = mutableSetOf()
-) { override fun toString() = "${Extends::class.simpleName}(${typeClassOrDslRef}, interfaces: '${superInterfaces.joinToString()}')" }
+    val superInterfaces: MutableSet<EitherTypeOrDslRef> = mutableSetOf(),
+    // to determine if extends.typeClassOrDslRef is the default NOTHING (never has been touched in the DSL) or explicitly set to NOTHING
+    var superclassHasBeenSet: Boolean = false
+) {
+    override fun toString() = "${Extends::class.simpleName}(${typeClassOrDslRef}, interfaces: '${superInterfaces.joinToString()}')"
+}

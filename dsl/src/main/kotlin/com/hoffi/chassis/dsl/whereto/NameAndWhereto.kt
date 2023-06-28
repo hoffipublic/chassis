@@ -120,7 +120,7 @@ open class DslNameAndWheretoPropsImpl(
     override fun classPostfixBefore(concat: String) { classPostfixAddendum = "$concat$classPostfixAddendum" }
     override fun classPostfixAfter(concat: String)  { classPostfixAddendum = "$classPostfixAddendum$concat" }
 
-    var basePackageAbsolute: String = NameAndWheretoDefaults.packageName
+    var basePackageAbsolute: String = NameAndWheretoDefaults.basePackage
     override fun basePackageAbsolute(absolute: String) { basePackageAbsolute = absolute }
     var basePackageAddendum: String = NameAndWheretoDefaults.packageName
     override fun basePackage(concat: String) { basePackageAddendum = "${basePackageAddendum.ifNotBlank{"$basePackageAddendum."}}${concat.replace(pathSepRE, ".")}" }
@@ -178,7 +178,11 @@ class DslNameAndWheretoWithSubelementsDelegateImpl(
     override fun nameAndWhereto(simpleName: String, block: IDslApiNameAndWheretoOnSubElements.() -> Unit) {
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
-            dslCtx.PASS_1_BASEMODELS-> {
+            dslCtx.PASS_0_CONFIGURE -> {
+                val dslImpl = nameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoOnSubElementsDelegateImpl(simpleName, selfDslRef) }
+                dslImpl.apply(block)
+            }
+            dslCtx.PASS_1_BASEMODELS -> {
                 val dslImpl = nameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoOnSubElementsDelegateImpl(simpleName, selfDslRef) }
                 dslImpl.apply(block)
             }
@@ -202,6 +206,10 @@ class DslNameAndWheretoOnSubElementsDelegateImpl(
     override fun dtoNameAndWhereto(simpleName: String, block: IDslApiNameAndWheretoProps.() -> Unit) {
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
+            dslCtx.PASS_0_CONFIGURE -> {
+                val dslImpl = parentDslClass.dtoNameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoPropsImpl(simpleName, selfDslRef) }
+                dslImpl.apply(block)
+            }
             dslCtx.PASS_1_BASEMODELS -> {
                 val dslImpl = parentDslClass.dtoNameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoPropsImpl(simpleName, selfDslRef) }
                 dslImpl.apply(block)
@@ -215,6 +223,10 @@ class DslNameAndWheretoOnSubElementsDelegateImpl(
     override fun tableNameAndWhereto(simpleName: String, block: IDslApiNameAndWheretoProps.() -> Unit) {
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
+            dslCtx.PASS_0_CONFIGURE -> {
+                val dslImpl = parentDslClass.tableNameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoPropsImpl(simpleName, selfDslRef) }
+                dslImpl.apply(block)
+            }
             dslCtx.PASS_1_BASEMODELS -> {
                 val dslImpl = parentDslClass.tableNameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoPropsImpl(simpleName, selfDslRef) }
                 dslImpl.apply(block)

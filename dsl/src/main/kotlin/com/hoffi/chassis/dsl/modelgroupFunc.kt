@@ -34,6 +34,7 @@ fun modelgroup(simpleName: String, modelgroupBlock: DslModelgroup.() -> Unit) {
             dslModelgroup.finish(dslCtx)
         }
         dslCtx.PASS_INHERITANCE -> {
+            // we do not decend the dsl tree in this Pass !!!
             val modelgroupRef = DslRef.modelgroup(simpleName, dslDiscriminator)
             val dslModelgroup = dslCtx.getModelgroup(modelgroupRef)
             dslModelgroup.gatherInheritedPropertys(dslCtx)

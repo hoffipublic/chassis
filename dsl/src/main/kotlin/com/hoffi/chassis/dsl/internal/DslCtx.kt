@@ -5,6 +5,7 @@ import com.hoffi.chassis.chassismodel.dsl.DslCtxException
 import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.dsl.modelgroup.DslModel
 import com.hoffi.chassis.dsl.modelgroup.DslModelgroup
+import com.hoffi.chassis.dsl.modelgroup.IDslApiClassObjectOrInterface
 import com.hoffi.chassis.shared.codegen.GenCtx
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.dsl.DslRef
@@ -210,6 +211,23 @@ class DslCtx private constructor(){
         sharedGatheredExtends[dslRef] ?: throw DslCtxException("no ${SharedGatheredExtends::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
     fun gatheredExtends(dslRef: DslRef.IElementLevel): SharedGatheredExtends =
         sharedGatheredExtends[dslRef] ?: SharedGatheredExtends(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredExtends[dslRef] = it }
+
+    fun isInterface(dslRef: IDslRef): Boolean {
+        val dslClass = ctxObj<ADslClass>(dslRef)
+        return when (dslClass) {
+            is DslModel -> dslClass.kind == DslClassObjectOrInterface.INTERFACE
+            is IDslApiClassObjectOrInterface -> {
+                when (dslClass.kind) {
+                    //dslClass.kind == DslClassObjectOrInterface.INTERFACE
+                    DslClassObjectOrInterface.UNDEFINED -> (ctxObj<ADslClass>(dslClass.selfDslRef.parentRef) as IDslApiClassObjectOrInterface).kind == DslClassObjectOrInterface.INTERFACE
+                    DslClassObjectOrInterface.CLASS -> false
+                    DslClassObjectOrInterface.OBJECT -> false
+                    DslClassObjectOrInterface.INTERFACE -> true
+                }
+            }
+            else -> throw DslException("isInterface on DslRef which is not a modelelement or modelsubelement not implemented yet!")
+        }
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

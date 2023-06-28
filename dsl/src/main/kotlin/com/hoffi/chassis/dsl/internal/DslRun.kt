@@ -66,7 +66,7 @@ class DslRun(var runIdentifierEgEnvAndTime: String) : IDslClass {
 
     @DslInstance
     internal val wheretoImpl: DslNameAndWheretoWithSubelementsDelegateImpl = with(dslCtxWrapper) {
-        dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto("<DslRun>", runRef))
+        dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto(C.DSLRUNREFSIMPLENAME, runRef))
     }
 
     @DslBlockOn(DslNameAndWheretoWithSubelementsDelegateImpl::class)

@@ -160,6 +160,9 @@ globalDslCtx = dslCtx // TODO remove workaround
     }
 
     fun finish(dslCtx: DslCtx) {
+
+    }
+    fun prepareNameAndWheretos(dslCtx: DslCtx) {
         val gatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(modelRef)
         for (dslNameAndWheretoDelegateEntry: MutableMap.MutableEntry<String, DslNameAndWheretoOnSubElementsDelegateImpl> in nameAndWheretoWithSubelements.nameAndWheretos) {
             gatheredNameAndWheretos.createFor(SharedGatheredNameAndWheretos.THINGSWITHNAMEANDWHERETOS.model, SharedNameAndWhereto(
@@ -175,7 +178,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.dtoNameAndWheretos) {
-            gatheredNameAndWheretos.createFromElementForSubelement(DslRef.dto(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
+            gatheredNameAndWheretos.createFromElementForSubelement(DslRef.model.MODELELEMENT.DTO, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
@@ -188,7 +191,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.tableNameAndWheretos) {
-            gatheredNameAndWheretos.createFromElementForSubelement(DslRef.table(dslNameAndWheretoDelegateEntry.value.simpleName , selfDslRef), SharedNameAndWhereto(
+            gatheredNameAndWheretos.createFromElementForSubelement(DslRef.model.MODELELEMENT.TABLE, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
@@ -305,7 +308,7 @@ class DslDto(
     fun finish(dslCtx: DslCtx) {
         val sharedGatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(selfDslRef.parentRef as DslRef.IElementLevel)
         for (dslNameAndWhereto in nameAndWheretoWithoutModelSubelementsImpl.nameAndWheretos.values) {
-            sharedGatheredNameAndWheretos.createFor(selfDslRef, SharedNameAndWhereto(
+            sharedGatheredNameAndWheretos.createForSubelement(selfDslRef, SharedNameAndWhereto(
                 dslNameAndWhereto.simpleName,
                 selfDslRef,
                 dslNameAndWhereto.strategyClassName, dslNameAndWhereto.strategyTableName,
@@ -318,7 +321,7 @@ class DslDto(
             ))
         }
 
-        val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS, selfDslRef, sharedGatheredNameAndWheretos)
+        val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS, selfDslRef, sharedGatheredNameAndWheretos)
         val dtoModel = EitherModel.DtoModel(selfDslRef as DslRef.dto, modelClassName)
         dslCtx.genCtx.genModels[selfDslRef] = dtoModel
         val dslModel: DslModel = dslCtx.ctxObj(selfDslRef.parentRef)
@@ -348,11 +351,10 @@ class DslDto(
 
         val sharedGatheredExtends = dslCtx.gatheredExtends(dslModel.selfDslRef)
         if (sharedGatheredExtends.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a map.entry of Extends for simpleName '${simpleName}' in dslCtx for '${selfDslRef}'")
-        val mapOfGatheredExtends: MutableMap<String, Extends> = mutableMapOf()
-        sharedGatheredExtends.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.put(selfDslRef.simpleName, mapOfGatheredExtends)
-        mapOfGatheredExtends.putAll(extendsImpl.theExtendBlocks.map { entry -> entry.key to entry.value.extends })
-        val modelGatherExtends: Set<Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.UNION, selfDslRef, sharedGatheredExtends)
-        dtoModel.extends.addAll(modelGatherExtends)
+        //val setOfGatheredExtends: MutableSet<Extends> = mutableSetOf()
+        sharedGatheredExtends.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.putAll(extendsImpl.theExtendBlocks.values.map { it.simpleName to it.extends })
+        val modelGatherExtends: MutableMap<String, Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.UNION, selfDslRef, sharedGatheredExtends)
+        dtoModel.extends.putAll(modelGatherExtends)
 
         val sharedGatheredGatherPropertys: SharedGatheredGatherPropertys = dslCtx.gatheredGatherPropertys(selfDslRef.parentRef as DslRef.IElementLevel)
         if (sharedGatheredGatherPropertys.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a set of GatherPropertys in dslCtx for '${selfDslRef}")
@@ -367,8 +369,6 @@ class DslDto(
         dtoModel.propertys.putAll(mapOfPropertys)
 
         // TODO XXX Continue here
-
-        dslCtx.genCtx.genModels[selfDslRef] = dtoModel
     }
 
     companion object {
@@ -443,7 +443,7 @@ class DslTable(
     fun finish(dslCtx: DslCtx) {
         val sharedGatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(selfDslRef.parentRef as DslRef.IElementLevel)
         for (dslNameAndWhereto in nameAndWheretoWithoutModelSubelementsImpl.nameAndWheretos.values) {
-            sharedGatheredNameAndWheretos.createFor(selfDslRef, SharedNameAndWhereto(
+            sharedGatheredNameAndWheretos.createForSubelement(selfDslRef, SharedNameAndWhereto(
                 dslNameAndWhereto.simpleName,
                 selfDslRef,
                 dslNameAndWhereto.strategyClassName, dslNameAndWhereto.strategyTableName,
@@ -456,7 +456,7 @@ class DslTable(
             ))
         }
 
-        val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS, selfDslRef, sharedGatheredNameAndWheretos)
+        val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS, selfDslRef, sharedGatheredNameAndWheretos)
         val tableModel = EitherModel.TableModel(selfDslRef as DslRef.table, modelClassName)
         dslCtx.genCtx.genModels[selfDslRef] = tableModel
         val dslModel: DslModel = dslCtx.ctxObj(selfDslRef.parentRef)
@@ -486,11 +486,10 @@ class DslTable(
 
         val sharedGatheredExtends = dslCtx.gatheredExtends(dslModel.selfDslRef)
         if (sharedGatheredExtends.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a map.entry of Extends for simpleName '${simpleName}' in dslCtx for '${selfDslRef}'")
-        val mapOfGatheredExtends: MutableMap<String, Extends> = mutableMapOf()
-        sharedGatheredExtends.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.put(selfDslRef.simpleName, mapOfGatheredExtends)
-        mapOfGatheredExtends.putAll(extendsImpl.theExtendBlocks.map { entry -> entry.key to entry.value.extends })
-        val modelGatherExtends: Set<Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.UNION, selfDslRef, sharedGatheredExtends)
-        tableModel.extends.addAll(modelGatherExtends)
+        //val setOfGatheredExtends: MutableSet<Extends> = mutableSetOf()
+        sharedGatheredExtends.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.putAll(extendsImpl.theExtendBlocks.values.map { it.simpleName to it.extends })
+        val modelGatherExtends: MutableMap<String, Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.UNION, selfDslRef, sharedGatheredExtends)
+        tableModel.extends.putAll(modelGatherExtends)
 
         val sharedGatheredGatherPropertys: SharedGatheredGatherPropertys = dslCtx.gatheredGatherPropertys(selfDslRef.parentRef as DslRef.IElementLevel)
         if (sharedGatheredGatherPropertys.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a set of GatherPropertys in dslCtx for '${selfDslRef}")
@@ -505,8 +504,6 @@ class DslTable(
         tableModel.propertys.putAll(mapOfPropertys)
 
        // TODO XXX Continue here
-
-        dslCtx.genCtx.genModels[selfDslRef] = tableModel
     }
 
     companion object {

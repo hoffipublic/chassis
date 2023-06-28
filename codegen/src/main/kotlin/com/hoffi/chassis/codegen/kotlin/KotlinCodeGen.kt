@@ -21,7 +21,7 @@ class KotlinCodeGen(val genRun: GenRun) {
 
     private fun codeGenDto() {
         for(model in genRun.genCtx.genModels.values.filterIsInstance<EitherModel.DtoModel>()) {
-            println("$model -> ${model.modelSubElRef}")
+            println("$model ${model.extends.values.firstOrNull{it.simpleName == "default"} ?: "extends NOTHING"} ") //-> ${model.modelSubElRef}")
         }
     }
 

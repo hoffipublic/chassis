@@ -9,6 +9,7 @@ import com.hoffi.chassis.shared.strategies.TableNameStrategy
 import com.squareup.kotlinpoet.TypeName
 import okio.Path
 import okio.Path.Companion.toPath
+import org.slf4j.LoggerFactory
 
 interface IModelClassName {
     var modelName: String
@@ -20,6 +21,7 @@ interface IModelClassName {
 class ModelClassName(
     val modelSubElRef: IDslRef
 ) : IModelClassName {
+    val log = LoggerFactory.getLogger(javaClass)
     override fun toString() = poetType.toString()
     var classNameStrategy = ClassNameStrategy.get(IClassNameStrategy.STRATEGY.DEFAULT)
     var tableNameStrategy = TableNameStrategy.get(ITableNameStrategy.STRATEGY.DEFAULT)
@@ -31,7 +33,7 @@ class ModelClassName(
     var classPrefix = NameAndWheretoDefaults.classPrefix
     var classPostfix = NameAndWheretoDefaults.classPostfix
 
-    override var modelName: String = modelSubElRef.parentRef.simpleName.ifBlank { "HEREXXX" }
+    override var modelName: String = modelSubElRef.parentRef.simpleName.ifBlank { log.warn("empty simpleName of model '${modelSubElRef.parentRef}'") ; "" }
 
     // we need to wait until all properties are set on the instance before we can pre-calculate the "derived" properties:
 
