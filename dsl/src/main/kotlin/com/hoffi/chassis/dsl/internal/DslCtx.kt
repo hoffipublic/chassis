@@ -44,15 +44,15 @@ class DslCtx private constructor(){
     val genCtx by lazy { GenCtx._internal_create() } // filled to be passed on by @ChassisDslMarker classes finish() methods
     var currentPASS: DSLPASS = DSLPASS.NULL
     // we need Instances of DSLPASS to be able to do when(...) on them
-    val PASS_ERROR =         DSLPASS.PASS_ERROR(this)
-    val PASS_INHERITANCE =   DSLPASS.PASS_INHERITANCE(this)
-    val PASS_FINISH =        DSLPASS.PASS_FINISH(PASS_INHERITANCE, this)
-    val PASS_4_REFERENCING = DSLPASS.PASS_4_REFERENCING(PASS_FINISH, this)
-    val PASS_3_ALLMODELS =   DSLPASS.PASS_3_ALLMODELS(PASS_4_REFERENCING, this)
-    val PASS_2_TABLEMODELS = DSLPASS.PASS_2_TABLEMODELS(PASS_3_ALLMODELS, this)
-    val PASS_1_BASEMODELS  = DSLPASS.PASS_1_BASEMODELS(PASS_2_TABLEMODELS, this)
+    val PASS_ERROR            = DSLPASS.PASS_ERROR(this)
+    val PASS_GENMODELSCREATED = DSLPASS.PASS_GENMODELSCREATED(this)
+    val PASS_FINISH           = DSLPASS.PASS_FINISH(PASS_GENMODELSCREATED, this)
+    val PASS_4_REFERENCING    = DSLPASS.PASS_4_REFERENCING(PASS_FINISH, this)
+    val PASS_3_ALLMODELS      = DSLPASS.PASS_3_ALLMODELS(PASS_4_REFERENCING, this)
+    val PASS_2_TABLEMODELS    = DSLPASS.PASS_2_TABLEMODELS(PASS_3_ALLMODELS, this)
+    val PASS_1_BASEMODELS     = DSLPASS.PASS_1_BASEMODELS(PASS_2_TABLEMODELS, this)
     val firstPass = PASS_1_BASEMODELS
-    val PASS_0_CONFIGURE  = DSLPASS.PASS_0_CONFIGURE(firstPass, this)
+    val PASS_0_CONFIGURE = DSLPASS.PASS_0_CONFIGURE(firstPass, this)
     fun start(): DSLPASS     {
         if (currentPASS != DSLPASS.NULL && currentPASS != PASS_0_CONFIGURE) { throw DslCtxException("DslRun(\"${dslRun.runIdentifierEgEnvAndTime}\")'s DslCtx already started and in PASS '${currentPASS}'. exiting.") }
         currentPASS = firstPass

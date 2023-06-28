@@ -7,10 +7,16 @@ class GenRun(val genCtx: GenCtx, var runIdentifier: String) : IRun {
     var running = false
     val genRun = this
 
-    fun start(runBlock: GenRun.() -> Unit = {}): GenRun {
-        this.apply(runBlock)
-        return this
+    init {
+        genCtx.genRun = this
     }
+
+    context(GenCtxWrapper)
+    fun start(runBlock: GenRun.() -> Unit = {}): GenRun {
+        this@GenRun.apply(runBlock)
+        return this@GenRun
+    }
+
     companion object {
         val NULL = GenRun(GenCtx._internal_create(), C.NULLSTRING)
     }

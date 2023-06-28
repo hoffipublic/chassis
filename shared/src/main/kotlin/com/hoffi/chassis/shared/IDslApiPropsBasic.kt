@@ -1,10 +1,13 @@
 package com.hoffi.chassis.shared
 
-import com.benasher44.uuid.Uuid
 import com.hoffi.chassis.chassismodel.C
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.asClassName
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.reflect.KClass
 
 @JvmInline value class Mutable(val bool: Boolean)
 val immutable = Mutable(false)
@@ -26,17 +29,17 @@ sealed class COLLECTIONTYPE {
     }
 }
 
-sealed class TYP {
+sealed class TYP(val poetType: ClassName) {
     override fun toString() = this::class.simpleName!!
-    class CLASS : TYP()
-    class MODEL : TYP()
-    class INT : TYP()
-    class LONG : TYP()
-    class STRING : TYP()
-    class BOOL : TYP()
-    class UUID : TYP()
-    class INSTANT : TYP()
-    class LOCALDATETIME : TYP()
+    class CLASS : TYP(KClass::class.asClassName())
+    class MODEL : TYP(Any::class.asClassName())
+    class INT : TYP(Integer::class.asClassName())
+    class LONG : TYP(Long::class.asClassName())
+    class STRING : TYP(String::class.asClassName())
+    class BOOL : TYP(Boolean::class.asClassName())
+    class UUID : TYP(java.util.UUID::class.asClassName())
+    class INSTANT : TYP(Instant::class.asClassName())
+    class LOCALDATETIME : TYP(LocalDateTime::class.asClassName())
     companion object {
         val DEFAULT = STRING()
         val CLASS = CLASS()
@@ -52,7 +55,7 @@ sealed class TYP {
         val DEFAULT_LONG = -1L
         val DEFAULT_STRING = C.DEFAULTSTRING
         val DEFAULT_STRING_DUMMY = C.DEFAULT
-        val DEFAULT_UUID = Uuid.fromString("00000000-0000-0000-0000-000000000001")
+        val DEFAULT_UUID = java.util.UUID.fromString("00000000-0000-0000-0000-000000000001")
         val DEFAULT_INSTANT = Instant.fromEpochMilliseconds(1L)
         val DEFAULT_LOCALDATETIME = DEFAULT_INSTANT.toLocalDateTime(TimeZone.UTC)
         val DEFAULT_LOCALDATETIME_DB = DEFAULT_LOCALDATETIME

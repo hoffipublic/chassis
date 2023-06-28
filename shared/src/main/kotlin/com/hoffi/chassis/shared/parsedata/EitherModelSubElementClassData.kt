@@ -30,10 +30,6 @@ abstract class ModelClassData(
     val gatheredPropertys = mutableMapOf<String, Property>()
     val gatheredFromDslRefs = mutableSetOf<GatherPropertys>()
 
-    init {
-
-    }
-
     // TODO delegate to concrete sealed class implementation
 //    val className: ClassName
 //        get() = typeWrapper.className

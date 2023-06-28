@@ -7,8 +7,11 @@ object DslPropToGenProp {
         val p = Property(
             dslProp.name,
             dslProp.propRef,
+            dslProp.eitherTypModelOrClass,
             dslProp.mutable,
-            dslProp.tags
+            dslProp.tags,
+            dslProp.length,
+            dslProp.collectionType
         )
         return p
     }

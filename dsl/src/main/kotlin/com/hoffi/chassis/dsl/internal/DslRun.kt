@@ -50,8 +50,8 @@ class DslRun(var runIdentifierEgEnvAndTime: String) : IDslClass {
             dslCtx.nextPass() ?: break
         }
         println("\ninfo summary on ${this::class.simpleName}(${this.runIdentifierEgEnvAndTime}):")
-        val fs=20
-        for (pass in listOf(dslCtx.PASS_0_CONFIGURE, dslCtx.PASS_1_BASEMODELS, dslCtx.PASS_2_TABLEMODELS, dslCtx.PASS_3_ALLMODELS, dslCtx.PASS_4_REFERENCING, dslCtx.PASS_FINISH, dslCtx.PASS_INHERITANCE, dslCtx.PASS_ERROR) ) {
+        val fs=21
+        for (pass in listOf(dslCtx.PASS_0_CONFIGURE, dslCtx.PASS_1_BASEMODELS, dslCtx.PASS_2_TABLEMODELS, dslCtx.PASS_3_ALLMODELS, dslCtx.PASS_4_REFERENCING, dslCtx.PASS_FINISH, dslCtx.PASS_GENMODELSCREATED, dslCtx.PASS_ERROR) ) {
             if (pass.execStart != 0L) {
                 if (pass.execEnd == -1L) {
                     println(String.format("%-${fs}s execEnd was never set", pass::class.simpleName))

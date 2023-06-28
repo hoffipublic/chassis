@@ -70,6 +70,11 @@ value class MixedCaseString(private val s: String) {
         val fromMixedFirst = "^[^-_]+(?=[-_])".toRegex()
         val fromMixedCharsRegex = "[-_]+".toRegex()
         val snakeKebabTitleRegex = "([-_]+[a-zA-Z0-9])".toRegex()
+     }
+    companion object {
+        fun concat(s: String, prefix: String = "", postfix: String = "") = concatCapitalized(s, prefix, postfix)
+        fun concatCapitalized(s: String, prefix: String = "", postfix: String = "") = MixedCaseString("$prefix${s.replaceFirstChar { if (it.isLowerCase()) it.titlecase(C.LOCALE) else it.toString() }}${postfix.replaceFirstChar { if (it.isLowerCase()) it.titlecase(C.LOCALE) else it.toString() }}")
+        fun concatDecapitalized(s: String, prefix: String = "", postfix: String = "") = MixedCaseString("$prefix${s.replaceFirstChar { it.lowercase(C.LOCALE) }}${postfix.replaceFirstChar { it.lowercase(C.LOCALE) }}")
     }
     // camel conversion only occurs if it IS a mixed-string (meaning it contains [-_] somewhere) otherwise the string won't be altered
     private fun toLowerCamelFirstPart(wholeString: String): MixedCaseString = MixedCaseString(RE.fromMixedFirst.replace(wholeString) { it.value.lowercase() })

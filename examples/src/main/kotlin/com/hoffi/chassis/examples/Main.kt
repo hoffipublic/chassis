@@ -5,6 +5,7 @@ import com.hoffi.chassis.codegen.kotlin.KotlinCodeGen
 import com.hoffi.chassis.dsl.internal.DslRun
 import com.hoffi.chassis.examples.basic.baseModelsPersistent
 import com.hoffi.chassis.examples.basic.entities
+import com.hoffi.chassis.shared.codegen.GenCtxWrapper
 import com.hoffi.chassis.shared.codegen.GenRun
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.dsl.DslRef
@@ -47,9 +48,10 @@ fun main(@Suppress("UNUSED_PARAMETER") args: Array<String>) {
 
     val examplesCodegenRun = GenRun(examplesDslRun.dslCtx.genCtx, examplesRunName)
 
-    examplesCodegenRun.start {
-        println("examples/${examplesCodegenRun.runIdentifier}".boxed(postfix = "\n"))
-        KotlinCodeGen(this).codeGen(DslRef.model.MODELELEMENT.DTO)
-
+    with(GenCtxWrapper(examplesCodegenRun.genCtx)) {
+        examplesCodegenRun.start {
+            println("examples/${examplesCodegenRun.runIdentifier}".boxed(postfix = "\n"))
+            KotlinCodeGen().codeGen(DslRef.model.MODELELEMENT.DTO)
+        }
     }
 }

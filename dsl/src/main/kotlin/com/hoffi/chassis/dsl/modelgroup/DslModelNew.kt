@@ -292,8 +292,6 @@ class DslDto(
 {
     val log = LoggerFactory.getLogger(javaClass)
 
-    //override val modelElement = DslRef.model.MODELELEMENT.DTO
-
     init {
         this@DslCtxWrapper.dslCtx.addToCtx(propsImpl)
         this@DslCtxWrapper.dslCtx.addToCtx(nameAndWheretoWithoutModelSubelementsImpl)
@@ -302,7 +300,7 @@ class DslDto(
         this@DslCtxWrapper.dslCtx.addToCtx(extendsImpl)
         this@DslCtxWrapper.dslCtx.addToCtx(showcaseImpl)
     }
-    override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.CLASS
+    override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.UNDEFINED
 
 
     fun finish(dslCtx: DslCtx) {
@@ -364,7 +362,8 @@ class DslDto(
         val modelGatherProperties: Set<GatherPropertys> = StrategyGatherProperties.resolve(StrategyGatherProperties.STRATEGY.UNION, selfDslRef, sharedGatheredGatherPropertys)
         dtoModel.gatheredFromDslRefs.addAll(modelGatherProperties)
 
-        // the gathered properties will be fetched into the model in Modelgroup's PASS_INHERITANCE fun gatherInheritedPropertys()
+        // the gathered properties will be fetched into the model                      in Modelgroup's PASS_GENMODELSCREATED fun gatherInheritedPropertys()
+        // the ModelClassName of EitherModel's will be set in Modelgroup's PASS_GENMODELSCREATED fun setModelClassNameOfReffedModelProperties()
         val mapOfPropertys = thePropertiesOf(this.propsImpl, dslModel.propsImpl)
         dtoModel.propertys.putAll(mapOfPropertys)
 
@@ -426,8 +425,6 @@ class DslTable(
 {
     val log = LoggerFactory.getLogger(javaClass)
 
-    //override val modelElement = DslRef.model.MODELELEMENT.TABLE
-
     init {
         this@DslCtxWrapper.dslCtx.addToCtx(propsImpl)
         this@DslCtxWrapper.dslCtx.addToCtx(nameAndWheretoWithoutModelSubelementsImpl)
@@ -437,7 +434,7 @@ class DslTable(
         this@DslCtxWrapper.dslCtx.addToCtx(showcaseImpl)
     }
 
-    override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.CLASS
+    override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.OBJECT
 
 
     fun finish(dslCtx: DslCtx) {
@@ -499,7 +496,7 @@ class DslTable(
         val modelGatherProperties: Set<GatherPropertys> = StrategyGatherProperties.resolve(StrategyGatherProperties.STRATEGY.UNION, selfDslRef, sharedGatheredGatherPropertys)
         tableModel.gatheredFromDslRefs.addAll(modelGatherProperties)
 
-        // the gathered properties will be fetched into the model in Modelgroup's PASS_INHERITANCE fun gatherInheritedPropertys()
+        // the gathered properties will be fetched into the model in Modelgroup's PASS_GENMODELSCREATED fun gatherInheritedPropertys()
         val mapOfPropertys = thePropertiesOf(this.propsImpl, dslModel.propsImpl)
         tableModel.propertys.putAll(mapOfPropertys)
 

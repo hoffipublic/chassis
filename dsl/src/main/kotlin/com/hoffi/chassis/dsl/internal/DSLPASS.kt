@@ -44,7 +44,7 @@ sealed class DSLPASS(val index: Int, protected val nextDSLPASS: DSLPASS?, protec
     class PASS_3_ALLMODELS  (nextPASS: DSLPASS, dslCtx: DslCtx) : DSLPASS(3, nextPASS, dslCtx) // allModels { } at the end of DSLPASS.TWO_TABLEMODELS
     class PASS_4_REFERENCING(nextPASS: DSLPASS, dslCtx: DslCtx) : DSLPASS(4, nextPASS, dslCtx) // things that potentially reference other Models, like extends { } clauses
     class PASS_FINISH       (nextPASS: DSLPASS, dslCtx: DslCtx) : DSLPASS(5, nextPASS, dslCtx) // create Gen Models and cleanup for specific models
-    class PASS_INHERITANCE  (                   dslCtx: DslCtx) : DSLPASS(6, nextDSLPASS = null, dslCtx) // things after finish, e.g. gather propertiesOf
+    class PASS_GENMODELSCREATED  (dslCtx: DslCtx) : DSLPASS(6, nextDSLPASS = null, dslCtx) // things after finish, e.g. gather propertiesOf
     class PASS_ERROR        (                   dslCtx: DslCtx) : DSLPASS(99, nextDSLPASS = null, dslCtx)
 
     //region equals and hashCode ...

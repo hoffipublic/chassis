@@ -64,7 +64,7 @@ allprojects {
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.versions.kotlinx.coroutines.get()}")
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.get()}")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${libs.versions.kotlinx.serialization.json.get()}")
-            implementation("com.benasher44:uuid:${libs.versions.benasher44.uuid.get()}")
+            //implementation("com.benasher44:uuid:${libs.versions.benasher44.uuid.get()}")
 
             testImplementation("io.kotest:kotest-framework-engine:${libs.versions.kotest.asProvider().get()}")
             testImplementation("io.kotest:kotest-framework-datatest:${libs.versions.kotest.asProvider().get()}")

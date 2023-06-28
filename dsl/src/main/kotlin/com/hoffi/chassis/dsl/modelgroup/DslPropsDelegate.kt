@@ -10,11 +10,12 @@ import com.hoffi.chassis.shared.dsl.DslRefString
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.Tags
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeName
 import org.slf4j.LoggerFactory
 
-class DslModelProp(
+class DslModelProp constructor(
     val name: String,
     val propRef: DslRef.prop,
     var eitherTypModelOrClass: EitherTypOrModelOrPoetType,
@@ -38,7 +39,7 @@ class DslPropsDelegate(
 
     val theProps = mutableMapOf<String, DslModelProp>()
     fun getPropOrNull(name: String) = theProps[name]
-    fun addProp(name: String, prop: DslModelProp) = if (!theProps.containsKey(name)) prop.also { theProps[name] = prop } else { throw DslException("$parentRef already has a property $name") }
+    fun addProp(name: String, prop: DslModelProp): DslModelProp = if (!theProps.containsKey(name)) prop.also { theProps[name] = prop } else { throw DslException("$parentRef already has a property $name") }
 
     // ===================================================================================================================================
     // ====================   "primitive" TYP properties   ===============================================================================
@@ -70,7 +71,7 @@ class DslPropsDelegate(
         log.info("fun {}(\"{}, poetType\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
-        val prop = DslModelProp(name, DslRef.prop(name, parentRef), EitherTypOrModelOrPoetType.EitherPoetType(poetType), mutable, tags, length, collectionType)
+        val prop = DslModelProp(name, DslRef.prop(name, parentRef), EitherTypOrModelOrPoetType.EitherPoetType(poetType as ClassName), mutable, tags, length, collectionType)
         addProp(name, prop)
     }
 
@@ -95,8 +96,9 @@ class DslPropsDelegate(
 
     override fun property(name: String, modelSubElementRefString: String, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, length: Int, tags: Tags) {
         log.info("fun {}(\"{}, modelSubElementRefString\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
-        if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
-        //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
+        if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
+        //if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
+        ////if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
         val modelOrModelSubElementRef = DslRefString.MODELREF(modelSubElementRefString)
         if (modelOrModelSubElementRef !is DslRef.IModelSubelement) {
             throw DslException("prop $name of ref: $parentRef does not reference a modelSubElement (dto/table/...)")
@@ -107,10 +109,11 @@ class DslPropsDelegate(
 
     override fun property(name: String, modelSubElementRef: DslRef.IModelSubelement, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, length: Int, tags: Tags) {
         log.info("fun {}(\"{}, DslRef\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
-        if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
-        //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
-        //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
+        //if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
+        ////if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
+        //if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
+        ////if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
 
         if (Tag.NULLABLE in tags) log.warn("Tag.NULLABLE for Class property $name of $parentRef")
         val prop = DslModelProp(name, DslRef.prop(name, parentRef), EitherTypOrModelOrPoetType.EitherModel(modelSubElementRef), mutable, tags, length, collectionType)

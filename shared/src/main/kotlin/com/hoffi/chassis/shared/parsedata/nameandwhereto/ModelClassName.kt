@@ -1,25 +1,30 @@
 package com.hoffi.chassis.shared.parsedata.nameandwhereto
 
+import arrow.core.right
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.helpers.ifNotBlank
 import com.hoffi.chassis.shared.strategies.ClassNameStrategy
 import com.hoffi.chassis.shared.strategies.IClassNameStrategy
 import com.hoffi.chassis.shared.strategies.ITableNameStrategy
 import com.hoffi.chassis.shared.strategies.TableNameStrategy
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.asTypeName
 import okio.Path
 import okio.Path.Companion.toPath
 import org.slf4j.LoggerFactory
 
 interface IModelClassName {
     var modelName: String
-    val poetType: TypeName
+    var poetType: ClassName
     val tableName: String
     val asVarName: String
 }
 
-class ModelClassName(
-    val modelSubElRef: IDslRef
+class ModelClassName constructor(
+    val modelSubElRef: IDslRef,
+    private var poetTypeDirect: ClassName? = null
 ) : IModelClassName {
     val log = LoggerFactory.getLogger(javaClass)
     override fun toString() = poetType.toString()
@@ -35,9 +40,11 @@ class ModelClassName(
 
     override var modelName: String = modelSubElRef.parentRef.simpleName.ifBlank { log.warn("empty simpleName of model '${modelSubElRef.parentRef}'") ; "" }
 
-    // we need to wait until all properties are set on the instance before we can pre-calculate the "derived" properties:
-
-    override val poetType: TypeName by lazy { classNameStrategy.poetType(modelName, "${basePackage.ifNotBlank{"$basePackage."}}$packageName", classPrefix, classPostfix) }
+    // we need to wait until all properties are set on the instance before we can pre-calculate the "derived" properties via strategies:
+    override var poetType: ClassName
+        get() = poetTypeDirect ?: poetTypeInternal
+        set(value) { poetTypeDirect = value }
+    private val poetTypeInternal by lazy { classNameStrategy.poetType(modelName, "${basePackage.ifNotBlank{"$basePackage."}}$packageName", classPrefix, classPostfix) as ClassName }
     override val asVarName: String by lazy { classNameStrategy.asVarname(modelName, classPrefix, classPostfix) }
     override val tableName: String by lazy { tableNameStrategy.tableName(modelName) /*, classPrefix, classPostfix)*/ }
 

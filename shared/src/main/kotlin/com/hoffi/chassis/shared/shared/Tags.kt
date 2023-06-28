@@ -3,6 +3,7 @@ package com.hoffi.chassis.shared.shared
 sealed class Tag {
     override fun toString() = this::class.simpleName!!
     class CONSTRUCTOR : Tag()
+    class CONSTRUCTOR_INSUPER : Tag()
     class HASH_MEMBER : Tag()
     class PRIMARY : Tag()
     class TO_STRING_MEMBER : Tag()
@@ -10,6 +11,7 @@ sealed class Tag {
     class NULLABLE : Tag()
     companion object {
         val CONSTRUCTOR = CONSTRUCTOR()
+        val CONSTRUCTOR_INSUPER = CONSTRUCTOR_INSUPER()
         val HASH_MEMBER = HASH_MEMBER()
         val PRIMARY = PRIMARY()
         val TO_STRING_MEMBER = TO_STRING_MEMBER()
