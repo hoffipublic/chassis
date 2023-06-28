@@ -1,4 +1,4 @@
-package com.hoffi.chassis.chassismodel
+package com.hoffi.chassis.chassismodel.helpers
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel

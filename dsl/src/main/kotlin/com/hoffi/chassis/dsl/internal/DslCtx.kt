@@ -5,7 +5,6 @@ import com.hoffi.chassis.chassismodel.dsl.DslCtxException
 import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.dsl.modelgroup.DslModel
 import com.hoffi.chassis.dsl.modelgroup.DslModelgroup
-import com.hoffi.chassis.shared.codegen.CodeGenRun
 import com.hoffi.chassis.shared.codegen.GenCtx
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.dsl.DslRef
@@ -41,7 +40,7 @@ class DslCtx private constructor(){
     lateinit var dslRun: DslRun
     val log = LoggerFactory.getLogger(javaClass)
 
-    val genCtx by lazy { GenCtx(CodeGenRun(dslRun.runIdentifierEgEnvAndTime)) } // filled to be passed on by @ChassisDslMarker classes finish() methods
+    val genCtx by lazy { GenCtx._internal_create() } // filled to be passed on by @ChassisDslMarker classes finish() methods
     var currentPASS: DSLPASS = DSLPASS.NULL
     // we need Instances of DSLPASS to be able to do when(...) on them
     val PASS_ERROR =         DSLPASS.PASS_ERROR(this)

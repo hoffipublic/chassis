@@ -31,7 +31,7 @@ koodies = "1.9.7"
 kotest = "5.6.2"
 kotest-extensions-koin = "1.1.0"
 # global
-kotlin = "1.8.22"
+kotlin = "1.9.0-RC"
 kotlin-logging = "3.0.5"
 kotlinpoet = "1.14.2"
 kotlinx-coroutines = "1.7.1"

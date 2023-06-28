@@ -100,10 +100,10 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
     override var extends: Extends = Extends(simpleName)
     override var replaceSuperclass: Boolean
         get() = extends.replaceSuperclass
-        set(value) { extends.replaceSuperclass }
+        set(value) { extends.replaceSuperclass = value }
     override var replaceSuperInterfaces: Boolean
         get() = extends.replaceSuperInterfaces
-        set(value) { extends.replaceSuperInterfaces }
+        set(value) { extends.replaceSuperInterfaces = value }
 
     override fun KClass<*>.unaryPlus() {
         if (this.java.isInterface) { throw DslException("extends { unaryPlus(+) Some::class only is for classes, NOT for interfaces!") }
@@ -139,7 +139,6 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
             else -> throw DslException("extends on neither IElementLevel nor on ISubElementLevel")
         }
         // TODO hardcoded: possible only on modelgroup by now
-        val theDslRef: DslRef
         val reffedModel = dslModelgroup.dslModels.firstOrNull { it.simpleName == this }
         if (reffedModel != null) {
             reffedModel.selfDslRef.unaryPlus()

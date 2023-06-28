@@ -40,7 +40,6 @@ class DslModelgroup(
 {
     val log = LoggerFactory.getLogger(javaClass)
     init {
-        val workaround = dslCtxWrapperFake
         this@DslCtxWrapper.dslCtx.addToCtx(nameAndWheretoWithSubelements)
         this@DslCtxWrapper.dslCtx.addToCtx(gatherPropertiesImpl)
     }
@@ -82,7 +81,6 @@ globalDslCtx = dslCtx // TODO remove workaround
         when (dslCtx.currentPASS) {
             dslCtx.PASS_0_CONFIGURE -> {}
             dslCtx.PASS_1_BASEMODELS -> {
-                val modelRef = DslRef.model(simpleName, modelgroupRef)
                 @DslInstance val dslModel = dslCtx.createModel(simpleName, selfDslRef)
                 dslModels.add(dslModel)
                 dslModel.apply(dslModelBlock)
@@ -105,7 +103,7 @@ globalDslCtx = dslCtx // TODO remove workaround
     fun finish(dslCtx: DslCtx) {
 
     }
-    fun finishNameAndWheretos(dslCtx: DslCtx) {
+    fun prepareNameAndWheretos(dslCtx: DslCtx) {
         val gatheredNameAndWheretosFakeOfDslRun = SharedGatheredNameAndWheretos(DslRef.model("Fake", DslRef.NULL), "Fake")
         val nameAndWheretoWithSubelementsDevRun: DslNameAndWheretoWithSubelementsDelegateImpl = dslCtx.ctxObj(DslRef.nameAndWhereto("<DslRun>", dslCtx.dslRun.runRef))
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.nameAndWheretos) {
@@ -197,7 +195,7 @@ globalDslCtx = dslCtx // TODO remove workaround
         }
     }
 
-    fun finishClassModifiers(dslCtx: DslCtx) {
+    fun prepareClassModifiers(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
             val gatheredClassModifiers = dslCtx.gatheredClassModifiers(dslModel.selfDslRef)
             gatheredClassModifiers.allFromGroup.addAll(classModifiersImpl.theClassModifiers)
@@ -205,7 +203,7 @@ globalDslCtx = dslCtx // TODO remove workaround
         }
     }
 
-    fun finishExtends(dslCtx: DslCtx) {
+    fun prepareExtends(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
             val gatheredExtends: SharedGatheredExtends = dslCtx.gatheredExtends(dslModel.selfDslRef)
             gatheredExtends.allFromElement.putAll(dslModel.extendsImpl.theExtendBlocks.map { entry -> entry.key to entry.value.extends })
@@ -213,7 +211,7 @@ globalDslCtx = dslCtx // TODO remove workaround
     }
 
     /** gather dslRefs to gather from */
-    fun finishGatherPropertys(dslCtx: DslCtx) {
+    fun prepareGatherPropertys(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
             val gatheredGatherPropertys = dslCtx.gatheredGatherPropertys(dslModel.selfDslRef)
             gatheredGatherPropertys.allFromGroup.addAll(gatherPropertiesImpl.theGatherPropertys)

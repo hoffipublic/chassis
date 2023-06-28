@@ -14,7 +14,7 @@ class DslRun(var runIdentifierEgEnvAndTime: String) : IDslClass {
     override fun toString() = "DslRun(runIdentifierEgEnvAndTime='$runIdentifierEgEnvAndTime')"
     var running = false
     val dslRun = this
-    internal val dslCtx: DslCtx = DslCtx._create(this)
+    val dslCtx: DslCtx = DslCtx._create(this)
         .also {  globalDslCtx = it }
     val dslCtxWrapper by lazy { DslCtxWrapper(dslCtx, DslDiscriminator("run: $runIdentifierEgEnvAndTime")) }
 

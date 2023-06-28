@@ -25,11 +25,12 @@ fun modelgroup(simpleName: String, modelgroupBlock: DslModelgroup.() -> Unit) {
         dslCtx.PASS_FINISH -> {
             /* no special modelgroup finishing at the moment, so the same as else -> { } */
             val modelgroupRef = DslRef.modelgroup(simpleName, dslDiscriminator)
-            val dslModelgroup = dslCtx.getModelgroup(modelgroupRef).apply(modelgroupBlock)
-            dslModelgroup.finishNameAndWheretos(dslCtx)
-            dslModelgroup.finishClassModifiers(dslCtx)
-            dslModelgroup.finishExtends(dslCtx)
-            dslModelgroup.finishGatherPropertys(dslCtx)
+            val dslModelgroup = dslCtx.getModelgroup(modelgroupRef)
+            dslModelgroup.prepareNameAndWheretos(dslCtx)
+            dslModelgroup.prepareClassModifiers(dslCtx)
+            dslModelgroup.prepareExtends(dslCtx)
+            dslModelgroup.prepareGatherPropertys(dslCtx)
+            dslModelgroup.apply(modelgroupBlock)
             dslModelgroup.finish(dslCtx)
         }
         dslCtx.PASS_INHERITANCE -> {

@@ -99,7 +99,6 @@ class DslModel constructor(
     override val selfDslRef = modelRef
 
     init {
-        val workaround = dslCtxWrapperFake
         this@DslCtxWrapper.dslCtx.addToCtx(propsImpl)
         this@DslCtxWrapper.dslCtx.addToCtx(nameAndWheretoWithSubelements)
         this@DslCtxWrapper.dslCtx.addToCtx(gatherPropertiesImpl)
@@ -293,7 +292,6 @@ class DslDto(
     //override val modelElement = DslRef.model.MODELELEMENT.DTO
 
     init {
-        val workaround = dslCtxWrapperFake
         this@DslCtxWrapper.dslCtx.addToCtx(propsImpl)
         this@DslCtxWrapper.dslCtx.addToCtx(nameAndWheretoWithoutModelSubelementsImpl)
         this@DslCtxWrapper.dslCtx.addToCtx(gatherPropertiesImpl)
@@ -431,7 +429,6 @@ class DslTable(
     //override val modelElement = DslRef.model.MODELELEMENT.TABLE
 
     init {
-        val workaround = dslCtxWrapperFake
         this@DslCtxWrapper.dslCtx.addToCtx(propsImpl)
         this@DslCtxWrapper.dslCtx.addToCtx(nameAndWheretoWithoutModelSubelementsImpl)
         this@DslCtxWrapper.dslCtx.addToCtx(gatherPropertiesImpl)

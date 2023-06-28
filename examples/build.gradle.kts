@@ -17,15 +17,26 @@ application {
 
 
 dependencies {
+    implementation(project(":chassismodel"))
+    implementation(project(":shared"))
     implementation(project(":dsl"))
-//    implementation("com.github.ajalt.clikt:clikt".depAndVersion())
-//    implementation("com.squareup:kotlinpoet".depAndVersion())
+    implementation(project(":codegen"))
+    implementation(kotlin("reflect"))
+    implementation("com.github.ajalt.clikt:clikt:${libs.versions.clikt.get()}")
+    implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.get()}")
 }
 
 tasks {
     named<JavaExec>("run") {
         // needed if App wants to read from stdin
         standardInput = System.`in`
+    }
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions{
+            //Will retain parameter names for Java reflection
+            javaParameters = true
+            kotlinOptions.freeCompilerArgs = listOf("-Xcontext-receivers")
+        }
     }
     withType<Jar> {
         archiveBaseName.set(artifactName)
