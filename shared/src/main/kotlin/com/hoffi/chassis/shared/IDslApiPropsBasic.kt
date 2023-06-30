@@ -31,6 +31,7 @@ sealed class COLLECTIONTYPE {
 
 sealed class TYP(val poetType: ClassName) {
     override fun toString() = this::class.simpleName!!
+
     class CLASS : TYP(KClass::class.asClassName())
     class MODEL : TYP(Any::class.asClassName())
     class INT : TYP(Integer::class.asClassName())
@@ -62,12 +63,18 @@ sealed class TYP(val poetType: ClassName) {
         val DEFAULT_VARCHAR_LENGTH = 512
         val DEFAULT_USER = "<System>"
         val DEFAULT_OPTIMISTIC_LOCK_ID = 0
-
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is TYP) return false
+        return poetType == other.poetType
+    }
+    override fun hashCode() = poetType.hashCode()
 }
 
 class Initializer private constructor(var format: String, val args: MutableList<Any> = mutableListOf()) {
-    override fun toString() = "\"$format\"->${args.joinToString()}"
+    override fun toString() = "\"$format\"->(${args.joinToString()})"
     constructor(format: String, arg: Any, vararg args: Any) : this(format, mutableListOf(arg, *args))
     fun isEmpty() = format.isBlank()
     fun isNotEmpty() = !format.isBlank()

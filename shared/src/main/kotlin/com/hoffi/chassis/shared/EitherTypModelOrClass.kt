@@ -5,21 +5,74 @@ import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.ModelClassName
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.NameAndWheretoDefaults
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.asClassName
+import kotlin.reflect.KClass
 
 interface ITypOrModelOrPoetType {
+    val isInterface: Boolean
+    fun validate(any: Any)
     //fun classname(prefix: String = "", postfix: String = "")
 }
 
 sealed class EitherTypOrModelOrPoetType : ITypOrModelOrPoetType {
     lateinit var modelClassName: ModelClassName
-    class EitherTyp(val typ: TYP) : EitherTypOrModelOrPoetType() {
+    abstract override fun equals(other: Any?): Boolean
+    abstract override fun hashCode(): Int
+
+    class EitherTyp constructor(val typ: TYP) : EitherTypOrModelOrPoetType() {
+        override fun toString() = "${this::class.simpleName}($typ)"
         init { modelClassName = fakePoetTypeClassName(typ.poetType) }
+        override val isInterface = false
+        override fun validate(any: Any) {
+            modelClassName.validate(any)
+        }
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is EitherTyp) return false
+            return typ == other.typ
+        }
+        override fun hashCode() = typ.hashCode()
     }
-    class EitherModel(val modelSubElement: DslRef.IModelSubelement) : EitherTypOrModelOrPoetType() {
+    class EitherModel constructor(val modelSubElementRef: DslRef.IModelSubelement, override var isInterface: Boolean) : EitherTypOrModelOrPoetType() {
+        override fun toString() = "${this::class.simpleName}($modelSubElementRef)"
         // modelClassName (with poetType) init'ed in finish of modelSubelement
+        override fun validate(any: Any) {
+            modelClassName.validate(any)
+        }
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is EitherModel) return false
+            return modelSubElementRef == other.modelSubElementRef
+        }
+        override fun hashCode() = modelSubElementRef.hashCode()
     }
-    class EitherPoetType(val poetType: ClassName) : EitherTypOrModelOrPoetType() {
-        init { fakePoetTypeClassName(poetType) }
+    class EitherPoetType constructor(val poetType: ClassName, override val isInterface: Boolean) : EitherTypOrModelOrPoetType() {
+        override fun toString() = "${this::class.simpleName}($poetType)"
+        init { modelClassName = fakePoetTypeClassName(poetType) }
+        override fun validate(any: Any) {
+            modelClassName.validate(any)
+        }
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is EitherPoetType) return false
+            if (poetType != other.poetType) return false
+            return isInterface == other.isInterface
+        }
+        override fun hashCode(): Int {
+            var result = poetType.hashCode()
+            result = 31 * result + isInterface.hashCode()
+            return result
+        }
+    }
+    class NOTHING : EitherTypOrModelOrPoetType() {
+        override fun toString() = "${this::class.simpleName}"
+        override val isInterface = false
+        override fun validate(any: Any) {}
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            return (other is NOTHING)
+        }
+        override fun hashCode() = 42
     }
 
     protected fun fakePoetTypeClassName(thePoetType: ClassName): ModelClassName = ModelClassName(IDslRef.NULL).apply {
@@ -33,6 +86,12 @@ sealed class EitherTypOrModelOrPoetType : ITypOrModelOrPoetType {
             classPostfix = NameAndWheretoDefaults.classPostfix
 
             poetType = thePoetType
+            modelOrTypeNameString = thePoetType.simpleName
         }
+
+    companion object {
+        val NOTHING = NOTHING()
+        fun KClass<*>.createPoetType() = EitherPoetType(this.asClassName(), this.java.isInterface)
+    }
 }
 

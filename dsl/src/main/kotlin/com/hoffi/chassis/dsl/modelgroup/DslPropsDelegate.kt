@@ -20,6 +20,7 @@ class DslModelProp constructor(
     val propRef: DslRef.prop,
     var eitherTypModelOrClass: EitherTypOrModelOrPoetType,
     var mutable: Mutable = Mutable(false),
+    val modifiers: MutableSet<KModifier> = mutableSetOf(),
     val tags: Tags = Tags.NONE,
     var length: Int = C.DEFAULT_INT,
     val collectionType: COLLECTIONTYPE = COLLECTIONTYPE.NONE
@@ -60,22 +61,22 @@ class DslPropsDelegate(
 
         if (Tag.NULLABLE in tags) throw DslException("Tag.NULLABLE not allowed for primitive TYP properties in property $name of $parentRef")
         val typProp = EitherTypOrModelOrPoetType.EitherTyp(typ)
-        val prop = DslModelProp(name, DslRef.prop(name, parentRef), typProp, mutable, tags, length, collectionType)
+        val prop = DslModelProp(name, DslRef.prop(name, parentRef), typProp, mutable, modifiers, tags, length, collectionType)
         addProp(name, prop)
     }
 
     // ===================================================================================================================================
     // ====================   "CLASS" propertys   ====================================================================================
     // ===================================================================================================================================
-    override fun property(name: String, poetType: TypeName, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, modifiers: MutableSet<KModifier>, length: Int, tags: Tags) {
+    override fun property(name: String, poetType: TypeName, isInterface: Boolean, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, modifiers: MutableSet<KModifier>, length: Int, tags: Tags) {
         log.info("fun {}(\"{}, poetType\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
-        val prop = DslModelProp(name, DslRef.prop(name, parentRef), EitherTypOrModelOrPoetType.EitherPoetType(poetType as ClassName), mutable, tags, length, collectionType)
+        val prop = DslModelProp(name, DslRef.prop(name, parentRef), EitherTypOrModelOrPoetType.EitherPoetType(poetType as ClassName, isInterface), mutable, modifiers, tags, length, collectionType)
         addProp(name, prop)
     }
 
-    override fun property(name: String, modelRefString: String, modelSubelement: DslRef.model.MODELELEMENT, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, length: Int, tags: Tags) {
+    override fun property(name: String, modelRefString: String, modelSubelement: DslRef.model.MODELELEMENT, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, modifiers: MutableSet<KModifier>, length: Int, tags: Tags) {
         log.info("fun {}(\"{}, modelRefString\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
@@ -85,8 +86,8 @@ class DslPropsDelegate(
         }
         when (modelSubelement) {
             DslRef.model.MODELELEMENT.MODEL -> throw DslException("should have been catched above")
-            DslRef.model.MODELELEMENT.DTO ->   property(name, DslRef.dto(  C.DEFAULT, modelOrModelSubElementRef), mutable, collectionType, initializer, length, tags)
-            DslRef.model.MODELELEMENT.TABLE -> property(name, DslRef.table(C.DEFAULT, modelOrModelSubElementRef), mutable, collectionType, initializer, length, tags)
+            DslRef.model.MODELELEMENT.DTO ->   property(name, DslRef.dto(  C.DEFAULT, modelOrModelSubElementRef), mutable, collectionType, initializer, modifiers, length, tags)
+            DslRef.model.MODELELEMENT.TABLE -> property(name, DslRef.table(C.DEFAULT, modelOrModelSubElementRef), mutable, collectionType, initializer, modifiers, length, tags)
         }
     }
 
@@ -94,7 +95,7 @@ class DslPropsDelegate(
     // ====================   Model properties   =========================================================================================
     // ===================================================================================================================================
 
-    override fun property(name: String, modelSubElementRefString: String, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, length: Int, tags: Tags) {
+    override fun property(name: String, modelSubElementRefString: String, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, modifiers: MutableSet<KModifier>, length: Int, tags: Tags) {
         log.info("fun {}(\"{}, modelSubElementRefString\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
@@ -103,11 +104,11 @@ class DslPropsDelegate(
         if (modelOrModelSubElementRef !is DslRef.IModelSubelement) {
             throw DslException("prop $name of ref: $parentRef does not reference a modelSubElement (dto/table/...)")
         }
-        property(name, modelOrModelSubElementRef, mutable, collectionType, initializer, length, tags)
+        property(name, modelOrModelSubElementRef, mutable, collectionType, initializer, modifiers, length, tags)
     }
 
 
-    override fun property(name: String, modelSubElementRef: DslRef.IModelSubelement, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, length: Int, tags: Tags) {
+    override fun property(name: String, modelSubElementRef: DslRef.IModelSubelement, mutable: Mutable, collectionType: COLLECTIONTYPE, initializer: Initializer, modifiers: MutableSet<KModifier>, length: Int, tags: Tags) {
         log.info("fun {}(\"{}, DslRef\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
@@ -116,7 +117,8 @@ class DslPropsDelegate(
         ////if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
 
         if (Tag.NULLABLE in tags) log.warn("Tag.NULLABLE for Class property $name of $parentRef")
-        val prop = DslModelProp(name, DslRef.prop(name, parentRef), EitherTypOrModelOrPoetType.EitherModel(modelSubElementRef), mutable, tags, length, collectionType)
+        // isInterface of GenModel will be set to correct value in setModelClassNameOfReffedModelProperties()
+        val prop = DslModelProp(name, DslRef.prop(name, parentRef), EitherTypOrModelOrPoetType.EitherModel(modelSubElementRef, true), mutable, modifiers, tags, length, collectionType)
         addProp(name, prop)
     }
 }

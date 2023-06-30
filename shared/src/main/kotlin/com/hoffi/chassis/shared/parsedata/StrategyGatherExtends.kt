@@ -1,7 +1,7 @@
 package com.hoffi.chassis.shared.parsedata
 
 import com.hoffi.chassis.chassismodel.dsl.DslException
-import com.hoffi.chassis.shared.EitherTypeOrDslRef.Companion.NOTHING
+import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType.Companion.NOTHING
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.shared.Extends
 

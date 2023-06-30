@@ -242,7 +242,7 @@ object StrategyNameAndWhereto {
         }
         var absolute = false
         if ( (!eventualSharedNameAndWhereto.baseDirAbsoluteBool) &&
-            (sharedNameAndWhereto.baseDirAbsolute != NameAndWheretoDefaults.path) && (eventualSharedNameAndWhereto.baseDirAbsolute == NameAndWheretoDefaults.path) ) {
+            (sharedNameAndWhereto.baseDirAbsolute != NameAndWheretoDefaults.basePath) && (eventualSharedNameAndWhereto.baseDirAbsolute == NameAndWheretoDefaults.basePath) ) {
             eventualSharedNameAndWhereto.baseDirAbsolute = sharedNameAndWhereto.baseDirAbsolute
             absolute = true
         }

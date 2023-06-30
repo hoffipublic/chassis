@@ -10,7 +10,7 @@
 //import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoOnly
 //import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoWithSubelements
 //import com.hoffi.chassis.shared.dsl.DslRef
-//import com.hoffi.chassis.shared.parsedata.EitherModel
+//import com.hoffi.chassis.shared.parsedata.GenModel
 //import com.hoffi.chassis.shared.parsedata.Property
 //import com.squareup.kotlinpoet.TypeSpec
 //import org.slf4j.LoggerFactory
@@ -162,7 +162,7 @@
 //    override val modelElement = DslRef.model.MODELELEMENT.DTO
 //
 //    fun finish(dslCtx: DslCtx) {
-//        val dtoModel = EitherModel.DtoModel(dtoRef)
+//        val dtoModel = GenModel.DtoModel(dtoRef)
 //        dslCtx.genCtx.genModels[dtoRef] = dtoModel
 //        when (kind) {
 //            DslClassObjectOrInterface.CLASS -> dtoModel.kind = TypeSpec.Kind.CLASS

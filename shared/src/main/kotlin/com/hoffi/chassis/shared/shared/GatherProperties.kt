@@ -10,6 +10,6 @@ enum class GatherPropertiesEnum {
 }
 
 data class GatherPropertys(
-    var modelOrModelSubelementRef: IDslRef,
-    var gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES
+    val modelOrModelSubelementRef: IDslRef,
+    val gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES
 ) { override fun toString() = "$gatherPropertiesEnum of $modelOrModelSubelementRef" }

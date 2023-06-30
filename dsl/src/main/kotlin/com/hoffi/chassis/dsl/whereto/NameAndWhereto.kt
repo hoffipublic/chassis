@@ -93,7 +93,7 @@ open class DslNameAndWheretoPropsImpl(
     override fun toString() = "$selfDslRef"
     override var strategyClassName = IClassNameStrategy.STRATEGY.DEFAULT
     override var strategyTableName = ITableNameStrategy.STRATEGY.DEFAULT
-    var baseDirPathAbsolute: Path = NameAndWheretoDefaults.path
+    var baseDirPathAbsolute: Path = NameAndWheretoDefaults.basePath
     override fun baseDirAbsolute(absolute: Path) { baseDirPathAbsolute = absolute }
     override fun baseDirAbsolute(absolute: String) { baseDirPathAbsolute = absolute.toPath() }
     var baseDirAddendum: Path = NameAndWheretoDefaults.path

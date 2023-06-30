@@ -1,6 +1,7 @@
 package com.hoffi.chassis.examples.basic
 
-import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.*
+import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.INTERFACE
+import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.OBJECT
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.shared.TYP
@@ -31,7 +32,6 @@ fun baseModelsPersistent() {
             }
         }
         model(PERSISTENT__INTFC) {
-            kind = CLASS
             dto {
                 kind = INTERFACE
             }
@@ -42,14 +42,13 @@ fun baseModelsPersistent() {
             }
         }
         model(PERSISTENT__BASE) {
-            extends { +PERSISTENT__INTFC }
             classModifiers(KModifier.ABSTRACT)
             dto {
                 + KModifier.ABSTRACT
+                extends { -PERSISTENT__INTFC }
             }
         }
         model(PERSISTENT__PERSISTENT) {
-            extends { +PERSISTENT__BASE } // TODO this@model
             classModifiers(KModifier.ABSTRACT)
             property("uuid", TYP.UUID, mutable, Tag.PRIMARY)
             property("createdAt", TYP.LOCALDATETIME, mutable)
@@ -63,6 +62,7 @@ fun baseModelsPersistent() {
 //                "updateUser" with Initializer.of("%S", DEFAULT_USER)
 //            }
             dto {
+                extends { +PERSISTENT__BASE } // TODO this@model
                 classMods { }
                 nameAndWhereto {
                     classPostfix("Base")
@@ -70,23 +70,23 @@ fun baseModelsPersistent() {
             }
         }
         model(PERSISTENT__TRANSIENT_STATE) {
-            extends { +PERSISTENT__PERSISTENT }
             classModifiers(KModifier.ABSTRACT)
             property("created", TYP.BOOL, mutable, Tag.TRANSIENT)
             property("modified", TYP.BOOL, mutable, Tag.TRANSIENT)
             property("deleted", TYP.BOOL, mutable, Tag.TRANSIENT)
 
             dto {
+                extends { +PERSISTENT__PERSISTENT }
             }
         }
         model(PERSISTENT__PERSISTENT_OPTIMISTIC) {
-            extends { +PERSISTENT__TRANSIENT_STATE }
             classModifiers(KModifier.ABSTRACT)
             property("optimisticLockId", TYP.LONG, mutable)
 //            initBusinessValues {
 //                "optimisticLockId" with Initializer.of("%L", DEFAULT_OPTIMISTIC_LOCK_ID)
 //            }
             dto {
+                extends { +PERSISTENT__TRANSIENT_STATE }
             }
         }
         // ================================================================================================================================

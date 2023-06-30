@@ -37,8 +37,8 @@ fun modelgroup(simpleName: String, modelgroupBlock: DslModelgroup.() -> Unit) {
             // we do not decend the dsl tree in this Pass !!!
             val modelgroupRef = DslRef.modelgroup(simpleName, dslDiscriminator)
             val dslModelgroup = dslCtx.getModelgroup(modelgroupRef)
-            dslModelgroup.setModelClassNameOfReffedModelProperties(dslCtx)
-            dslModelgroup.gatherInheritedPropertys(dslCtx)
+            dslModelgroup.setModelClassNameOfReffedModelPropertiesAndExtendsModel(dslCtx)
+            dslModelgroup.gatherReferencedPropertys(dslCtx)
         }
         else -> {
             val modelgroupRef = DslRef.modelgroup(simpleName, dslDiscriminator)

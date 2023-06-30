@@ -1,13 +1,15 @@
 package com.hoffi.chassis.codegen.kotlin.gens
 
-import com.hoffi.chassis.shared.EitherTypeOrDslRef
+import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.codegen.GenCtxWrapper
-import com.hoffi.chassis.shared.parsedata.EitherModel
+import com.hoffi.chassis.shared.parsedata.GenModel
+import com.hoffi.chassis.shared.parsedata.Property
+import com.hoffi.chassis.shared.shared.Tag
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.TypeSpec
 
 context(GenCtxWrapper)
-class KotlinClassModelDto(val dtoModel: EitherModel.DtoModel)
+class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
     : AKotlinClass(dtoModel)
 {
     override fun toString() = "${this::class.simpleName}(${dtoModel})"
@@ -25,29 +27,50 @@ class KotlinClassModelDto(val dtoModel: EitherModel.DtoModel)
     }.apply {
     }
 
-    fun build() {
+    fun build(): TypeSpec.Builder {
         buildExtends()
         buildConstructors()
         buildPropertys()
         buildAuxiliaryFunctions()
+        return builder
     }
 
     fun buildExtends() {
         val extends = modelClassData.extends["default"]
-        if (extends != null && extends.typeClassOrDslRef != EitherTypeOrDslRef.NOTHING) {
-                //builder.superclass(extends.classPoetType)
-                //for (superConstrProp: Property in superclassModel.propertys.values.filter { Tag.CONSTRUCTOR in it.tags }) {
-                //    builder.addSuperclassConstructorParameter(superConstrProp.name)
-                //}
+        if (extends != null && extends.typeClassOrDslRef != EitherTypOrModelOrPoetType.NOTHING) {
+            builder.superclass(extends.typeClassOrDslRef.modelClassName.poetType)
+            when (extends.typeClassOrDslRef) {
+                is EitherTypOrModelOrPoetType.EitherModel -> {
+                    val eitherModel = extends.typeClassOrDslRef as EitherTypOrModelOrPoetType.EitherModel
+                    val reffedModel = genCtx.genModel(eitherModel.modelSubElementRef)
+                    for (superConstrProp: Property in reffedModel.propertys.values.filter { Tag.CONSTRUCTOR in it.tags }) {
+                        builder.addSuperclassConstructorParameter(superConstrProp.name)
+                    }
+                }
+                is EitherTypOrModelOrPoetType.EitherPoetType -> TODO()
+                is EitherTypOrModelOrPoetType.EitherTyp -> {}
+                is EitherTypOrModelOrPoetType.NOTHING -> {}
             }
         }
+    }
 
     fun buildConstructors() {
 
     }
 
     fun buildPropertys() {
-
+        for (prop in modelClassData.propertys.values) {
+            prop.validate(this)
+            val kotlinProp = KotlinPropertyDto(prop)
+            val propSpec = kotlinProp.build()
+            builder.addProperty(propSpec)
+        }
+        for (prop in modelClassData.gatheredPropertys.values) {
+            prop.validate(this)
+            val kotlinProp = KotlinPropertyDto(prop)
+            val propSpec = kotlinProp.build()
+            builder.addProperty(propSpec)
+        }
     }
 
     fun buildFunctions() {

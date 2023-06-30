@@ -8,10 +8,10 @@ import com.hoffi.chassis.shared.shared.GatherPropertys
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 
-sealed class EitherModel(modelSubElRef: DslRef.IModelSubelement, modelClassName: ModelClassName)
+sealed class GenModel(modelSubElRef: DslRef.IModelSubelement, modelClassName: ModelClassName)
     : ModelClassData(modelSubElRef, modelClassName) {
-    class DtoModel(dtoRef: DslRef.dto, modelClassName: ModelClassName) : EitherModel(dtoRef, modelClassName)
-    class TableModel(tableRef: DslRef.table, modelClassName: ModelClassName) : EitherModel(tableRef, modelClassName)
+    class DtoModel(dtoRef: DslRef.dto, modelClassName: ModelClassName) : GenModel(dtoRef, modelClassName)
+    class TableModel(tableRef: DslRef.table, modelClassName: ModelClassName) : GenModel(tableRef, modelClassName)
 }
 
 /** all props and sub-props are set on chassis DSL PASS_FINISH */

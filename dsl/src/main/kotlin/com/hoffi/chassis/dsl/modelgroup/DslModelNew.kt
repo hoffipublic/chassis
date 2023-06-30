@@ -320,8 +320,8 @@ class DslDto(
         }
 
         val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS, selfDslRef, sharedGatheredNameAndWheretos)
-        val dtoModel = EitherModel.DtoModel(selfDslRef as DslRef.dto, modelClassName)
-        dslCtx.genCtx.genModels[selfDslRef] = dtoModel
+        val dtoModel = GenModel.DtoModel(selfDslRef as DslRef.dto, modelClassName)
+        dslCtx.genCtx.allGenModels[selfDslRef] = dtoModel
         val dslModel: DslModel = dslCtx.ctxObj(selfDslRef.parentRef)
 
         when (kind) {
@@ -363,7 +363,7 @@ class DslDto(
         dtoModel.gatheredFromDslRefs.addAll(modelGatherProperties)
 
         // the gathered properties will be fetched into the model                      in Modelgroup's PASS_GENMODELSCREATED fun gatherInheritedPropertys()
-        // the ModelClassName of EitherModel's will be set in Modelgroup's PASS_GENMODELSCREATED fun setModelClassNameOfReffedModelProperties()
+        // the ModelClassName of GenModel's will be set in Modelgroup's PASS_GENMODELSCREATED fun setModelClassNameOfReffedModelProperties()
         val mapOfPropertys = thePropertiesOf(this.propsImpl, dslModel.propsImpl)
         dtoModel.propertys.putAll(mapOfPropertys)
 
@@ -454,8 +454,8 @@ class DslTable(
         }
 
         val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS, selfDslRef, sharedGatheredNameAndWheretos)
-        val tableModel = EitherModel.TableModel(selfDslRef as DslRef.table, modelClassName)
-        dslCtx.genCtx.genModels[selfDslRef] = tableModel
+        val tableModel = GenModel.TableModel(selfDslRef as DslRef.table, modelClassName)
+        dslCtx.genCtx.allGenModels[selfDslRef] = tableModel
         val dslModel: DslModel = dslCtx.ctxObj(selfDslRef.parentRef)
 
         when (kind) {

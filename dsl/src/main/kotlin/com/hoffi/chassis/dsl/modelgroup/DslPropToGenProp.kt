@@ -9,6 +9,7 @@ object DslPropToGenProp {
             dslProp.propRef,
             dslProp.eitherTypModelOrClass,
             dslProp.mutable,
+            dslProp.modifiers,
             dslProp.tags,
             dslProp.length,
             dslProp.collectionType

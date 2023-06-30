@@ -5,15 +5,18 @@ import com.hoffi.chassis.shared.COLLECTIONTYPE
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.Mutable
 import com.hoffi.chassis.shared.dsl.DslRef
+import com.hoffi.chassis.shared.helpers.Validate.failIfIdentifierInvalid
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.Tags
 import com.hoffi.chassis.shared.strategies.*
+import com.squareup.kotlinpoet.KModifier
 
 class Property constructor(
     val name: String,
     val propRef: DslRef.prop,
     var eitherTypModelOrClass: EitherTypOrModelOrPoetType,
     val mutable: Mutable = Mutable(false),
+    val modifiers: MutableSet<KModifier> = mutableSetOf(),
     val tags: Tags = Tags.NONE,
     var length: Int = C.DEFAULT_INT,
     val collectionType: COLLECTIONTYPE = COLLECTIONTYPE.NONE
@@ -25,4 +28,8 @@ class Property constructor(
 
     fun name(prefix: String = "", postfix: String = "") = varNameStrategy.nameLowerFirst(name, prefix, postfix)
 
+    fun validate(any: Any) {
+        name.failIfIdentifierInvalid(any)
+        eitherTypModelOrClass.validate("$any->$this")
+    }
 }

@@ -42,8 +42,8 @@ fun entities() {
 
         model(ENTITY__ENTITY) {
             extends {
-                + (MODEL inModelgroup PERSISTENTGROUP withModelName COMMON__PERSISTENT_OPTIMISTIC)
-                - ENTITY__BASE
+                //+ (MODEL inModelgroup PERSISTENTGROUP withModelName COMMON__PERSISTENT_OPTIMISTIC)
+                //- ENTITY__BASE
                 // NEXT WILL BREAK for Table
                 //+ ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT) ) // withName COMMON__PERSISTENT) //
                 //+ com.hoffi.chassis.shared.Dummy::class // special models overwrite non-Interface super classes
@@ -71,6 +71,7 @@ fun entities() {
 
             dto {
                 extends {
+                    + (MODEL inModelgroup PERSISTENTGROUP withModelName COMMON__PERSISTENT_OPTIMISTIC)
                     //replaceSuperclass = true
                     - ENTITY__BASE
                     //+ ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT_OPTIMISTIC) ) // withName COMMON__PERSISTENT) //
