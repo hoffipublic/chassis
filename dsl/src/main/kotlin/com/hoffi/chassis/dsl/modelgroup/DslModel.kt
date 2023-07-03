@@ -62,7 +62,7 @@
 //@ChassisDslMarker
 //abstract class ADslModelAndElementsCommonImpl(
 //    simpleName: String,
-//    parentRef: DslRef.IModelOrModelSubElement,
+//    parentRef: DslRef.IModelOrModelSubelement,
 //    val classModifiersImpl: DslClassModifiersImpl,
 //    val propsImpl: DslPropsDelegate,
 //    val classModsImpl: DslClassModsDelegateImpl,
@@ -78,7 +78,7 @@
 //{
 //    val log = LoggerFactory.getLogger(javaClass)
 //    // non direct DSL props
-//    //override val selfDslRef: DslRef.IModelOrModelSubElement = modelOrModelSubElementRef
+//    //override val selfDslRef: DslRef.IModelOrModelSubelement = modelOrModelSubElementRef
 //    override val selfDslRef = DslRef.model(simpleName, parentRef)
 //
 //    // DSL props
@@ -89,7 +89,7 @@
 //@ChassisDslMarker
 //abstract class ADslSubElementsOnly(
 //    simpleName: String,
-//    parentRef: DslRef.IModelOrModelSubElement,
+//    parentRef: DslRef.IModelOrModelSubelement,
 //    classModifiersImpl: DslClassModifiersImpl,
 //    propsImpl: DslPropsDelegate,
 //    val nameAndWheretos: DslNameAndWheretoOnlyDelegateImpl,
@@ -117,7 +117,7 @@
 //@ChassisDslMarker
 //abstract class ADslModelOnly(
 //    simpleName: String,
-//    parentRef: DslRef.IModelOrModelSubElement,
+//    parentRef: DslRef.IModelOrModelSubelement,
 //    classModifiersImpl: DslClassModifiersImpl,
 //    propsImpl: DslPropsDelegate,
 //    val nameAndWheretos: DslNameAndWheretoWithSubelementsDelegateImpl,

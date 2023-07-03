@@ -6,15 +6,14 @@ import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.dsl.scratchdslEXAMPLES.COMMON__PERSISTENT_OPTIMISTIC
 import com.hoffi.chassis.shared.COLLECTIONTYP
-import com.hoffi.chassis.shared.Dummy
 import com.hoffi.chassis.shared.TYP
-import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.dsl.DslRef.model.MODELELEMENT.MODEL
 import com.hoffi.chassis.shared.mutable
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.Initializer
 import com.hoffi.chassis.shared.shared.Tag
-import com.squareup.kotlinpoet.asTypeName
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.MODEL
+import com.hoffi.generated.universe.Dummy
 
 const val ENTITYGROUP = "Entitygroup"
 const val ENTITY__BASE      = ""
@@ -53,15 +52,16 @@ fun entities() {
                 //+ com.hoffi.chassis.shared.Dummy::class // special models overwrite non-Interface super classes
             }
 
-            property("name", TYP.STRING, mutable, Tag.CONSTRUCTOR, Tag.NO_DEFAULT_INITIALIZER, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
-            property("value", TYP.STRING, mutable, length = 4096, Tag.CONSTRUCTOR, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
+            property("name", TYP.STRING, mutable, Tag.CONSTRUCTOR, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
+            property("value", TYP.STRING, mutable, length = 4096, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
             property("prio", TYP.INT, mutable, Tag.TO_STRING_MEMBER)
             property("aInstant", TYP.INSTANT, mutable)
             property("aLocalDateTime", TYP.LOCALDATETIME, mutable)
-            property("someObject", Dummy::class, mutable, Initializer.of("%T.%L", Dummy::class.asTypeName(), "NULL"), length = C.DEFAULT_INT, Tag.TRANSIENT)
+            //property("someObject", Dummy::class, mutable, Tag.NO_DEFAULT_INITIALIZER, Tag.TRANSIENT)
+            property("someObject", Dummy::class, mutable, Initializer.of("%T.%L", Dummy::class, "NULL"), length = C.DEFAULT_INT, Tag.TRANSIENT)
             //property("someModelObject", SIMPLE__SUBENTITY, GENS.DTO, mutable, Tag.NULLABLE)
-            property("subentitys", "modelgroup:$ENTITYGROUP;model:$ENTITY__SUBENTITY", DslRef.model.MODELELEMENT.DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.NO_DEFAULT_INITIALIZER, Tag.NULLABLE)
-            property("listOfStrings", TYP.STRING, COLLECTIONTYP.LIST, Tag.COLLECTION_IMMUTABLE, Tag.CONSTRUCTOR, Tag.NO_DEFAULT_INITIALIZER, Tag.TRANSIENT)
+            property("subentitys", "modelgroup:$ENTITYGROUP;model:$ENTITY__SUBENTITY", MODELREFENUM.DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER, Tag.NULLABLE)
+            property("listOfStrings", TYP.STRING, COLLECTIONTYP.LIST, Tag.COLLECTION_IMMUTABLE, Tag.CONSTRUCTOR, Tag.TRANSIENT)
 
 //            initBusinessValues {
 //                init("someObject", Initializer.of("%T(%L)", Dummy::class.asTypeName(), 42))
@@ -82,7 +82,7 @@ fun entities() {
                 }
 //                annotateProperty("someObject", AnnotationSpec.builder(Contextual::class))
                 property("dtoSpecificProp", TYP.STRING, mutable, Tag.CONSTRUCTOR)
-                //propertiesOf( (DslRef.model.MODELELEMENT.DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__TRANSIENT_STATE), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+                //propertiesOf( (MODELREFENUM.DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__TRANSIENT_STATE), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
 //                initBusinessValues {
 //                    "someObject"      with Initializer.of("%T(%L)", Dummy::class.asTypeName(), 43)
 //                    "dtoSpecificProp" with Initializer.of("%S", "businessInitialized")
@@ -96,7 +96,7 @@ fun entities() {
                     replaceSuperclass = true
                 }
 
-                propertiesOf(DslRef.model.MODELELEMENT.DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+                propertiesOf(MODELREFENUM.DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
                 //alterPropertyForDB("name", "uniqueIndex()")
             }
 //            filler {
@@ -123,6 +123,7 @@ fun entities() {
                     + ( (MODEL inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) ) // withName COMMON__PERSISTENT) //
                 }
                 property("subEntityDtoSpecificProp", TYP.STRING, mutable = mutable, Tag.CONSTRUCTOR)
+                //property("entityBackreference", MODELREFENUM.DTO of ENTITY__ENTITY, mutable, Tag.TRANSIENT)
 
                 //initBusinessValues {
                 //    "dtoSpecificProp" with Initializer.of("%S", "subentity businessInitialized")
@@ -139,7 +140,7 @@ fun entities() {
 //                addToStringMembers("dtoSpecificProp")
             }
             table {
-                propertiesOf(DslRef.model.MODELELEMENT.DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+                propertiesOf(MODELREFENUM.DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
             }
 //            filler {
 //                +GENS.DTO

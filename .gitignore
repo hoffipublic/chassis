@@ -63,6 +63,7 @@ log/*
 tmp/*
 temp/*
 backup/*
+/generated/
 **/generated/*
 bak/*
 .svn

@@ -129,13 +129,24 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                 paramBuilder = ParameterSpec.builder(theProp.name, theProp.eitherTypModelOrClass.modelClassName.poetType)
                 if (theProp.eitherTypModelOrClass.initializer.format.isNotBlank()) {
                     paramBuilder.defaultValue(theProp.eitherTypModelOrClass.initializer.format, theProp.eitherTypModelOrClass.initializer.args)
+                } else if (Tag.DEFAULT_INITIALIZER in theProp.tags) {
+                    val eitherTypOfProp = theProp.eitherTypModelOrClass
+                    val defaultInitializer = when (eitherTypOfProp) {
+                        is EitherTypOrModelOrPoetType.EitherModel -> TODO()
+                        is EitherTypOrModelOrPoetType.EitherPoetType -> TODO()
+                        is EitherTypOrModelOrPoetType.EitherTyp -> eitherTypOfProp.typ.defaultInitializer
+                        is EitherTypOrModelOrPoetType.NOTHING -> TODO()
+                    }
+                    paramBuilder.defaultValue(defaultInitializer.codeBlock())
                 }
             }
             is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
                 val collMutable = if (Tag.COLLECTION_IMMUTABLE in theProp.tags) immutable else mutable
                 val collTypeWrapper = TypWrapper.of(theProp.collectionType, collMutable, theProp.eitherTypModelOrClass.modelClassName.poetType)
                 paramBuilder = ParameterSpec.builder(theProp.name, collTypeWrapper.typeName)
-                paramBuilder.defaultValue(collTypeWrapper.initializer.format, collTypeWrapper.initializer.args)
+                if (Tag.DEFAULT_INITIALIZER in theProp.tags) {
+                    paramBuilder.defaultValue(collTypeWrapper.initializer.format, collTypeWrapper.initializer.args)
+                }
             }
         }
         return paramBuilder

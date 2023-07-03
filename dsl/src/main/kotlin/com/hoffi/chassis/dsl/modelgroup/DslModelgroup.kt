@@ -19,6 +19,7 @@ import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWh
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedNameAndWhereto
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.GatherPropertys
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.squareup.kotlinpoet.TypeSpec
 import org.slf4j.LoggerFactory
 
@@ -121,7 +122,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.dtoNameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(DslRef.model.MODELELEMENT.DTO, SharedNameAndWhereto(
+            gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(MODELREFENUM.DTO, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
@@ -134,7 +135,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.tableNameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(DslRef.model.MODELELEMENT.TABLE, SharedNameAndWhereto(
+            gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(MODELREFENUM.TABLE, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
@@ -161,7 +162,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.dtoNameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(DslRef.model.MODELELEMENT.DTO, SharedNameAndWhereto(
+            gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(MODELREFENUM.DTO, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
@@ -174,7 +175,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.tableNameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(DslRef.model.MODELELEMENT.TABLE, SharedNameAndWhereto(
+            gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(MODELREFENUM.TABLE, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,

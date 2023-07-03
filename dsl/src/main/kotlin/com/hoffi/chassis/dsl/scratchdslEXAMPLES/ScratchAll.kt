@@ -4,9 +4,9 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.*
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
-import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.DslRefString
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.MODEL
 import com.squareup.kotlinpoet.KModifier
 
 const val SCRATCH = "CommonModel"
@@ -85,7 +85,7 @@ fun commonScratch() {
             //}
             extends("specialCase") {
                 if (dslCtx.dslRun.runIdentifierEgEnvAndTime != "devRun") {
-                    +((DslRef.model.MODELELEMENT.MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT))
+                    +((MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT))
                 }
             }
             dto {

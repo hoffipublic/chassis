@@ -6,10 +6,12 @@ import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.helpers.ifNotBlank
 import com.hoffi.chassis.shared.helpers.pathSepRE
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.hoffi.chassis.shared.strategies.ClassNameStrategy
 import com.hoffi.chassis.shared.strategies.IClassNameStrategy
 import com.hoffi.chassis.shared.strategies.ITableNameStrategy
 import com.hoffi.chassis.shared.strategies.TableNameStrategy
+import com.hoffi.chassis.shared.whens.WhensDslRef
 import okio.Path
 
 /** all nameAndWhereto { } information from viewpoint of one(!) Element (e.g. model or api) */
@@ -27,12 +29,13 @@ class SharedGatheredNameAndWheretos(val dslRef: DslRef.IElementLevel, val dslRun
         private set(value) { allFromElement[C.DEFAULT] = value }
 
     val allFromDslRunConfigure: MutableMap<String, SharedNameAndWhereto> = mutableMapOf()
-    val allFromDslRunConfigureForSubelement: MutableMap<DslRef.model.MODELELEMENT, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
     val allFromGroup: MutableMap<String, SharedNameAndWhereto> = mutableMapOf()
-    val allFromGroupForSubelement: MutableMap<DslRef.model.MODELELEMENT, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
+
+    val allFromDslRunConfigureForSubelement: MutableMap<MODELREFENUM, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
+    val allFromGroupForSubelement: MutableMap<MODELREFENUM, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
+    val allFromElementForSubelement: MutableMap<MODELREFENUM, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
 
     val allFromElement: MutableMap<String, SharedNameAndWhereto> = mutableMapOf()
-    val allFromElementForSubelement: MutableMap<DslRef.model.MODELELEMENT, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
     val allFromSubelements: MutableMap<DslRef.ISubElementLevel, MutableMap<String, SharedNameAndWhereto>> = mutableMapOf()
 
     fun createFor(thing: THINGSWITHNAMEANDWHERETOS, sharedNameAndWhereto: SharedNameAndWhereto) {
@@ -57,21 +60,21 @@ class SharedGatheredNameAndWheretos(val dslRef: DslRef.IElementLevel, val dslRun
         }
         subelementsNameAndWheretosMap[sharedNameAndWhereto.simpleName] = sharedNameAndWhereto
     }
-    fun createFromElementForSubelement(modelelement: DslRef.model.MODELELEMENT, sharedNameAndWhereto: SharedNameAndWhereto) {
+    fun createFromElementForSubelement(modelelement: MODELREFENUM, sharedNameAndWhereto: SharedNameAndWhereto) {
         val subelementsNameAndWheretosMap = allFromElementForSubelement.getOrPut(modelelement) { mutableMapOf() }
         if (subelementsNameAndWheretosMap.containsKey(sharedNameAndWhereto.simpleName)) {
             throw DslException("$modelelement has more than one nameAndWhereto with simpleName: '${sharedNameAndWhereto.simpleName}'")
         }
         subelementsNameAndWheretosMap[sharedNameAndWhereto.simpleName] = sharedNameAndWhereto
     }
-    fun createFromGroupForSubelement(modelelement: DslRef.model.MODELELEMENT, sharedNameAndWhereto: SharedNameAndWhereto) {
+    fun createFromGroupForSubelement(modelelement: MODELREFENUM, sharedNameAndWhereto: SharedNameAndWhereto) {
         val subelementsNameAndWheretosMap = allFromGroupForSubelement.getOrPut(modelelement) { mutableMapOf() }
         if (subelementsNameAndWheretosMap.containsKey(sharedNameAndWhereto.simpleName)) {
             throw DslException("$modelelement has more than one nameAndWhereto with simpleName: '${sharedNameAndWhereto.simpleName}'")
         }
         subelementsNameAndWheretosMap[sharedNameAndWhereto.simpleName] = sharedNameAndWhereto
     }
-    fun createFromDslRunForSubelement(modelelement: DslRef.model.MODELELEMENT, sharedNameAndWhereto: SharedNameAndWhereto) {
+    fun createFromDslRunForSubelement(modelelement: MODELREFENUM, sharedNameAndWhereto: SharedNameAndWhereto) {
         val subelementsNameAndWheretosMap = allFromDslRunConfigureForSubelement.getOrPut(modelelement) { mutableMapOf() }
         if (subelementsNameAndWheretosMap.containsKey(sharedNameAndWhereto.simpleName)) {
             throw DslException("$modelelement has more than one nameAndWhereto with simpleName: '${sharedNameAndWhereto.simpleName}'")
@@ -150,25 +153,10 @@ object StrategyNameAndWhereto {
     }
 
     private fun specialWins(dslRef: DslRef.ISubElementLevel, gatheredNameAndWheretos: SharedGatheredNameAndWheretos): ModelClassName {
-        val modelelement = when (dslRef as DslRef) {
-            is DslRef.DslRun -> TODO()
-            is DslRef.allModels -> TODO()
-            is DslRef.api -> TODO()
-            is DslRef.apifun -> TODO()
-            is DslRef.apigroup -> TODO()
-            is DslRef.classMods -> TODO()
-            is DslRef.dto -> DslRef.model.MODELELEMENT.DTO
-            is DslRef.extends -> TODO()
-            is DslRef.filler -> TODO()
-            is DslRef.model -> TODO()
-            is DslRef.modelgroup -> TODO()
-            is DslRef.nameAndWhereto -> TODO()
-            is DslRef.prop -> TODO()
-            is DslRef.properties -> TODO()
-            is DslRef.propertiesOf -> TODO()
-            is DslRef.showcase -> TODO()
-            is DslRef.table -> DslRef.model.MODELELEMENT.TABLE
-        }
+        val modelelement = WhensDslRef.whenModelSubelement(dslRef,
+            isDtoRef = { MODELREFENUM.DTO },
+            isTableRef = { MODELREFENUM.TABLE }
+        )
         val eventualModelClassName = ModelClassName(dslRef, null)
         val g = gatheredNameAndWheretos
         val eventualSharedNameAndWhereto = EventualSharedNameAndWhereto(

@@ -10,7 +10,7 @@ import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 /** a DslRun starts parsing multiple DSLs into the same DslCtx */
-class DslRun(var runIdentifierEgEnvAndTime: String) : IDslClass {
+class DslRun constructor(var runIdentifierEgEnvAndTime: String) : IDslClass {
     override fun toString() = "DslRun(runIdentifierEgEnvAndTime='$runIdentifierEgEnvAndTime')"
     var running = false
     val dslRun = this
@@ -18,7 +18,7 @@ class DslRun(var runIdentifierEgEnvAndTime: String) : IDslClass {
         .also {  globalDslCtx = it }
     val dslCtxWrapper by lazy { DslCtxWrapper(dslCtx, DslDiscriminator("run: $runIdentifierEgEnvAndTime")) }
 
-    val runRef = DslRef.DslRun(runIdentifierEgEnvAndTime)
+    val runRef = DslRef.dslRun(runIdentifierEgEnvAndTime)
     override val selfDslRef: DslRef = runRef
 
     fun start(dslRunDiscriminator: String, dslRunBlock: DslCtxWrapper.() -> Unit): DslRun {

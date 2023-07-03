@@ -14,6 +14,8 @@ import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.shared.Initializer
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.Tags
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
+import com.hoffi.chassis.shared.whens.WhensDslRef
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeName
@@ -80,7 +82,7 @@ class DslPropsDelegate(
         addProp(name, prop)
     }
 
-    override fun property(name: String, modelRefString: String, modelSubelement: DslRef.model.MODELELEMENT, mutable: Mutable, collectionType: COLLECTIONTYP, initializer: Initializer, modifiers: MutableSet<KModifier>, length: Int, tags: Tags) {
+    override fun property(name: String, modelRefString: String, modelSubelement: MODELREFENUM, mutable: Mutable, collectionType: COLLECTIONTYP, initializer: Initializer, modifiers: MutableSet<KModifier>, length: Int, tags: Tags) {
         log.info("fun {}(\"{}, modelRefString\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
@@ -89,9 +91,9 @@ class DslPropsDelegate(
             throw DslException("prop $name of ref: $parentRef does not reference a model  (model() { ... }")
         }
         when (modelSubelement) {
-            DslRef.model.MODELELEMENT.MODEL -> throw DslException("should have been catched above")
-            DslRef.model.MODELELEMENT.DTO ->   property(name, DslRef.dto(  C.DEFAULT, modelOrModelSubElementRef), mutable, collectionType, initializer, modifiers, length, tags)
-            DslRef.model.MODELELEMENT.TABLE -> property(name, DslRef.table(C.DEFAULT, modelOrModelSubElementRef), mutable, collectionType, initializer, modifiers, length, tags)
+            MODELREFENUM.MODEL -> throw DslException("should have been catched above")
+            MODELREFENUM.DTO ->   property(name, DslRef.dto(  C.DEFAULT, modelOrModelSubElementRef), mutable, collectionType, initializer, modifiers, length, tags)
+            MODELREFENUM.TABLE -> property(name, DslRef.table(C.DEFAULT, modelOrModelSubElementRef), mutable, collectionType, initializer, modifiers, length, tags)
         }
     }
 
@@ -112,7 +114,7 @@ class DslPropsDelegate(
     }
 
 
-    override fun property(name: String, modelSubElementRef: DslRef.IModelSubelement, mutable: Mutable, collectionType: COLLECTIONTYP, initializer: Initializer, modifiers: MutableSet<KModifier>, length: Int, tags: Tags) {
+    override fun property(name: String, modelSubElementRef: IDslRef, mutable: Mutable, collectionType: COLLECTIONTYP, initializer: Initializer, modifiers: MutableSet<KModifier>, length: Int, tags: Tags) {
         log.info("fun {}(\"{}, DslRef\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
@@ -120,9 +122,11 @@ class DslPropsDelegate(
         //if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         ////if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
 
+        WhensDslRef.whenModelSubelement(modelSubElementRef, {}, {}, catching = { throw DslException("must be a modelsubelement (dto, table, ...): property '${name}' of $parentRef") })
+
         if (Tag.NULLABLE in tags) log.warn("Tag.NULLABLE for Class property $name of $parentRef")
         // isInterface of GenModel will be set to correct value in setModelClassNameOfReffedModelProperties()
-        val prop = DslModelProp(name, DslRef.prop(name, parentRef), EitherTypOrModelOrPoetType.EitherModel(modelSubElementRef, true, initializer), mutable, modifiers, tags, length, collectionType)
+        val prop = DslModelProp(name, DslRef.prop(name, parentRef), EitherTypOrModelOrPoetType.EitherModel(modelSubElementRef as DslRef.IModelSubelement, true, initializer), mutable, modifiers, tags, length, collectionType)
         addProp(name, prop)
     }
 }

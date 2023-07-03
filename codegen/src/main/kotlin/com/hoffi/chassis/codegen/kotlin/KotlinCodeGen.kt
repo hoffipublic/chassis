@@ -3,22 +3,24 @@ package com.hoffi.chassis.codegen.kotlin
 import com.hoffi.chassis.codegen.kotlin.gens.KotlinClassModelDto
 import com.hoffi.chassis.shared.codegen.GenCtxWrapper
 import com.hoffi.chassis.shared.dsl.DslRef
+import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
+import com.hoffi.chassis.shared.whens.WhensDslRef
 
 context(GenCtxWrapper)
 class KotlinCodeGen() {
-    fun codeGen(modelelement: DslRef.model.MODELELEMENT) {
+    fun codeGen(dslRefProto: IDslRef) {
         println("========================================================================================")
-        println("     KotlinCodeGen(${genCtx.genRun.runIdentifier}).codeGen(${modelelement})")
+        println("     KotlinCodeGen(${genCtx.genRun.runIdentifier}).codeGen(${dslRefProto.dslBlockName})")
         println("========================================================================================")
-        when (modelelement) {
-            DslRef.model.MODELELEMENT.MODEL -> {
-                codeGen(DslRef.model.MODELELEMENT.DTO)
-                codeGen(DslRef.model.MODELELEMENT.TABLE)
-            }
-            DslRef.model.MODELELEMENT.DTO -> codeGenDto()
-            DslRef.model.MODELELEMENT.TABLE -> codeGenTable()
-        }
+        WhensDslRef.whenModelOrModelSubelement(dslRefProto,
+            isModelRef = {
+                codeGen(DslRef.dto.DTOPROTO)
+                codeGen(DslRef.table.TABLEPROTO)
+            },
+            isDtoRef = { codeGenDto() },
+            isTableRef = { codeGenTable() }
+        )
     }
 
     private fun codeGenDto() {

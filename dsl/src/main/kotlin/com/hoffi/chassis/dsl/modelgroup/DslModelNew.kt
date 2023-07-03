@@ -13,6 +13,7 @@ import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedNameAndWhereto
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.StrategyNameAndWhereto
 import com.hoffi.chassis.shared.shared.Extends
 import com.hoffi.chassis.shared.shared.GatherPropertys
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import org.slf4j.LoggerFactory
@@ -178,7 +179,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.dtoNameAndWheretos) {
-            gatheredNameAndWheretos.createFromElementForSubelement(DslRef.model.MODELELEMENT.DTO, SharedNameAndWhereto(
+            gatheredNameAndWheretos.createFromElementForSubelement(MODELREFENUM.DTO, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
@@ -191,7 +192,7 @@ globalDslCtx = dslCtx // TODO remove workaround
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.tableNameAndWheretos) {
-            gatheredNameAndWheretos.createFromElementForSubelement(DslRef.model.MODELELEMENT.TABLE, SharedNameAndWhereto(
+            gatheredNameAndWheretos.createFromElementForSubelement(MODELREFENUM.TABLE, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,

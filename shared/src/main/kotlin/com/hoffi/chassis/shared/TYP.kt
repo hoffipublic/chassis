@@ -1,6 +1,7 @@
 package com.hoffi.chassis.shared
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.shared.fix.RuntimeDefaults
 import com.hoffi.chassis.shared.shared.Initializer
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -11,7 +12,6 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import kotlin.reflect.KClass
 
 @JvmInline value class Mutable(val bool: Boolean)
 val immutable = Mutable(false)
@@ -33,22 +33,22 @@ sealed class COLLECTIONTYP {
     }
 }
 
-sealed class TYP(val poetType: ClassName) {
+sealed class TYP(val poetType: ClassName, val defaultInitializer: Initializer) {
     override fun toString() = this::class.simpleName!!
 
-    class CLASS : TYP(KClass::class.asClassName())
-    class MODEL : TYP(Any::class.asClassName())
-    class INT : TYP(Integer::class.asClassName())
-    class LONG : TYP(Long::class.asClassName())
-    class STRING : TYP(String::class.asClassName())
-    class BOOL : TYP(Boolean::class.asClassName())
-    class UUID : TYP(java.util.UUID::class.asClassName())
-    class INSTANT : TYP(Instant::class.asClassName())
-    class LOCALDATETIME : TYP(LocalDateTime::class.asClassName())
+    //class CLASS : TYP(KClass::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_CLASS)
+    //class MODEL : TYP(Any::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_MODEL)
+    class INT : TYP(Integer::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_INT)
+    class LONG : TYP(Long::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_LOCALDATETIME)
+    class STRING : TYP(String::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_STRING)
+    class BOOL : TYP(Boolean::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_BOOL)
+    class UUID : TYP(java.util.UUID::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_UUID)
+    class INSTANT : TYP(Instant::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_INSTANT)
+    class LOCALDATETIME : TYP(LocalDateTime::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_LOCALDATETIME)
     companion object {
         val DEFAULT = STRING()
-        val CLASS = CLASS()
-        val MODEL = MODEL()
+        //val CLASS = CLASS()
+        //val MODEL = MODEL()
         val INT = INT()
         val LONG = LONG()
         val STRING = STRING()
@@ -56,17 +56,17 @@ sealed class TYP(val poetType: ClassName) {
         val UUID = UUID()
         val INSTANT = INSTANT()
         val LOCALDATETIME = LOCALDATETIME()
-        val DEFAULT_INT = -1
-        val DEFAULT_LONG = -1L
+        val DEFAULT_INT = C.DEFAULT_INT
+        val DEFAULT_LONG = C.DEFAULT_LONG
         val DEFAULT_STRING = C.DEFAULTSTRING
         val DEFAULT_STRING_DUMMY = C.DEFAULT
-        val DEFAULT_UUID = java.util.UUID.fromString("00000000-0000-0000-0000-000000000001")
-        val DEFAULT_INSTANT = Instant.fromEpochMilliseconds(1L)
+        val DEFAULT_UUID = C.DEFAULT_UUID
+        val DEFAULT_INSTANT = C.DEFAULT_INSTANT
         val DEFAULT_LOCALDATETIME = DEFAULT_INSTANT.toLocalDateTime(TimeZone.UTC)
         val DEFAULT_LOCALDATETIME_DB = DEFAULT_LOCALDATETIME
-        val DEFAULT_VARCHAR_LENGTH = 512
-        val DEFAULT_USER = "<System>"
-        val DEFAULT_OPTIMISTIC_LOCK_ID = 0
+        val DEFAULT_VARCHAR_LENGTH = C.DEFAULT_VARCHAR_LENGTH
+        val DEFAULT_USER = C.DEFAULT_USER
+        val DEFAULT_OPTIMISTIC_LOCK_ID = C.DEFAULT_OPTIMISTIC_LOCK_ID
     }
 
     override fun equals(other: Any?): Boolean {

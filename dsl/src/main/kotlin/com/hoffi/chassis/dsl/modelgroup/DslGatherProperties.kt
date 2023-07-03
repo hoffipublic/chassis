@@ -11,6 +11,7 @@ import com.hoffi.chassis.shared.dsl.DslRefString
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.GatherPropertys
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import org.slf4j.LoggerFactory
 
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
@@ -24,8 +25,8 @@ interface IDslApiGatherPropertiesModelAndModelSubelementsCommon {
 }
 @ChassisDslMarker
 interface IDslApiGatherPropertiesElementsOnlyCommon : IDslApiGatherPropertiesProp, IDslApiModelReffing {
-    fun propertiesOf(modelElement: DslRef.model.MODELELEMENT, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.NONE, simpleName: String = C.DEFAULT)
-    fun propertiesOfSuperclassesOf(modelElement: DslRef.model.MODELELEMENT, simpleName: String = C.DEFAULT)
+    fun propertiesOf(modelElement: MODELREFENUM, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.NONE, simpleName: String = C.DEFAULT)
+    fun propertiesOfSuperclassesOf(modelElement: MODELREFENUM, simpleName: String = C.DEFAULT)
 }
 @ChassisDslMarker
 interface IDslApiGatherPropertiesBoth : IDslApiGatherPropertiesModelAndModelSubelementsCommon, IDslApiGatherPropertiesElementsOnlyCommon
@@ -61,7 +62,7 @@ class DslGatherPropertiesDelegateImpl(
 
     override fun propertiesOfSuperclasses() {
         if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return
-        theGatherPropertys.add(GatherPropertys(parentRef.parentRef as DslRef.IModelOrModelSubElement, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES))
+        theGatherPropertys.add(GatherPropertys(parentRef.parentRef as DslRef.IModelOrModelSubelement, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES))
     }
 
     override fun propertiesOf(dslModelOrElementRefString: String, gatherPropertiesEnum: GatherPropertiesEnum) {
@@ -82,7 +83,7 @@ class DslGatherPropertiesDelegateImpl(
     }
 
     override fun propertiesOf(
-        modelElement: DslRef.model.MODELELEMENT,
+        modelElement: MODELREFENUM,
         gatherPropertiesEnum: GatherPropertiesEnum,
         simpleName: String
     ) {
@@ -90,19 +91,19 @@ class DslGatherPropertiesDelegateImpl(
         // definitely a modelSubElement, as this function should only be callable in context of a DslRef.IModelSubelement
         val modelRef = parentRef.parentRef as DslRef.model
         when (modelElement) {
-            DslRef.model.MODELELEMENT.MODEL -> {
+            MODELREFENUM.MODEL -> {
                 theGatherPropertys.add(GatherPropertys(modelRef, gatherPropertiesEnum))
             }
-            DslRef.model.MODELELEMENT.DTO -> {
+            MODELREFENUM.DTO -> {
                 theGatherPropertys.add(GatherPropertys(DslRef.dto(simpleName, modelRef), gatherPropertiesEnum))
             }
-            DslRef.model.MODELELEMENT.TABLE -> {
+            MODELREFENUM.TABLE -> {
                 theGatherPropertys.add(GatherPropertys(DslRef.table(simpleName, modelRef), gatherPropertiesEnum))
             }
         }
     }
 
-    override fun propertiesOfSuperclassesOf(modelElement: DslRef.model.MODELELEMENT, simpleName: String) {
+    override fun propertiesOfSuperclassesOf(modelElement: MODELREFENUM, simpleName: String) {
         propertiesOf(modelElement, GatherPropertiesEnum.SUPERCLASS_PROPERTIES_ONLY, simpleName)
     }
 
@@ -112,11 +113,11 @@ class DslGatherPropertiesDelegateImpl(
 
     val modelReffing = DslImplModelReffing(this)
 
-    override fun DslRef.model.MODELELEMENT.of(thisModelgroupSubElementSimpleName: String): IDslRef {
+    override fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): IDslRef {
         return modelReffing.fakeOf(this, thisModelgroupSubElementSimpleName)
     }
 
-    override fun DslRef.model.MODELELEMENT.inModelgroup(otherModelgroupSimpleName: String): OtherModelgroupSubelementDefault {
+    override fun MODELREFENUM.inModelgroup(otherModelgroupSimpleName: String): OtherModelgroupSubelementDefault {
         return modelReffing.fakeInModelgroup(this, otherModelgroupSimpleName)
     }
 

@@ -7,12 +7,13 @@ import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.shared.COLLECTIONTYP
 import com.hoffi.chassis.shared.TYP
-import com.hoffi.chassis.shared.dsl.DslRef.model.MODELELEMENT.DTO
-import com.hoffi.chassis.shared.dsl.DslRef.model.MODELELEMENT.MODEL
 import com.hoffi.chassis.shared.mutable
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.Initializer
 import com.hoffi.chassis.shared.shared.Tag
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.DTO
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.MODEL
+import com.hoffi.generated.universe.Dummy
 import com.squareup.kotlinpoet.asTypeName
 
 const val SIMPLE = "Simple"
@@ -54,7 +55,7 @@ fun simpleEntities() {
             property("prio", TYP.INT, mutable, Tag.TO_STRING_MEMBER)
             property("aInstant", TYP.INSTANT, mutable)
             property("aLocalDateTime", TYP.LOCALDATETIME, mutable)
-            property("someObject", com.hoffi.chassis.shared.Dummy::class, mutable, Initializer.of("%T.%L", com.hoffi.chassis.shared.Dummy::class.asTypeName(), "NULL"), length = C.DEFAULT_INT, Tag.TRANSIENT)
+            property("someObject", Dummy::class, mutable, Initializer.of("%T.%L", Dummy::class.asTypeName(), "NULL"), length = C.DEFAULT_INT, Tag.TRANSIENT)
             //property("someModelObject", SIMPLE__SUBENTITY, GENS.DTO, mutable, Tag.NULLABLE)
             property("subentitys", "modelgroup:$SIMPLE;model:$SIMPLE__SUBENTITY", DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.NULLABLE)
             property("listOfStrings", TYP.STRING, COLLECTIONTYP.LIST, Tag.CONSTRUCTOR, Tag.TRANSIENT)

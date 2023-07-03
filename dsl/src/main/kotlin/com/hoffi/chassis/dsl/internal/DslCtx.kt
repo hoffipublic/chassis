@@ -109,7 +109,7 @@ class DslCtx private constructor(){
                     it.parameters[0].type.classifier == String::class  && ! it.parameters[0].type.isMarkedNullable
                     it.parameters[1].type.isSubtypeOf(IDslRef::class.createType()) && ! it.parameters[0].type.isMarkedNullable
         } ?: throw DslCtxException("${T::class.simpleName} does not have a constructor(String, IDslRef")
-        log.debug("{}.constr({}) in DslCtx.ctxObjCreate('DslRef.{}')", T::class.simpleName, dslRef::class.simpleName, dslRef)
+        log.debug("{}.constr({}) in DslCtx.ctxObjCreate(dslRef = '{}')", T::class.simpleName, dslRef::class.simpleName, dslRef)
         val theObj: T = constr.call(this@DslCtxWrapper, dslRef.simpleName, dslRef.parentRef)
         log.debug("ok.")
         //theObj = T::class.getDeclaredConstructor().newInstance()

@@ -1,61 +1,113 @@
 package com.hoffi.chassis.shared.fix
 
+import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_INSTANT
+import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_INT
+import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_LONG
+import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_STRING
+import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_UUID
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.DEFAULT_MEMBER_INT
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.UNIVERSE___DEFAULTS
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.UNIVERSE___PACKAGE
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.WAS_GENERATED_INTERFACE_ClassName
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.classNameInstant
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.classNameInstant_toLocalDateTime
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.classNameLocalDateTime
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.classNameTimeZone
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.classNameUUID
+import com.squareup.kotlinpoet.*
+
 object Universe {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        codeGen()
+    }
     fun codeGen() {
-        //universe()
+        universe()
         //fixedClasses()
         //annotations()
+        dummy()
     }
 
-//    fun universe() {
-//        var fileSpec = FileSpec.builder(WAS_GENERATED_INTERFACE_ClassName.packageName, WAS_GENERATED_INTERFACE_ClassName.simpleName)
-//            .addType(
-//                TypeSpec.interfaceBuilder(WAS_GENERATED_INTERFACE_ClassName)
-//                .addKdoc("generated at %L on %L", ENV.generationLocalDateTime, ENV.hostname)
-//                .build())
-//            .build()
-//        var universeModelGenRef = ModelGenRef(ModelRef(ModelgroupName(UNIVERSE___MODELGROUP), ModelName(WAS_GENERATED_INTERFACE_ClassName.simpleName)), GENS.COMMON)
-//        var universeEitherModelNew = EitherModelNew.DtoModel(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
-//        ctx.fileSpecs.getOrPut(universeEitherModelNew){ mutableListOf()}.add(fileSpec)
-//
-//        val universeDefaultsClassName = ClassName(UNIVERSE___PACKAGE, UNIVERSE___DEFAULTS)
-//        val typeSpec = TypeSpec.objectBuilder(UNIVERSE___DEFAULTS)
-//            .addKdoc("generated at %L on %L", ENV.generationLocalDateTime, ENV.hostname)
-//            .addSuperinterface(WAS_GENERATED_INTERFACE_ClassName)
-//            .addProperty(
-//                PropertySpec.builder("DEFAULT_INT", Int::class)
-//                .initializer("%L", Defaults.DEFAULT_INT)
-//                .build())
-//            .addProperty(
-//                PropertySpec.builder("DEFAULT_LONG", Long::class)
-//                .initializer("%L", Defaults.DEFAULT_LONG)
-//                .build())
-//            .addProperty(
-//                PropertySpec.builder("DEFAULT_STRING", String::class)
-//                .initializer("%S", Defaults.DEFAULT_STRING)
-//                .build())
-//            .addProperty(
-//                PropertySpec.builder("DEFAULT_UUID", classNameUUID)
-//                .initializer("%T.fromString(\"00000000-0000-0000-0000-000000000001\")", classNameUUID)
-//                .build())
-//            .addProperty(
-//                PropertySpec.builder("DEFAULT_INSTANT", classNameInstant)
-//                .initializer("%T.fromEpochMilliseconds(1L)", classNameInstant)
-//                .build())
-//            .addProperty(
-//                PropertySpec.builder("DEFAULT_LOCALDATETIME", classNameLocalDateTime)
-//                .initializer("DEFAULT_INSTANT.%M(%T.UTC)", classNameInstant_toLocalDateTime, classNameTimeZone)
-//                .build())
-//            .addProperty(
-//                PropertySpec.builder("DEFAULT_LOCALDATETIME_DB", classNameLocalDateTime)
-//                .initializer("%L", "DEFAULT_LOCALDATETIME")
-//                .build())
-//        fileSpec = FileSpec.builder(universeDefaultsClassName.packageName, universeDefaultsClassName.simpleName)
-//            .addType(typeSpec.build()).build()
-//        universeModelGenRef = ModelGenRef(ModelRef(ModelgroupName(UNIVERSE___MODELGROUP), ModelName(universeDefaultsClassName.simpleName)), GENS.COMMON)
-//        universeEitherModelNew = EitherModelNew.DtoModel(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
-//        ctx.fileSpecs.getOrPut(universeEitherModelNew){ mutableListOf()}.add(fileSpec)
-//    }
+    private fun dummy() {
+        //class Dummy(var i: Int) {
+        //    companion object {
+        //        val NULL = Dummy(Defaults.DEFAULT_INT)
+        //    }
+        //}
+        val fileSpecDummy = FileSpec.builder(UNIVERSE___PACKAGE, "Dummy")
+            .addType(
+                TypeSpec.classBuilder(ClassName(UNIVERSE___PACKAGE, "Dummy"))
+                    .primaryConstructor(FunSpec.constructorBuilder()
+                        .addParameter(ParameterSpec.builder("i", Int::class).build())
+                        .build()
+                    )
+                    .addProperty(PropertySpec.builder("i", Int::class).initializer("i").mutable().build())
+                    .addType(TypeSpec.companionObjectBuilder()
+                        .addProperty(PropertySpec.builder("NULL", ClassName(UNIVERSE___PACKAGE, "Dummy"))
+                            .initializer("%T(%M)", ClassName(UNIVERSE___PACKAGE, "Dummy"), DEFAULT_MEMBER_INT)
+                            .build()
+                        )
+                        .build()
+                    )
+                    .build()
+            ).build()
+        fileSpecDummy.writeTo(RuntimeDefaults.UNIVERSE__BASEDIR.toNioPath())
+    }
+
+    fun universe() {
+        val fileSpecWasGeneratedInterface = FileSpec.builder(WAS_GENERATED_INTERFACE_ClassName.packageName, WAS_GENERATED_INTERFACE_ClassName.simpleName)
+            .addType(
+                TypeSpec.interfaceBuilder(WAS_GENERATED_INTERFACE_ClassName)
+                .addKdoc("generated at %L on %L", ENV.generationLocalDateTime, ENV.hostname)
+                .build())
+            .build()
+        //var universeModelGenRef = ModelGenRef(ModelRef(ModelgroupName(UNIVERSE___MODELGROUP), ModelName(WAS_GENERATED_INTERFACE_ClassName.simpleName)), GENS.COMMON)
+        //var universeEitherModelNew = EitherModelNew.DtoModel(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
+        //ctx.fileSpecs.getOrPut(universeEitherModelNew){ mutableListOf()}.add(fileSpec)
+
+        val universeDefaultsClassName = ClassName(UNIVERSE___PACKAGE, UNIVERSE___DEFAULTS)
+        val typeSpecBuilder = TypeSpec.objectBuilder(UNIVERSE___DEFAULTS)
+            .addKdoc("generated at %L on %L", ENV.generationLocalDateTime, ENV.hostname)
+            .addSuperinterface(WAS_GENERATED_INTERFACE_ClassName)
+            .addProperty(
+                PropertySpec.builder("DEFAULT_INT", Int::class)
+                .initializer("%L", DEFAULT_INT)
+                .build())
+            .addProperty(
+                PropertySpec.builder("DEFAULT_LONG", Long::class)
+                .initializer("%LL", DEFAULT_LONG)
+                .build())
+            .addProperty(
+                PropertySpec.builder("DEFAULT_STRING", String::class)
+                .initializer("%S", DEFAULT_STRING)
+                .build())
+            .addProperty(
+                PropertySpec.builder("DEFAULT_UUID", classNameUUID)
+                .initializer("%T.fromString(\"${DEFAULT_UUID}\")", classNameUUID)
+                .build())
+            .addProperty(
+                PropertySpec.builder("DEFAULT_INSTANT", classNameInstant)
+                .initializer("%T.fromEpochMilliseconds(${DEFAULT_INSTANT.toEpochMilliseconds()}L)", classNameInstant)
+                .build())
+            .addProperty(
+                PropertySpec.builder("DEFAULT_LOCALDATETIME", classNameLocalDateTime)
+                .initializer("DEFAULT_INSTANT.%M(%T.UTC)", classNameInstant_toLocalDateTime, classNameTimeZone)
+                .build())
+            .addProperty(
+                PropertySpec.builder("DEFAULT_LOCALDATETIME_DB", classNameLocalDateTime)
+                .initializer("%L", "DEFAULT_LOCALDATETIME")
+                .build())
+        val fileSpecUniverseDefaults = FileSpec.builder(universeDefaultsClassName.packageName, universeDefaultsClassName.simpleName)
+            .addType(typeSpecBuilder.build()).build()
+
+        fileSpecWasGeneratedInterface.writeTo(RuntimeDefaults.UNIVERSE__BASEDIR.toNioPath())
+        fileSpecUniverseDefaults.writeTo(RuntimeDefaults.UNIVERSE__BASEDIR.toNioPath())
+
+
+        //universeModelGenRef = ModelGenRef(ModelRef(ModelgroupName(UNIVERSE___MODELGROUP), ModelName(universeDefaultsClassName.simpleName)), GENS.COMMON)
+        //universeEitherModelNew = EitherModelNew.DtoModel(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
+        //ctx.fileSpecs.getOrPut(universeEitherModelNew){ mutableListOf()}.add(fileSpec)
+    }
 
 //    fun fixedClasses() {
 //        if (Models.dtoModels.isNotEmpty()) {
