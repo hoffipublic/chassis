@@ -1,8 +1,12 @@
 package com.hoffi.chassis.shared
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.shared.shared.Initializer
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.asTypeName
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -13,13 +17,13 @@ import kotlin.reflect.KClass
 val immutable = Mutable(false)
 val mutable = Mutable(true)
 
-sealed class COLLECTIONTYPE {
+sealed class COLLECTIONTYP {
     override fun toString() = this::class.simpleName!!
-    class NONE : COLLECTIONTYPE()
-    class LIST : COLLECTIONTYPE()
-    class SET : COLLECTIONTYPE()
-    class COLLECTION : COLLECTIONTYPE()
-    class ITERABLE : COLLECTIONTYPE()
+    class NONE : COLLECTIONTYP()
+    class LIST : COLLECTIONTYP()
+    class SET : COLLECTIONTYP()
+    class COLLECTION : COLLECTIONTYP()
+    class ITERABLE : COLLECTIONTYP()
     companion object {
         val NONE = NONE()
         val LIST = LIST()
@@ -73,15 +77,15 @@ sealed class TYP(val poetType: ClassName) {
     override fun hashCode() = poetType.hashCode()
 }
 
-class Initializer private constructor(var format: String, val args: MutableList<Any> = mutableListOf()) {
-    override fun toString() = "\"$format\"->(${args.joinToString()})"
-    constructor(format: String, arg: Any, vararg args: Any) : this(format, mutableListOf(arg, *args))
-    fun isEmpty() = format.isBlank()
-    fun isNotEmpty() = !format.isBlank()
+data class TypWrapper(val typeName: TypeName, val initializer: Initializer) {
     companion object {
-        val EMPTY = Initializer("")
-        fun of(format: String, vararg args: Any) = Initializer(format, args)
-        fun of(format: String, args: List<Any>) = Initializer(format, args.toTypedArray())
+        fun of(COLLECTIONTYP: COLLECTIONTYP, mutable: Mutable, genericType: TypeName) =
+            when (COLLECTIONTYP) {
+                is COLLECTIONTYP.LIST ->       if (mutable.bool) TypWrapper(ClassName("kotlin.collections", "MutableList").parameterizedBy(genericType), Initializer.of("mutableListOf()", "")) else TypWrapper(List::class      .asTypeName().parameterizedBy(genericType), Initializer.of("listOf()", ""))
+                is COLLECTIONTYP.SET ->        if (mutable.bool) TypWrapper(ClassName("kotlin.collections", "MutableSet") .parameterizedBy(genericType), Initializer.of("mutableSetOf()", ""))  else TypWrapper(Set::class       .asTypeName().parameterizedBy(genericType), Initializer.of("setOf()", ""))
+                is COLLECTIONTYP.COLLECTION -> if (mutable.bool) TypWrapper(ClassName("kotlin.collections", "MutableList").parameterizedBy(genericType), Initializer.of("mutableListOf()", "")) else TypWrapper(Collection::class.asTypeName().parameterizedBy(genericType), Initializer.of("listOf()", ""))
+                is COLLECTIONTYP.ITERABLE ->   if (mutable.bool) TypWrapper(ClassName("kotlin.collections", "MutableList").parameterizedBy(genericType), Initializer.of("mutableListOf()", "")) else TypWrapper(Iterable::class  .asTypeName().parameterizedBy(genericType), Initializer.of("listOf()", ""))
+                is COLLECTIONTYP.NONE -> TODO()
+            }
     }
-    fun copy(format: String = this.format, args: MutableList<Any> = this.args) = Initializer(format, args)
 }

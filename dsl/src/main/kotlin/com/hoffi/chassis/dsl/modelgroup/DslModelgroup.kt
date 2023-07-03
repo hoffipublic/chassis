@@ -241,6 +241,31 @@ globalDslCtx = dslCtx // TODO remove workaround
                     extendsEitherModel.modelClassName = reffedModelClassName
                     extendsEitherModel.isInterface = reffedModel.kind == TypeSpec.Kind.INTERFACE
                 }
+                for (extends in genModel.extends.values) {
+                    var extendsTypClassOrDslRef = extends.typeClassOrDslRef
+                    when (extendsTypClassOrDslRef) {
+                        is EitherTypOrModelOrPoetType.EitherModel -> {
+                            val reffedSubElRef = extendsTypClassOrDslRef.modelSubElementRef
+                            val reffedModel = dslCtx.genCtx.allGenModels[reffedSubElRef]!!
+                            val reffedModelClassName = reffedModel.modelClassName
+                            extendsTypClassOrDslRef.modelClassName = reffedModelClassName
+                            extendsTypClassOrDslRef.isInterface = reffedModel.kind == TypeSpec.Kind.INTERFACE
+                        }
+                        else -> {}
+                    }
+                    for (extendsInterface in extends.superInterfaces) {
+                        when (extendsInterface) {
+                            is EitherTypOrModelOrPoetType.EitherModel -> {
+                                val reffedSubElRef = extendsInterface.modelSubElementRef
+                                val reffedModel = dslCtx.genCtx.allGenModels[reffedSubElRef]!!
+                                val reffedModelClassName = reffedModel.modelClassName
+                                extendsInterface.modelClassName = reffedModelClassName
+                                extendsInterface.isInterface = reffedModel.kind == TypeSpec.Kind.INTERFACE
+                            }
+                            else -> {}
+                        }
+                    }
+                }
             }
         }
     }

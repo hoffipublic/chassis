@@ -1,7 +1,7 @@
 package com.hoffi.chassis.shared.parsedata
 
 import com.hoffi.chassis.chassismodel.C
-import com.hoffi.chassis.shared.COLLECTIONTYPE
+import com.hoffi.chassis.shared.COLLECTIONTYP
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.Mutable
 import com.hoffi.chassis.shared.dsl.DslRef
@@ -19,9 +19,9 @@ class Property constructor(
     val modifiers: MutableSet<KModifier> = mutableSetOf(),
     val tags: Tags = Tags.NONE,
     var length: Int = C.DEFAULT_INT,
-    val collectionType: COLLECTIONTYPE = COLLECTIONTYPE.NONE
+    val collectionType: COLLECTIONTYP = COLLECTIONTYP.NONE
 ) {
-    override fun toString() = "${this::class.simpleName}[${if (tags.contains(Tag.CONSTRUCTOR)) "C " else "  "}${if (mutable.bool) "var " else "fix "}${if (collectionType != COLLECTIONTYPE.NONE) "$collectionType " else ""}${name}/${eitherTypModelOrClass}})${if (tags.isNotEmpty()) ", tags:$tags" else ""}] OF $propRef"
+    override fun toString() = "${this::class.simpleName}[${if (tags.contains(Tag.CONSTRUCTOR)) "C " else "  "}${if (mutable.bool) "var " else "fix "}${if (collectionType != COLLECTIONTYP.NONE) "$collectionType " else ""}${name}/${eitherTypModelOrClass}})${if (tags.isNotEmpty()) ", tags:$tags" else ""}] OF $propRef"
     var classNameStrategy = ClassNameStrategy.get(IClassNameStrategy.STRATEGY.DEFAULT)
     var tableNameStrategy = TableNameStrategy.get(ITableNameStrategy.STRATEGY.DEFAULT)
     var varNameStrategy = VarNameStrategy.get(IVarNameStrategy.STRATEGY.DEFAULT)
@@ -32,4 +32,11 @@ class Property constructor(
         name.failIfIdentifierInvalid(any)
         eitherTypModelOrClass.validate("$any->$this")
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Property) return false
+        return name == other.name
+    }
+    override fun hashCode() = name.hashCode()
 }

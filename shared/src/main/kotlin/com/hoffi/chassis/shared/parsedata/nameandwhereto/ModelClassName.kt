@@ -20,7 +20,7 @@ interface IModelClassName {
 
 class ModelClassName constructor(
     val modelSubElRef: IDslRef,
-    private var poetTypeDirect: ClassName? = null
+    private var poetTypeDirect: ClassName?
 ) : IModelClassName {
     val log = LoggerFactory.getLogger(javaClass)
     override fun toString() = poetType.toString()
@@ -38,9 +38,9 @@ class ModelClassName constructor(
 
     // we need to wait until all properties are set on the instance before we can pre-calculate the "derived" properties via strategies:
     override var poetType: ClassName
-        get() = poetTypeDirect ?: poetTypeInternal
+        get() = poetTypeDirect ?: poetTypeDslModel
         set(value) { poetTypeDirect = value }
-    private val poetTypeInternal by lazy { classNameStrategy.poetType(modelOrTypeNameString, "${basePackage.ifNotBlank{"$basePackage."}}$packageName", classPrefix, classPostfix) as ClassName }
+    private val poetTypeDslModel by lazy { classNameStrategy.poetType(modelOrTypeNameString, "${basePackage.ifNotBlank{"$basePackage."}}$packageName", classPrefix, classPostfix) as ClassName }
     override val asVarName: String by lazy { classNameStrategy.asVarname(modelOrTypeNameString, classPrefix, classPostfix) }
     override val tableName: String by lazy { tableNameStrategy.tableName(modelOrTypeNameString) /*, classPrefix, classPostfix)*/ }
 

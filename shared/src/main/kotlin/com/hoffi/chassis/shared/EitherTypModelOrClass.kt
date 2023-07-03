@@ -4,22 +4,24 @@ import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.ModelClassName
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.NameAndWheretoDefaults
+import com.hoffi.chassis.shared.shared.Initializer
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.asClassName
 import kotlin.reflect.KClass
 
 interface ITypOrModelOrPoetType {
     val isInterface: Boolean
+    val initializer: Initializer
     fun validate(any: Any)
     //fun classname(prefix: String = "", postfix: String = "")
 }
 
-sealed class EitherTypOrModelOrPoetType : ITypOrModelOrPoetType {
+sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) : ITypOrModelOrPoetType {
     lateinit var modelClassName: ModelClassName
     abstract override fun equals(other: Any?): Boolean
     abstract override fun hashCode(): Int
 
-    class EitherTyp constructor(val typ: TYP) : EitherTypOrModelOrPoetType() {
+    class EitherTyp constructor(val typ: TYP, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName}($typ)"
         init { modelClassName = fakePoetTypeClassName(typ.poetType) }
         override val isInterface = false
@@ -33,7 +35,7 @@ sealed class EitherTypOrModelOrPoetType : ITypOrModelOrPoetType {
         }
         override fun hashCode() = typ.hashCode()
     }
-    class EitherModel constructor(val modelSubElementRef: DslRef.IModelSubelement, override var isInterface: Boolean) : EitherTypOrModelOrPoetType() {
+    class EitherModel constructor(val modelSubElementRef: DslRef.IModelSubelement, override var isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName}($modelSubElementRef)"
         // modelClassName (with poetType) init'ed in finish of modelSubelement
         override fun validate(any: Any) {
@@ -46,7 +48,7 @@ sealed class EitherTypOrModelOrPoetType : ITypOrModelOrPoetType {
         }
         override fun hashCode() = modelSubElementRef.hashCode()
     }
-    class EitherPoetType constructor(val poetType: ClassName, override val isInterface: Boolean) : EitherTypOrModelOrPoetType() {
+    class EitherPoetType constructor(val poetType: ClassName, override val isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName}($poetType)"
         init { modelClassName = fakePoetTypeClassName(poetType) }
         override fun validate(any: Any) {
@@ -64,7 +66,7 @@ sealed class EitherTypOrModelOrPoetType : ITypOrModelOrPoetType {
             return result
         }
     }
-    class NOTHING : EitherTypOrModelOrPoetType() {
+    class NOTHING : EitherTypOrModelOrPoetType(Initializer.EMPTY) {
         override fun toString() = "${this::class.simpleName}"
         override val isInterface = false
         override fun validate(any: Any) {}
@@ -75,7 +77,7 @@ sealed class EitherTypOrModelOrPoetType : ITypOrModelOrPoetType {
         override fun hashCode() = 42
     }
 
-    protected fun fakePoetTypeClassName(thePoetType: ClassName): ModelClassName = ModelClassName(IDslRef.NULL).apply {
+    protected fun fakePoetTypeClassName(thePoetType: ClassName): ModelClassName = ModelClassName(IDslRef.NULL, thePoetType).apply {
             classNameStrategy = NameAndWheretoDefaults.classNameStrategy
             tableNameStrategy = NameAndWheretoDefaults.tableNameStrategy
             basePath = NameAndWheretoDefaults.basePath
@@ -91,7 +93,7 @@ sealed class EitherTypOrModelOrPoetType : ITypOrModelOrPoetType {
 
     companion object {
         val NOTHING = NOTHING()
-        fun KClass<*>.createPoetType() = EitherPoetType(this.asClassName(), this.java.isInterface)
+        fun KClass<*>.createPoetType() = EitherPoetType(this.asClassName(), this.java.isInterface, Initializer.EMPTY)
     }
 }
 

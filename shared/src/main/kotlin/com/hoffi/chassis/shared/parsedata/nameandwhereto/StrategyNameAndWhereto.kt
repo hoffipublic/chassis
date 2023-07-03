@@ -169,7 +169,7 @@ object StrategyNameAndWhereto {
             is DslRef.showcase -> TODO()
             is DslRef.table -> DslRef.model.MODELELEMENT.TABLE
         }
-        val eventualModelClassName = ModelClassName(dslRef)
+        val eventualModelClassName = ModelClassName(dslRef, null)
         val g = gatheredNameAndWheretos
         val eventualSharedNameAndWhereto = EventualSharedNameAndWhereto(
             dslRef.simpleName,

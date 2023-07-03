@@ -2,16 +2,21 @@ package com.hoffi.chassis.shared.shared
 
 sealed class Tag {
     override fun toString() = this::class.simpleName!!
+    class NO_DEFAULT_INITIALIZER : Tag()
     class CONSTRUCTOR : Tag()
     class CONSTRUCTOR_INSUPER : Tag()
+    class COLLECTION_IMMUTABLE : Tag()
     class HASH_MEMBER : Tag()
     class PRIMARY : Tag()
     class TO_STRING_MEMBER : Tag()
     class TRANSIENT : Tag()
     class NULLABLE : Tag()
     companion object {
+        val DEFAULT_INITIALIZER = NO_DEFAULT_INITIALIZER() // overrule default for constructors and functions
+        val NO_DEFAULT_INITIALIZER = NO_DEFAULT_INITIALIZER() // overrule default for properties
         val CONSTRUCTOR = CONSTRUCTOR()
         val CONSTRUCTOR_INSUPER = CONSTRUCTOR_INSUPER()
+        val COLLECTION_IMMUTABLE = COLLECTION_IMMUTABLE()
         val HASH_MEMBER = HASH_MEMBER()
         val PRIMARY = PRIMARY()
         val TO_STRING_MEMBER = TO_STRING_MEMBER()

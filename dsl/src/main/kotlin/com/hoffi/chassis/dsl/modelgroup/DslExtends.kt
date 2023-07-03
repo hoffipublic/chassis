@@ -9,6 +9,7 @@ import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType.Companion.createPoetT
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.shared.Extends
+import com.hoffi.chassis.shared.shared.Initializer
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.asTypeName
 import org.slf4j.LoggerFactory
@@ -135,10 +136,10 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         if (isInterface) throw DslException("extends { unaryPlus(+) Some::class only is for class, NOT for interfaces!")
         extends.superclassHasBeenSet = true
         if (extends.replaceSuperclass) {
-            extends.typeClassOrDslRef = EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface)
+            extends.typeClassOrDslRef = EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface, Initializer.REFFED)
         } else {
             if (extends.typeClassOrDslRef is EitherTypOrModelOrPoetType.NOTHING) {
-                extends.typeClassOrDslRef = EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface)
+                extends.typeClassOrDslRef = EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface, Initializer.REFFED)
             } else {
                 throw DslException("${dslExtendsDelegateImpl.parentRef} already extends ${extends.typeClassOrDslRef}")
             }
@@ -189,9 +190,9 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         if ( ! isInterface) throw DslException("extends { unaryMinus(-) Some::class only is for interfaces, NOT for classes!")
         if (extends.replaceSuperInterfaces) {
             extends.superInterfaces.clear()
-            extends.superInterfaces.add(EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface))
+            extends.superInterfaces.add(EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface, Initializer.REFFED))
         } else {
-            extends.superInterfaces.add(EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface))
+            extends.superInterfaces.add(EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface, Initializer.REFFED))
         }
     }
 

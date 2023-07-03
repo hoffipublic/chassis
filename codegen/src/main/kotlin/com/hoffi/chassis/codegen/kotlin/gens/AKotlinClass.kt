@@ -5,7 +5,9 @@ import com.hoffi.chassis.shared.parsedata.ModelClassData
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
 
-abstract class AKotlinClass(val modelClassData: ModelClassData) {
+abstract class AHasPropertys(val modelClassData: ModelClassData)
+
+abstract class AKotlinClass(modelClassData: ModelClassData) : AHasPropertys(modelClassData) {
     abstract var builder: TypeSpec.Builder
 
     fun generate(): TypeSpec {

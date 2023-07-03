@@ -342,7 +342,7 @@ class DslDto(
         val sharedGatheredClassModifiers = dslCtx.gatheredClassModifiers(dslModel.selfDslRef)
         if (sharedGatheredClassModifiers.allFromSubelements[selfDslRef]?.containsKey(selfDslRef.simpleName) ?: false) throw DslException("There is already a set of ClassModifiers in dslCtx for '${selfDslRef}")
         val setOfGatheredClassModifiers : MutableSet<KModifier> = mutableSetOf()
-        sharedGatheredClassModifiers.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf<String, MutableSet<KModifier>>() }.put(selfDslRef.simpleName, setOfGatheredClassModifiers)
+        sharedGatheredClassModifiers.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.put(selfDslRef.simpleName, setOfGatheredClassModifiers)
         setOfGatheredClassModifiers.addAll(classModifiersImpl.theClassModifiers)
         val modelGatherClassModifiers: Set<KModifier> = StrategyGatherClassModifiers.resolve(StrategyGatherClassModifiers.STRATEGY.UNION, selfDslRef, sharedGatheredClassModifiers)
         dtoModel.classModifiers.addAll(modelGatherClassModifiers)

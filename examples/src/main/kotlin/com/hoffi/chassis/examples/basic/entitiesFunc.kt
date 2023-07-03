@@ -5,10 +5,14 @@ import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.dsl.scratchdslEXAMPLES.COMMON__PERSISTENT_OPTIMISTIC
-import com.hoffi.chassis.shared.*
+import com.hoffi.chassis.shared.COLLECTIONTYP
+import com.hoffi.chassis.shared.Dummy
+import com.hoffi.chassis.shared.TYP
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.DslRef.model.MODELELEMENT.MODEL
+import com.hoffi.chassis.shared.mutable
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
+import com.hoffi.chassis.shared.shared.Initializer
 import com.hoffi.chassis.shared.shared.Tag
 import com.squareup.kotlinpoet.asTypeName
 
@@ -49,15 +53,15 @@ fun entities() {
                 //+ com.hoffi.chassis.shared.Dummy::class // special models overwrite non-Interface super classes
             }
 
-            property("name", TYP.STRING, mutable, Tag.CONSTRUCTOR, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
+            property("name", TYP.STRING, mutable, Tag.CONSTRUCTOR, Tag.NO_DEFAULT_INITIALIZER, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
             property("value", TYP.STRING, mutable, length = 4096, Tag.CONSTRUCTOR, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
             property("prio", TYP.INT, mutable, Tag.TO_STRING_MEMBER)
             property("aInstant", TYP.INSTANT, mutable)
             property("aLocalDateTime", TYP.LOCALDATETIME, mutable)
             property("someObject", Dummy::class, mutable, Initializer.of("%T.%L", Dummy::class.asTypeName(), "NULL"), length = C.DEFAULT_INT, Tag.TRANSIENT)
             //property("someModelObject", SIMPLE__SUBENTITY, GENS.DTO, mutable, Tag.NULLABLE)
-            property("subentitys", "modelgroup:$ENTITYGROUP;model:$ENTITY__SUBENTITY", DslRef.model.MODELELEMENT.DTO, COLLECTIONTYPE.SET, Tag.CONSTRUCTOR, Tag.NULLABLE)
-            property("listOfStrings", TYP.STRING, COLLECTIONTYPE.LIST, Tag.CONSTRUCTOR, Tag.TRANSIENT)
+            property("subentitys", "modelgroup:$ENTITYGROUP;model:$ENTITY__SUBENTITY", DslRef.model.MODELELEMENT.DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.NO_DEFAULT_INITIALIZER, Tag.NULLABLE)
+            property("listOfStrings", TYP.STRING, COLLECTIONTYP.LIST, Tag.COLLECTION_IMMUTABLE, Tag.CONSTRUCTOR, Tag.NO_DEFAULT_INITIALIZER, Tag.TRANSIENT)
 
 //            initBusinessValues {
 //                init("someObject", Initializer.of("%T(%L)", Dummy::class.asTypeName(), 42))
@@ -77,8 +81,8 @@ fun entities() {
                     //+ ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT_OPTIMISTIC) ) // withName COMMON__PERSISTENT) //
                 }
 //                annotateProperty("someObject", AnnotationSpec.builder(Contextual::class))
-                property("dtoSpecificProp", TYP.STRING, mutable = mutable, Tag.CONSTRUCTOR)
-                propertiesOf( (DslRef.model.MODELELEMENT.DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__TRANSIENT_STATE), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+                property("dtoSpecificProp", TYP.STRING, mutable, Tag.CONSTRUCTOR)
+                //propertiesOf( (DslRef.model.MODELELEMENT.DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__TRANSIENT_STATE), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
 //                initBusinessValues {
 //                    "someObject"      with Initializer.of("%T(%L)", Dummy::class.asTypeName(), 43)
 //                    "dtoSpecificProp" with Initializer.of("%S", "businessInitialized")
