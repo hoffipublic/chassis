@@ -225,11 +225,11 @@ globalDslCtx = dslCtx // TODO remove workaround
     fun setModelClassNameOfReffedModelPropertiesAndExtendsModel(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
             for (dslSubel: AModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
-                val genModel: ModelClassData = dslCtx.genCtx.allGenModels[dslSubel.selfDslRef]!!
+                val genModel: ModelClassData = dslCtx.genCtx.genModel(dslSubel.selfDslRef)
                 val listOfNonKClassNonTypButModelRefGenProp = genModel.propertys.values.filter { it.eitherTypModelOrClass is EitherTypOrModelOrPoetType.EitherModel }.map { it.eitherTypModelOrClass as EitherTypOrModelOrPoetType.EitherModel }
                 for (genPropEitherModel in listOfNonKClassNonTypButModelRefGenProp) {
                     val reffedSubElRef = genPropEitherModel.modelSubElementRef
-                    val reffedModel = dslCtx.genCtx.allGenModels[reffedSubElRef]!!
+                    val reffedModel = dslCtx.genCtx.genModel(reffedSubElRef)
                     val reffedModelClassName = reffedModel.modelClassName
                     genPropEitherModel.modelClassName = reffedModelClassName
                     genPropEitherModel.isInterface = reffedModel.kind == TypeSpec.Kind.INTERFACE
@@ -237,7 +237,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                 val listOfExtendsModelClass = genModel.extends.values.filter { it.typeClassOrDslRef is EitherTypOrModelOrPoetType.EitherModel }.map { it.typeClassOrDslRef as EitherTypOrModelOrPoetType.EitherModel }
                 for (extendsEitherModel in listOfExtendsModelClass) {
                     val reffedSubElRef = extendsEitherModel.modelSubElementRef
-                    val reffedModel = dslCtx.genCtx.allGenModels[reffedSubElRef]!!
+                    val reffedModel = dslCtx.genCtx.genModel(reffedSubElRef)
                     val reffedModelClassName = reffedModel.modelClassName
                     extendsEitherModel.modelClassName = reffedModelClassName
                     extendsEitherModel.isInterface = reffedModel.kind == TypeSpec.Kind.INTERFACE
@@ -247,7 +247,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                     when (extendsTypClassOrDslRef) {
                         is EitherTypOrModelOrPoetType.EitherModel -> {
                             val reffedSubElRef = extendsTypClassOrDslRef.modelSubElementRef
-                            val reffedModel = dslCtx.genCtx.allGenModels[reffedSubElRef]!!
+                            val reffedModel = dslCtx.genCtx.genModel(reffedSubElRef)
                             val reffedModelClassName = reffedModel.modelClassName
                             extendsTypClassOrDslRef.modelClassName = reffedModelClassName
                             extendsTypClassOrDslRef.isInterface = reffedModel.kind == TypeSpec.Kind.INTERFACE
@@ -258,7 +258,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                         when (extendsInterface) {
                             is EitherTypOrModelOrPoetType.EitherModel -> {
                                 val reffedSubElRef = extendsInterface.modelSubElementRef
-                                val reffedModel = dslCtx.genCtx.allGenModels[reffedSubElRef]!!
+                                val reffedModel = dslCtx.genCtx.genModel(reffedSubElRef)
                                 val reffedModelClassName = reffedModel.modelClassName
                                 extendsInterface.modelClassName = reffedModelClassName
                                 extendsInterface.isInterface = reffedModel.kind == TypeSpec.Kind.INTERFACE
@@ -275,7 +275,7 @@ globalDslCtx = dslCtx // TODO remove workaround
     fun gatherReferencedPropertys(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
             for (dslDto in dslModel.dslDtos.values) {
-                val genModel: ModelClassData = dslCtx.genCtx.allGenModels[dslDto.selfDslRef]!!
+                val genModel: ModelClassData = dslCtx.genCtx.genModel(dslDto.selfDslRef)
                 val refsToGatherPropsFrom: MutableList<GatherPropertys> = mutableListOf<GatherPropertys>().also { it.addAll(genModel.gatheredFromDslRefs) }
                 while (refsToGatherPropsFrom.isNotEmpty()) {
                     val reffedGatherPropertys: GatherPropertys = refsToGatherPropsFrom.removeFirst()
@@ -285,7 +285,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                             TODO()
                         }
                         is DslDto, is DslTable -> {
-                            val reffedGenModel: ModelClassData = dslCtx.genCtx.allGenModels[reffedDslClass.selfDslRef]!!
+                            val reffedGenModel: ModelClassData = dslCtx.genCtx.genModel(reffedDslClass.selfDslRef as DslRef.IModelSubelement)
 
                             when (reffedGatherPropertys.gatherPropertiesEnum) {
                                 GatherPropertiesEnum.NONE -> { }
@@ -312,7 +312,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                 }
             }
             for (dslTable in dslModel.dslTables.values) {
-                val genModel: ModelClassData = dslCtx.genCtx.allGenModels[dslTable.selfDslRef]!!
+                val genModel: ModelClassData = dslCtx.genCtx.genModel(dslTable.selfDslRef)
                 val refsToGatherPropsFrom: MutableList<GatherPropertys> = mutableListOf<GatherPropertys>().also { it.addAll(genModel.gatheredFromDslRefs) }
                 while (refsToGatherPropsFrom.isNotEmpty()) {
                     val reffedGatherPropertys: GatherPropertys = refsToGatherPropsFrom.removeFirst()
@@ -322,7 +322,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                             TODO()
                         }
                         is DslDto, is DslTable -> {
-                            val reffedModel: ModelClassData = dslCtx.genCtx.allGenModels[otherDslModelOrModelSubelement.selfDslRef]!!
+                            val reffedModel: ModelClassData = dslCtx.genCtx.genModel(otherDslModelOrModelSubelement.selfDslRef as DslRef.IModelSubelement)
 
                             when (reffedGatherPropertys.gatherPropertiesEnum) {
                                 GatherPropertiesEnum.NONE -> { }

@@ -18,13 +18,13 @@ import org.slf4j.LoggerFactory
 @ChassisDslMarker
 interface IDslApiGatherPropertiesProp
 @ChassisDslMarker
-interface IDslApiGatherPropertiesModelAndModelSubelementsCommon {
+interface IDslApiGatherPropertiesModelAndModelSubelementsCommon : IDslApiModelReffing {
     fun propertiesOfSuperclasses()
     fun propertiesOf(dslModelOrElementRefString: String,                   gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES)
     fun propertiesOf(dslModelOrElementRef: IDslRef, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES)
 }
 @ChassisDslMarker
-interface IDslApiGatherPropertiesElementsOnlyCommon : IDslApiGatherPropertiesProp, IDslApiModelReffing {
+interface IDslApiGatherPropertiesElementsOnlyCommon : IDslApiGatherPropertiesProp {
     fun propertiesOf(modelElement: MODELREFENUM, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.NONE, simpleName: String = C.DEFAULT)
     fun propertiesOfSuperclassesOf(modelElement: MODELREFENUM, simpleName: String = C.DEFAULT)
 }

@@ -18,8 +18,6 @@ interface ITypOrModelOrPoetType {
 
 sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) : ITypOrModelOrPoetType {
     lateinit var modelClassName: ModelClassName
-    abstract override fun equals(other: Any?): Boolean
-    abstract override fun hashCode(): Int
 
     class EitherTyp constructor(val typ: TYP, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName}($typ)"
@@ -28,12 +26,6 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
         override fun validate(any: Any) {
             modelClassName.validate(any)
         }
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is EitherTyp) return false
-            return typ == other.typ
-        }
-        override fun hashCode() = typ.hashCode()
     }
     class EitherModel constructor(val modelSubElementRef: DslRef.IModelSubelement, override var isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName}($modelSubElementRef)"
@@ -54,17 +46,6 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
         override fun validate(any: Any) {
             modelClassName.validate(any)
         }
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is EitherPoetType) return false
-            if (poetType != other.poetType) return false
-            return isInterface == other.isInterface
-        }
-        override fun hashCode(): Int {
-            var result = poetType.hashCode()
-            result = 31 * result + isInterface.hashCode()
-            return result
-        }
     }
     class NOTHING : EitherTypOrModelOrPoetType(Initializer.EMPTY) {
         override fun toString() = "${this::class.simpleName}"
@@ -76,6 +57,14 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
         }
         override fun hashCode() = 42
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is EitherTypOrModelOrPoetType) return false
+        return modelClassName == other.modelClassName
+    }
+    override fun hashCode() = modelClassName.hashCode()
+
 
     protected fun fakePoetTypeClassName(thePoetType: ClassName): ModelClassName = ModelClassName(IDslRef.NULL, thePoetType).apply {
             classNameStrategy = NameAndWheretoDefaults.classNameStrategy

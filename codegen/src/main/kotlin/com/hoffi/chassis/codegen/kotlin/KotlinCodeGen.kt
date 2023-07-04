@@ -24,7 +24,7 @@ class KotlinCodeGen() {
     }
 
     private fun codeGenDto() {
-        for(model in genCtx.allGenModels.values.filterIsInstance<GenModel.DtoModel>()) {
+        for(model in genCtx.allGenModels().filterIsInstance<GenModel.DtoModel>()) {
             println("${this::class.simpleName}.${object{}.javaClass.enclosingMethod.name}() for $model ${model.extends.values.firstOrNull{it.simpleName == "default"} ?: "extends NOTHING"} ") //-> ${model.modelSubElRef}")
             val kcmDto = KotlinClassModelDto(model)
             kcmDto.build()

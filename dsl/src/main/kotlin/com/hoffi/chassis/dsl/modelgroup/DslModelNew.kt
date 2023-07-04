@@ -322,7 +322,7 @@ class DslDto(
 
         val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS, selfDslRef, sharedGatheredNameAndWheretos)
         val dtoModel = GenModel.DtoModel(selfDslRef as DslRef.dto, modelClassName)
-        dslCtx.genCtx.allGenModels[selfDslRef] = dtoModel
+        dslCtx.genCtx.putModel(selfDslRef, dtoModel)
         val dslModel: DslModel = dslCtx.ctxObj(selfDslRef.parentRef)
 
         when (kind) {
@@ -456,7 +456,7 @@ class DslTable(
 
         val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS, selfDslRef, sharedGatheredNameAndWheretos)
         val tableModel = GenModel.TableModel(selfDslRef as DslRef.table, modelClassName)
-        dslCtx.genCtx.allGenModels[selfDslRef] = tableModel
+        dslCtx.genCtx.putModel(selfDslRef, tableModel)
         val dslModel: DslModel = dslCtx.ctxObj(selfDslRef.parentRef)
 
         when (kind) {

@@ -53,9 +53,9 @@ class ModelClassName constructor(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is ModelClassName) return false
-        return modelSubElRef == other.modelSubElRef
+        return poetType == other.poetType
     }
     override fun hashCode(): Int {
-        return modelSubElRef.hashCode()
+        return 31 * poetType.hashCode() + poetType.hashCode()
     }
 }

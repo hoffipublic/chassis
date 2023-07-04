@@ -15,12 +15,12 @@ class KotlinPropertyDto(val property: Property, val genModel: AHasPropertys) {
     init {
         when (property.collectionType) {
             is COLLECTIONTYP.NONE -> {
-                builder = PropertySpec.builder(property.name, property.eitherTypModelOrClass.modelClassName.poetType, property.modifiers)
-                if (property.eitherTypModelOrClass.initializer.format.isNotBlank()) {
-                    if (property.eitherTypModelOrClass.initializer.format.count { it == '%' } != property.eitherTypModelOrClass.initializer.args.size) {
-                        throw Exception("$property imbalanced number of initializer format variables and given args: ${property.eitherTypModelOrClass.initializer} in $property")
+                builder = PropertySpec.builder(property.name, property.poetType, property.modifiers)
+                if (property.initializer.format.isNotBlank()) {
+                    if (property.initializer.format.count { it == '%' } != property.initializer.args.size) {
+                        throw Exception("$property imbalanced number of initializer format variables and given args: ${property.initializer} in $property")
                     }
-                    builder.initializer(property.eitherTypModelOrClass.initializer.codeBlock())
+                    builder.initializer(property.initializer.codeBlock())
                 } else if (Tag.NO_DEFAULT_INITIALIZER !in property.tags) {
                     val eitherTypOfProp = property.eitherTypModelOrClass
                     val defaultInitializer = when (eitherTypOfProp) {
@@ -34,15 +34,15 @@ class KotlinPropertyDto(val property: Property, val genModel: AHasPropertys) {
             }
             is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE, is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET -> {
                 val collMutable = if (Tag.COLLECTION_IMMUTABLE in property.tags) immutable else mutable
-                val collTypWrapper = TypWrapper.of(property.collectionType, collMutable, property.eitherTypModelOrClass.modelClassName.poetType)
-                builder = PropertySpec.builder(property.name, collTypWrapper.typeName, property.modifiers)
+                val collCollectionTypWrapper = CollectionTypWrapper.of(property.collectionType, collMutable, property.isNullable, property.poetType)
+                builder = PropertySpec.builder(property.name, collCollectionTypWrapper.typeName, property.modifiers)
                 if (Tag.NO_DEFAULT_INITIALIZER !in property.tags) {
-                    builder.initializer(Initializer.of(collTypWrapper.initializer.format, collTypWrapper.initializer.args).codeBlock())
+                    builder.initializer(Initializer.of(collCollectionTypWrapper.initializer.format, collCollectionTypWrapper.initializer.args).codeBlock())
                 }
             }
         }
         if (property.mutable.bool) builder.mutable() // val or var
-        if (Tag.NULLABLE in property.tags) builder = builder.cop
+        //if (Tag.NULLABLE in property.tags) builder = builder.cop decide if either the generic type is nullable or the collection itself
     }
 
     fun mergePropertyIntoConstructor(): KotlinPropertyDto { builder.initializer(property.name) ; return this }

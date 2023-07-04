@@ -12,6 +12,7 @@ sealed class Tag {
     class TO_STRING_MEMBER : Tag()
     class TRANSIENT : Tag()
     class NULLABLE : Tag()
+    class NULLABLE_GENERICTYPE : Tag()
     companion object {
         val DEFAULT_INITIALIZER = DEFAULT_INITIALIZER()       // overrule default for constructors and functions
         val NO_DEFAULT_INITIALIZER = NO_DEFAULT_INITIALIZER() // overrule default for properties
@@ -23,6 +24,7 @@ sealed class Tag {
         val TO_STRING_MEMBER = TO_STRING_MEMBER()
         val TRANSIENT = TRANSIENT()
         val NULLABLE = NULLABLE()
+        val NULLABLE_GENERICTYPE = NULLABLE_GENERICTYPE()
     }
 }
 

@@ -65,7 +65,7 @@ class DslPropsDelegate(
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
 
-        if (Tag.NULLABLE in tags) throw DslException("Tag.NULLABLE not allowed for primitive TYP properties in property $name of $parentRef")
+        //if (Tag.NULLABLE in tags) throw DslException("Tag.NULLABLE not allowed for primitive TYP properties in property $name of $parentRef")
         val typProp = EitherTypOrModelOrPoetType.EitherTyp(typ, initializer)
         val prop = DslModelProp(name, DslRef.prop(name, parentRef), typProp, mutable, modifiers, tags, length, collectionType)
         addProp(name, prop)

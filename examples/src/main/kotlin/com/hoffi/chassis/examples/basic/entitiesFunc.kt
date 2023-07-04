@@ -59,7 +59,7 @@ fun entities() {
             property("aLocalDateTime", TYP.LOCALDATETIME, mutable)
             //property("someObject", Dummy::class, mutable, Tag.NO_DEFAULT_INITIALIZER, Tag.TRANSIENT)
             property("someObject", Dummy::class, mutable, Initializer.of("%T.%L", Dummy::class, "NULL"), length = C.DEFAULT_INT, Tag.TRANSIENT)
-            //property("someModelObject", SIMPLE__SUBENTITY, GENS.DTO, mutable, Tag.NULLABLE)
+            property("someModelObject", MODELREFENUM.DTO of ENTITY__SUBENTITY, mutable)
             property("subentitys", "modelgroup:$ENTITYGROUP;model:$ENTITY__SUBENTITY", MODELREFENUM.DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER, Tag.NULLABLE)
             property("listOfStrings", TYP.STRING, COLLECTIONTYP.LIST, Tag.COLLECTION_IMMUTABLE, Tag.CONSTRUCTOR, Tag.TRANSIENT)
 
@@ -123,7 +123,7 @@ fun entities() {
                     + ( (MODEL inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) ) // withName COMMON__PERSISTENT) //
                 }
                 property("subEntityDtoSpecificProp", TYP.STRING, mutable = mutable, Tag.CONSTRUCTOR)
-                //property("entityBackreference", MODELREFENUM.DTO of ENTITY__ENTITY, mutable, Tag.TRANSIENT)
+                property("entityBackreference", MODELREFENUM.DTO of ENTITY__ENTITY, mutable, Tag.TRANSIENT)
 
                 //initBusinessValues {
                 //    "dtoSpecificProp" with Initializer.of("%S", "subentity businessInitialized")
