@@ -86,7 +86,7 @@ class DslPropsDelegate(
         log.info("fun {}(\"{}, modelRefString\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
-        val modelOrModelSubElementRef = DslRefString.MODELREF(modelRefString)
+        val modelOrModelSubElementRef = DslRefString.REFmodelOrModelSubelement(modelRefString)
         if (modelOrModelSubElementRef !is DslRef.model) {
             throw DslException("prop $name of ref: $parentRef does not reference a model  (model() { ... }")
         }
@@ -104,9 +104,9 @@ class DslPropsDelegate(
     override fun property(name: String, modelSubElementRefString: String, mutable: Mutable, collectionType: COLLECTIONTYP, initializer: Initializer, modifiers: MutableSet<KModifier>, length: Int, tags: Tags) {
         log.info("fun {}(\"{}, modelSubElementRefString\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
-        //if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
+        //if (dslCtx.currentPASS != dslCtx.PASS_5_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
         ////if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
-        val modelOrModelSubElementRef = DslRefString.MODELREF(modelSubElementRefString)
+        val modelOrModelSubElementRef = DslRefString.REFmodelOrModelSubelement(modelSubElementRefString)
         if (modelOrModelSubElementRef !is DslRef.IModelSubelement) {
             throw DslException("prop $name of ref: $parentRef does not reference a modelSubElement (dto/table/...)")
         }
@@ -117,12 +117,15 @@ class DslPropsDelegate(
     override fun property(name: String, modelSubElementRef: IDslRef, mutable: Mutable, collectionType: COLLECTIONTYP, initializer: Initializer, modifiers: MutableSet<KModifier>, length: Int, tags: Tags) {
         log.info("fun {}(\"{}, DslRef\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
-        //if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
+        //if (dslCtx.currentPASS != dslCtx.PASS_5_REFERENCING) return // do something only in PASS.ONE_BASEMODELS
         ////if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
         //if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         ////if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
 
-        WhensDslRef.whenModelSubelement(modelSubElementRef, {}, {}, catching = { throw DslException("must be a modelsubelement (dto, table, ...): property '${name}' of $parentRef") })
+        // sentinel
+        WhensDslRef.whenModelSubelement(modelSubElementRef, {}, {}) {
+            DslException("must be a modelsubelement (dto, table, ...): property '${name}' of $parentRef")
+        }
 
         if (Tag.NULLABLE in tags) log.warn("Tag.NULLABLE for Class property $name of $parentRef")
         // isInterface of GenModel will be set to correct value in setModelClassNameOfReffedModelProperties()

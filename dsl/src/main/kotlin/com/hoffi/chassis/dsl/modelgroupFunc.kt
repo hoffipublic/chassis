@@ -33,7 +33,7 @@ fun modelgroup(simpleName: String, modelgroupBlock: DslModelgroup.() -> Unit) {
             dslModelgroup.apply(modelgroupBlock)
             dslModelgroup.finish(dslCtx)
         }
-        dslCtx.PASS_GENMODELSCREATED -> {
+        dslCtx.PASS_FINISHGENMODELS -> {
             // we do not decend the dsl tree in this Pass !!!
             val modelgroupRef = DslRef.modelgroup(simpleName, dslDiscriminator)
             val dslModelgroup = dslCtx.getModelgroup(modelgroupRef)

@@ -3,9 +3,8 @@ package com.hoffi.chassis.dsl.internal
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.dsl.DslCtxException
 import com.hoffi.chassis.chassismodel.dsl.DslException
-import com.hoffi.chassis.dsl.modelgroup.DslModel
-import com.hoffi.chassis.dsl.modelgroup.DslModelgroup
-import com.hoffi.chassis.dsl.modelgroup.IDslApiClassObjectOrInterface
+import com.hoffi.chassis.dsl.modelgroup.*
+import com.hoffi.chassis.dsl.whens.WhensModelgroup
 import com.hoffi.chassis.shared.codegen.GenCtx
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.dsl.DslRef
@@ -14,6 +13,7 @@ import com.hoffi.chassis.shared.parsedata.SharedGatheredClassModifiers
 import com.hoffi.chassis.shared.parsedata.SharedGatheredExtends
 import com.hoffi.chassis.shared.parsedata.SharedGatheredGatherPropertys
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
+import com.hoffi.chassis.shared.whens.WhensDslRef
 import org.slf4j.LoggerFactory
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.isSubtypeOf
@@ -45,10 +45,11 @@ class DslCtx private constructor(){
     var currentPASS: DSLPASS = DSLPASS.NULL
     // we need Instances of DSLPASS to be able to do when(...) on them
     val PASS_ERROR            = DSLPASS.PASS_ERROR(this)
-    val PASS_GENMODELSCREATED = DSLPASS.PASS_GENMODELSCREATED(this)
-    val PASS_FINISH           = DSLPASS.PASS_FINISH(PASS_GENMODELSCREATED, this)
-    val PASS_4_REFERENCING    = DSLPASS.PASS_4_REFERENCING(PASS_FINISH, this)
-    val PASS_3_ALLMODELS      = DSLPASS.PASS_3_ALLMODELS(PASS_4_REFERENCING, this)
+    val PASS_FINISHGENMODELS  = DSLPASS.PASS_FINISHGENMODELS(this)
+    val PASS_FINISH           = DSLPASS.PASS_FINISH(PASS_FINISHGENMODELS, this)
+    val PASS_5_REFERENCING    = DSLPASS.PASS_5_REFERENCING(PASS_FINISH, this)
+    val PASS_4_PREPREFFING    = DSLPASS.PASS_4_PREPREFFING(PASS_5_REFERENCING, this)
+    val PASS_3_ALLMODELS      = DSLPASS.PASS_3_ALLMODELS(PASS_4_PREPREFFING, this)
     val PASS_2_TABLEMODELS    = DSLPASS.PASS_2_TABLEMODELS(PASS_3_ALLMODELS, this)
     val PASS_1_BASEMODELS     = DSLPASS.PASS_1_BASEMODELS(PASS_2_TABLEMODELS, this)
     val firstPass = PASS_1_BASEMODELS
@@ -212,20 +213,67 @@ class DslCtx private constructor(){
     fun gatheredExtends(dslRef: DslRef.IElementLevel): SharedGatheredExtends =
         sharedGatheredExtends[dslRef] ?: SharedGatheredExtends(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredExtends[dslRef] = it }
 
-    fun isInterface(dslRef: IDslRef): Boolean {
-        val dslClass = ctxObj<ADslClass>(dslRef)
-        return when (dslClass) {
-            is DslModel -> dslClass.kind == DslClassObjectOrInterface.INTERFACE
-            is IDslApiClassObjectOrInterface -> {
-                when (dslClass.kind) {
-                    //dslClass.kind == DslClassObjectOrInterface.INTERFACE
-                    DslClassObjectOrInterface.UNDEFINED -> (ctxObj<ADslClass>(dslClass.selfDslRef.parentRef) as IDslApiClassObjectOrInterface).kind == DslClassObjectOrInterface.INTERFACE
-                    DslClassObjectOrInterface.CLASS -> false
-                    DslClassObjectOrInterface.OBJECT -> false
-                    DslClassObjectOrInterface.INTERFACE -> true
+    fun isInterface(dslRef: IDslRef, callerDslClass: ADslClass): Boolean {
+        val reffedDslClass = ctxObj<ADslClass>(dslRef) as IDslApiKindClassObjectOrInterface
+        val callerExtendsParent: IDslApiKindClassObjectOrInterface = ctxObj(callerDslClass.selfDslRef.parentRef)
+        return WhensModelgroup.whenModelOrModelSubelement(callerExtendsParent as ADslClass,
+            isDslModel = {
+                WhensDslRef.whenModelOrModelSubelement(dslRef,
+                    isModelRef = {
+                        // I am a DslModel and I reference a Model
+                        // HERE we want to know the kind (interface) of a model AND we do so FROM a model, but we don't know if any subelement might overrule this later on in finish()
+                        log.warn("isInterface() reference directly from a model (not a dto/table/...) and referencing also a model (not a dto/table/...) ! caller: '{}' is reffing: '{}'", callerDslClass.selfDslRef, dslRef)
+                        if (reffedDslClass.kind == DslClassObjectOrInterface.UNDEFINED) {
+                            log.warn("isInterface() AND reffed MODEL has Kind.UNDEFINED")
+                        }
+                        reffedDslClass.kind == DslClassObjectOrInterface.INTERFACE
+                        //throw DslException("isInterface() reference directly from a model (not a dto/table/...) and referencing also a model (not a dto/table/...) ! caller: '${callerDslClass.selfDslRef}' was reffing: '$dslRef'")
+
+                    },
+                    isModelSubelementRef = {
+                        // I am a DslModel and I reference a ModelSubelement (Dto, Table, ...)
+                        if (reffedDslClass.kind != DslClassObjectOrInterface.UNDEFINED) {
+                            reffedDslClass.kind == DslClassObjectOrInterface.INTERFACE
+                        } else {
+                            val reffedDslClassParent: DslModel = ctxObj(dslRef.parentRef)
+                            reffedDslClassParent.kind == DslClassObjectOrInterface.INTERFACE
+                        }
+                    }
+                ){
+                    DslException("model reffing for neither model nor modelSubelement")
+                }
+            },
+            isModelSubelement = {
+                WhensDslRef.whenModelOrModelSubelement(dslRef,
+                    isModelRef = {
+                        // I am a ModelSubelement and I reference a Model
+                        val subelementDslClass: IDslApiKindClassObjectOrInterface = WhensDslRef.whenModelSubelement(callerExtendsParent.selfDslRef,
+                            isDtoRef = { ctxObj<DslDto>(DslRef.dto(C.DEFAULT, dslRef)) },
+                            isTableRef = { ctxObj<DslTable>(DslRef.table(C.DEFAULT, dslRef)) }
+                        ) {
+                            DslException("neither of defined Model Subelements")
+                        }
+                        if (subelementDslClass.kind != DslClassObjectOrInterface.UNDEFINED) {
+                            subelementDslClass.kind == DslClassObjectOrInterface.INTERFACE
+                        } else {
+                            reffedDslClass.kind == DslClassObjectOrInterface.INTERFACE
+                        }
+                    },
+                    isModelSubelementRef = {
+                        // I am a ModelSubelement and I reference a ModelSubelement (Dto, Table, ...)
+                        if (reffedDslClass.kind != DslClassObjectOrInterface.UNDEFINED) {
+                            reffedDslClass.kind == DslClassObjectOrInterface.INTERFACE
+                        } else {
+                            val reffedDslClassParent: DslModel = ctxObj(dslRef.parentRef)
+                            reffedDslClassParent.kind == DslClassObjectOrInterface.INTERFACE
+                        }
+                    }
+                ) {
+                    DslException("isInterface() on DslRef which is not a modelelement or modelsubelement not implemented yet!")
                 }
             }
-            else -> throw DslException("isInterface on DslRef which is not a modelelement or modelsubelement not implemented yet!")
+        ) {
+            DslException("isInterface() from caller which is not a modelelement or modelsubelement not implemented yet!")
         }
     }
 

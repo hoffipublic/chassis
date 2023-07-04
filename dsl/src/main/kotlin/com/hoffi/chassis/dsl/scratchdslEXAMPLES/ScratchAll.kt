@@ -4,6 +4,7 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.*
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
+import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.DslRefString
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.MODEL
@@ -48,7 +49,7 @@ fun commonScratch() {
             //extends {
             //    + SCRATCH__ROOT
             //}
-            propertiesOf(DslRefString.modelElementRef("disc:$dslDiscriminator};modelgroup:$SCRATCH;model:$SCRATCH__INTFC", dslDiscriminator), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+            propertiesOf(DslRefString.REF("disc:$dslDiscriminator};modelgroup:$SCRATCH;model:$SCRATCH__INTFC") as DslRef.IModelOrModelSubelement, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
             showcase {
                 dslProp = 42
                 this -= "unset Data"

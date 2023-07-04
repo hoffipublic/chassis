@@ -1,10 +1,13 @@
 package com.hoffi.chassis.shared
 
+import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.ModelClassName
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.NameAndWheretoDefaults
 import com.hoffi.chassis.shared.shared.Initializer
+import com.hoffi.chassis.shared.whens.WhensDslRef
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.asClassName
 import kotlin.reflect.KClass
@@ -27,9 +30,13 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
             modelClassName.validate(any)
         }
     }
-    class EitherModel constructor(val modelSubElementRef: DslRef.IModelSubelement, override var isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
+    class EitherModel constructor(val modelSubElementRefOriginal: DslRef.IModelOrModelSubelement, override var isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName}($modelSubElementRef)"
         // modelClassName (with poetType) init'ed in finish of modelSubelement
+        val modelSubElementRef: DslRef.IModelSubelement
+            get() = modelSubElementRefExpanded ?: modelSubElementRefOriginal as DslRef.IModelSubelement
+        var modelSubElementRefExpanded: DslRef.IModelSubelement? = null
+
         override fun validate(any: Any) {
             modelClassName.validate(any)
         }
@@ -83,6 +90,31 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
     companion object {
         val NOTHING = NOTHING()
         fun KClass<*>.createPoetType() = EitherPoetType(this.asClassName(), this.java.isInterface, Initializer.EMPTY)
+        fun expandReffedEitherToSubelementIfModel(
+            either: EitherTypOrModelOrPoetType,
+            callerModelSubelementRef: DslRef.ISubElementLevel,
+        ) {
+            when (either) {
+                is EitherTypOrModelOrPoetType.EitherModel -> {
+                    when (either.modelSubElementRefOriginal) {
+                        is DslRef.model -> {
+                            WhensDslRef.whenModelSubelement(callerModelSubelementRef,
+                                isDtoRef = {   either.modelSubElementRefExpanded = DslRef.dto(C.DEFAULT, either.modelSubElementRefOriginal) },
+                                isTableRef = { either.modelSubElementRefExpanded = DslRef.table(C.DEFAULT, either.modelSubElementRefOriginal) }
+                            ) {
+                                DslException("no known model subelement")
+                            }
+                        }
+                        is DslRef.dto -> {}
+                        is DslRef.table -> {}
+                        else -> throw DslException("no (known) model or modelSubelement")
+                    }
+                }
+                is EitherTypOrModelOrPoetType.EitherPoetType -> {}
+                is EitherTypOrModelOrPoetType.EitherTyp -> {}
+                is EitherTypOrModelOrPoetType.NOTHING -> {}
+            }
+        }
     }
 }
 

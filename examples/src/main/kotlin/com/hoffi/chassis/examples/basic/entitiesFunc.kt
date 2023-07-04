@@ -45,7 +45,7 @@ fun entities() {
 
         model(ENTITY__ENTITY) {
             extends {
-                //+ (MODEL inModelgroup PERSISTENTGROUP withModelName COMMON__PERSISTENT_OPTIMISTIC)
+                + (MODEL inModelgroup PERSISTENTGROUP withModelName COMMON__PERSISTENT_OPTIMISTIC)
                 //- ENTITY__BASE
                 // NEXT WILL BREAK for Table
                 //+ ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT) ) // withName COMMON__PERSISTENT) //

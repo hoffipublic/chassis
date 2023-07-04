@@ -2,6 +2,7 @@ package com.hoffi.chassis.shared.parsedata
 
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.shared.GatherPropertys
+import com.hoffi.chassis.shared.whens.WhensDslRef
 
 class SharedGatheredGatherPropertys(val dslRef: DslRef.IElementLevel, val dslRunIdentifier: String) {
     override fun toString() = "${this::class.simpleName}($dslRef, $dslRunIdentifier)"
@@ -15,13 +16,19 @@ object StrategyGatherProperties {
 
     fun resolve(
         strategy: STRATEGY,
-        dslRef: DslRef.ISubElementLevel,
+        ownModelSubelementRef: DslRef.ISubElementLevel,
         sharedGatheredGatherPropertys: SharedGatheredGatherPropertys
     ): Set<GatherPropertys> {
-        return when (strategy) {
-            STRATEGY.UNION -> union(dslRef, sharedGatheredGatherPropertys)
-            STRATEGY.SPECIAL_WINS -> specialWins(dslRef, sharedGatheredGatherPropertys)
+        val result: Set<GatherPropertys> = when (strategy) {
+            STRATEGY.UNION -> union(ownModelSubelementRef, sharedGatheredGatherPropertys)
+            STRATEGY.SPECIAL_WINS -> specialWins(ownModelSubelementRef, sharedGatheredGatherPropertys)
         }
+        for (gatherPropertys in result) {
+            val modelOrModelSubelementRef = gatherPropertys.modelOrModelSubelementRefOriginal
+            val expandedRef = WhensDslRef.expandRefToSubelement(modelOrModelSubelementRef, ownModelSubelementRef)
+            if (expandedRef != gatherPropertys.modelSubelementRef) gatherPropertys.modelSubelementRefExpanded = expandedRef
+        }
+        return result
     }
 
     private fun union(dslRef: DslRef.ISubElementLevel, sharedGatheredGatherPropertys: SharedGatheredGatherPropertys): Set<GatherPropertys> {

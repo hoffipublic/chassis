@@ -5,7 +5,6 @@ import com.hoffi.chassis.dsl.internal.ADslDelegateClass
 import com.hoffi.chassis.dsl.internal.ChassisDslMarker
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.internal.IDslParticipator
-import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.DslRefString
 import com.hoffi.chassis.shared.dsl.IDslRef
@@ -21,7 +20,7 @@ interface IDslApiGatherPropertiesProp
 interface IDslApiGatherPropertiesModelAndModelSubelementsCommon : IDslApiModelReffing {
     fun propertiesOfSuperclasses()
     fun propertiesOf(dslModelOrElementRefString: String,                   gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES)
-    fun propertiesOf(dslModelOrElementRef: IDslRef, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES)
+    fun propertiesOf(dslModelOrElementRef: DslRef.IModelOrModelSubelement, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES)
 }
 @ChassisDslMarker
 interface IDslApiGatherPropertiesElementsOnlyCommon : IDslApiGatherPropertiesProp {
@@ -61,24 +60,22 @@ class DslGatherPropertiesDelegateImpl(
     override val theGatherPropertys = mutableSetOf<GatherPropertys>()
 
     override fun propertiesOfSuperclasses() {
-        if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return
+        if (dslCtx.currentPASS != dslCtx.PASS_5_REFERENCING) return
         theGatherPropertys.add(GatherPropertys(parentRef.parentRef as DslRef.IModelOrModelSubelement, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES))
     }
 
     override fun propertiesOf(dslModelOrElementRefString: String, gatherPropertiesEnum: GatherPropertiesEnum) {
-        if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return
+        if (dslCtx.currentPASS != dslCtx.PASS_5_REFERENCING) return
 
-        TODO("Not yet implemented")
-        val theRef = DslRefString.modelElementRef(dslModelOrElementRefString, DslDiscriminator.NULL)
-        // string to ref
+        val theRef = DslRefString.REFmodelOrModelSubelement(dslModelOrElementRefString)
         theGatherPropertys.add(GatherPropertys(theRef, gatherPropertiesEnum))
     }
 
     override fun propertiesOf(
-        dslModelOrElementRef: IDslRef,
+        dslModelOrElementRef: DslRef.IModelOrModelSubelement,
         gatherPropertiesEnum: GatherPropertiesEnum
     ) {
-        if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return
+        if (dslCtx.currentPASS != dslCtx.PASS_5_REFERENCING) return
         theGatherPropertys.add(GatherPropertys(dslModelOrElementRef, gatherPropertiesEnum))
     }
 
@@ -87,19 +84,13 @@ class DslGatherPropertiesDelegateImpl(
         gatherPropertiesEnum: GatherPropertiesEnum,
         simpleName: String
     ) {
-        if (dslCtx.currentPASS != dslCtx.PASS_4_REFERENCING) return
+        if (dslCtx.currentPASS != dslCtx.PASS_5_REFERENCING) return
         // definitely a modelSubElement, as this function should only be callable in context of a DslRef.IModelSubelement
         val modelRef = parentRef.parentRef as DslRef.model
         when (modelElement) {
-            MODELREFENUM.MODEL -> {
-                theGatherPropertys.add(GatherPropertys(modelRef, gatherPropertiesEnum))
-            }
-            MODELREFENUM.DTO -> {
-                theGatherPropertys.add(GatherPropertys(DslRef.dto(simpleName, modelRef), gatherPropertiesEnum))
-            }
-            MODELREFENUM.TABLE -> {
-                theGatherPropertys.add(GatherPropertys(DslRef.table(simpleName, modelRef), gatherPropertiesEnum))
-            }
+            MODELREFENUM.MODEL -> theGatherPropertys.add(GatherPropertys(modelRef, gatherPropertiesEnum))
+            MODELREFENUM.DTO -> theGatherPropertys.add(GatherPropertys(DslRef.dto(simpleName, modelRef), gatherPropertiesEnum))
+            MODELREFENUM.TABLE -> theGatherPropertys.add(GatherPropertys(DslRef.table(simpleName, modelRef), gatherPropertiesEnum))
         }
     }
 
@@ -107,21 +98,21 @@ class DslGatherPropertiesDelegateImpl(
         propertiesOf(modelElement, GatherPropertiesEnum.SUPERCLASS_PROPERTIES_ONLY, simpleName)
     }
 
-    // ===================
-    // === ModelRefing === // TODO remove workaround
-    // ===================
+    // ====================
+    // === ModelReffing ===
+    // ====================
 
     val modelReffing = DslImplModelReffing(this)
 
-    override fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): IDslRef {
+    override fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): DslRef.IModelOrModelSubelement {
         return modelReffing.fakeOf(this, thisModelgroupSubElementSimpleName)
     }
 
-    override fun MODELREFENUM.inModelgroup(otherModelgroupSimpleName: String): OtherModelgroupSubelementDefault {
+    override fun MODELREFENUM.inModelgroup(otherModelgroupSimpleName: String): OtherModelgroupSubelementWithSimpleNameDefault {
         return modelReffing.fakeInModelgroup(this, otherModelgroupSimpleName)
     }
 
-    override fun OtherModelgroupSubelementDefault.withModelName(modelName: String): IDslRef {
+    override fun OtherModelgroupSubelementWithSimpleNameDefault.withModelName(modelName: String): DslRef.IModelOrModelSubelement {
         return modelReffing.fakeWithModelName(this, modelName)
     }
 }

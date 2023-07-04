@@ -8,17 +8,16 @@ import com.hoffi.chassis.dsl.modelgroup.DslTable
 
 // TODO use whenXXX Functions for "isDslElement() when"-Decissions
 object WhensModelgroup {
-    fun <R> whenModelOrModelSubelement(
-        modelOrModelSubelement: ADslClass,
+    fun <R> whenModelOrModelSubelement(modelOrModelSubelement: ADslClass,
         isDslModel: () -> R,
         isModelSubelement: () -> R,
-        catching: (DslException) -> Unit = {}
+        catching: (DslException) -> Throwable = { Throwable("when on '$modelOrModelSubelement' not exhaustive") }
     ): R {
         return when (modelOrModelSubelement) {
             is DslModel -> isDslModel()
             is DslDto, is DslTable -> isModelSubelement()
             else -> {
-                throw DslException("neither model, nor (known) modelSubelement")
+                throw catching(DslException("neither model, nor (known) modelSubelement"))
             }
         }
     }

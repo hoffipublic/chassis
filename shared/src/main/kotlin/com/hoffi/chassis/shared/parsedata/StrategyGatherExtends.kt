@@ -1,6 +1,7 @@
 package com.hoffi.chassis.shared.parsedata
 
 import com.hoffi.chassis.chassismodel.dsl.DslException
+import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType.Companion.NOTHING
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.shared.Extends
@@ -13,38 +14,46 @@ class SharedGatheredExtends(val dslRef: DslRef.IElementLevel, val dslRunIdentifi
 }
 
 object StrategyGatherExtends {
-    enum class STRATEGY { UNION, SPECIAL_WINS, GENERAL_WINS }
+    enum class STRATEGY { DEFAULT, UNION, SPECIAL_WINS, GENERAL_WINS, SPECIAL_CLASS_WINS_UNION_OF_INTERFACES }
 
     fun resolve(
         strategy: StrategyGatherExtends.STRATEGY,
-        dslRef: DslRef.ISubElementLevel,
+        ownModelSubelementRef: DslRef.ISubElementLevel,
         sharedGatheredExtends: SharedGatheredExtends
     ): MutableMap<String, Extends> {
-        return when (strategy) {
-            STRATEGY.UNION -> union(dslRef, sharedGatheredExtends)
-            STRATEGY.SPECIAL_WINS -> specialWins(dslRef, sharedGatheredExtends)
-            STRATEGY.GENERAL_WINS -> generalWins(dslRef, sharedGatheredExtends)
+        val result: MutableMap<String, Extends> = when (strategy) {
+            STRATEGY.DEFAULT, STRATEGY.SPECIAL_CLASS_WINS_UNION_OF_INTERFACES -> union(ownModelSubelementRef, sharedGatheredExtends, specialWinsForClass = true)
+            STRATEGY.UNION -> union(ownModelSubelementRef, sharedGatheredExtends, specialWinsForClass = false)
+            STRATEGY.SPECIAL_WINS -> specialWins(ownModelSubelementRef, sharedGatheredExtends)
+            STRATEGY.GENERAL_WINS -> generalWins(ownModelSubelementRef, sharedGatheredExtends)
         }
-    }
-
-    private fun union(dslRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends): MutableMap<String, Extends> {
-        val result = mutableMapOf<String, Extends>()
-        with(sharedGatheredExtends) {
-            result.putAll(allFromGroup.map { it.key to it.value.copy() }) // we might alter the Extends content of group/element in EACH subelement
-            for (extends in allFromElement.values) {
-                putInResultExtend(result, extends.copy(), dslRef)
-            }
-            for (extends in allFromSubelements[dslRef]?.values ?: emptySet()) {
-                putInResultExtend(result, extends.copy(), dslRef)
+        for (extend in result.values) {
+            EitherTypOrModelOrPoetType.expandReffedEitherToSubelementIfModel(extend.typeClassOrDslRef, ownModelSubelementRef)
+            for (superInterface in extend.superInterfaces) {
+                EitherTypOrModelOrPoetType.expandReffedEitherToSubelementIfModel(superInterface, ownModelSubelementRef)
             }
         }
         return result
     }
 
-    private fun specialWins(dslRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends): MutableMap<String, Extends> {
+    private fun union(ownModelSubelementRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends, specialWinsForClass: Boolean): MutableMap<String, Extends> {
         val result = mutableMapOf<String, Extends>()
         with(sharedGatheredExtends) {
-            result.putAll(allFromSubelements[dslRef] ?: emptyMap())
+            result.putAll(allFromGroup.map { it.key to it.value.copy() }) // we might alter the Extends content of group/element in EACH subelement
+            for (extends in allFromElement.values) {
+                putUnionInResultExtend(result, extends.copy(), ownModelSubelementRef, specialWinsForClass)
+            }
+            for (extends in allFromSubelements[ownModelSubelementRef]?.values ?: emptySet()) {
+                putUnionInResultExtend(result, extends.copy(), ownModelSubelementRef, specialWinsForClass)
+            }
+        }
+        return result
+    }
+
+    private fun specialWins(ownModelSubelementRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends): MutableMap<String, Extends> {
+        val result: MutableMap<String, Extends> = mutableMapOf()
+        with(sharedGatheredExtends) {
+            result.putAll(allFromSubelements[ownModelSubelementRef] ?: emptyMap())
             for (extends in allFromElement.values) {
                 result.putIfAbsent(extends.simpleName, extends.copy())
             }
@@ -55,23 +64,24 @@ object StrategyGatherExtends {
         return result
     }
 
-    private fun generalWins(dslRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends): MutableMap<String, Extends> {
-        val result = mutableMapOf<String, Extends>()
+    private fun generalWins(ownModelSubelementRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends): MutableMap<String, Extends> {
+        val result: MutableMap<String, Extends> = mutableMapOf()
         with(sharedGatheredExtends) {
             result.putAll(allFromGroup)
             for (extends in allFromElement.values) {
                 result.putIfAbsent(extends.simpleName, extends.copy())
             }
-            for (extends in allFromSubelements[dslRef]?.values ?: emptyList())
+            for (extends in allFromSubelements[ownModelSubelementRef]?.values ?: emptyList())
                 result.putIfAbsent(extends.simpleName, extends.copy())
         }
         return result
     }
 
-    private fun SharedGatheredExtends.putInResultExtend(
+    private fun putUnionInResultExtend(
         result: MutableMap<String, Extends>,
         extends: Extends,
-        dslRef: DslRef.ISubElementLevel
+        ownModelSubelementRef: DslRef.ISubElementLevel,
+        specialWinsForClass: Boolean
     ) {
         val resultExtends: Extends? = result[extends.simpleName]
         if (resultExtends == null) {
@@ -82,12 +92,14 @@ object StrategyGatherExtends {
                 resultExtends.typeClassOrDslRef = extends.typeClassOrDslRef
                 resultExtends.superclassHasBeenSet = true
             } else if (resultExtends.typeClassOrDslRef != NOTHING && extends.superclassHasBeenSet) {
-                throw DslException("${this::class.simpleName} for $dslRef already extends $resultExtends in group")
+                if (!specialWinsForClass) {
+                    throw DslException("${this::class.simpleName} for $ownModelSubelementRef already extends $resultExtends in group")
+                }
             } else {
-                if (extends.superclassHasBeenSet) {
+                //if (extends.superclassHasBeenSet) {
                     resultExtends.typeClassOrDslRef = extends.typeClassOrDslRef
                     resultExtends.superclassHasBeenSet = true
-                }
+                //}
             }
             if (extends.replaceSuperInterfaces) {
                 resultExtends.replaceSuperInterfaces = true

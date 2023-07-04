@@ -111,10 +111,10 @@ fun main() {
     println("================================================================================")
     println("================================================================================")
 
-    val elementRef = DslRefString.elementRef("modelgroup:CommonModel;model:Intfc", DslDiscriminator("someDisc"))
+    val elementRef = DslRefString.REF("modelgroup:CommonModel;model:Intfc")
     //val model = aDslRun.dslCtx.getModel(modelRef)
     val element: IDslClass = aDslRun.dslCtx.allCtxObjs.entries.first { it.key == elementRef }.value
-    val breakpoint = 1
+    @Suppress("UNUSED_VARIABLE") val breakpoint = 1
     val model = element as DslModel
     val showcasePropsDefault = model.showcaseImpl.theShowcaseBlocks[C.DEFAULT]?.showcaseProps ?: ShowcaseProps()
     val derivedData = showcasePropsDefault.dslDerivedData

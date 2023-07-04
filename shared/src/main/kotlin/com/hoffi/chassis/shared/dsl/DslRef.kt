@@ -5,7 +5,6 @@ import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.chassismodel.dsl.DslRefException
 import com.hoffi.chassis.shared.dsl.DslRef.Companion.genericInstance
 import com.hoffi.chassis.shared.dsl.DslRefString.REF
-import com.hoffi.chassis.shared.whens.WhensDslRef
 import org.reflections.Reflections
 import org.reflections.util.ConfigurationBuilder
 import org.slf4j.LoggerFactory
@@ -305,60 +304,60 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
 
 object DslRefString {
     //region DslRefString { ...
-    fun groupRef(refString: String, dslDiscriminator: DslDiscriminator) : DslRef.IGroupLevel = groupRef(DslRef.refAtomsListFull(refString), dslDiscriminator)
-    private fun groupRef(refAtomsList: List<DslRef.DslRefAtom>, dslDiscriminator: DslDiscriminator) : DslRef.IGroupLevel {
-        if(refAtomsList.size < 2) {// first element is DslDiscriminator
-            throw DslException("cannot extract groupRef from '${DslRef.refListJoin(refAtomsList)}' as it has less than 2 elements ")
-        }
-        // sentinel exhaustive when to get a compile error here, when DSL adds/removes on grouplevel
-        WhensDslRef.whenGroup(IDslRef.NULL, isApigroup = {}, isModelgroup = {})
-        val (groupLevelRefAtom, _) = DslRef.getDslRefFuncname(DslRef.IGroupLevel::class, refAtomsList, 1)
-        val dslGroupRef = when (groupLevelRefAtom.functionName) {
-            DslRef.modelgroup.funcname -> { DslRef.modelgroup(groupLevelRefAtom.simpleName, dslDiscriminator) }
-            DslRef.apigroup.funcname ->   { DslRef.apigroup(groupLevelRefAtom.simpleName, dslDiscriminator) }
-            else -> { throw DslException("Forgot to add groupLevel when case here for group '${groupLevelRefAtom.functionName}' ???") }
-        }
-        return dslGroupRef
-    }
-    fun modelgroupRef(refString: String, dslDiscriminator: DslDiscriminator) : DslRef.modelgroup {
-        val groupRef = groupRef(refString, dslDiscriminator)
-        if (groupRef !is DslRef.modelgroup) throw DslException("DslRef '$refString' does not point to a modelgroup")
-        return groupRef
-    }
-    fun elementRef(refString: String, dslDiscriminator: DslDiscriminator) : DslRef.IElementLevel {
-        val refAtomsList = DslRef.refAtomsListFull(refString)
-        if(refAtomsList.size < 3) {// first element is DslDiscriminator
-            throw DslException("cannot extract elementRef from '${DslRef.refListJoin(refAtomsList)}' as it has less than 3 elements ")
-        }
-        // sentinel exhaustive when to get a compile error here, when DSL adds/removes on grouplevel
-        WhensDslRef.whenApigroupElement(IDslRef.NULL, isApiRef = {})
-        WhensDslRef.whenModelgroupElement(IDslRef.NULL, isModelRef = {}, isFillerRef = {}, isAllmodelsRef = {})
-        val groupRef = groupRef(refAtomsList, dslDiscriminator)
-        val (elementLevelRefAtom, _) = DslRef.getDslRefFuncname(DslRef.IElementLevel::class, refAtomsList, 2)
-        val elementRef = when (groupRef) {
-            //DslRef.IGroupLevel.NULL -> { throw DslException("trying to get elementRef on NULL") }
-            is DslRef.apigroup -> {
-                when (elementLevelRefAtom.functionName) {
-                    DslRef.api.funcname -> { DslRef.api(elementLevelRefAtom.simpleName, groupRef)}
-                    else -> { throw DslException("unknown Iapigroup.funcname '${elementLevelRefAtom}'") }
-                }
-            }
-            is DslRef.modelgroup -> {
-                when (elementLevelRefAtom.functionName) {
-                    DslRef.model.funcname -> { DslRef.model(elementLevelRefAtom.simpleName, groupRef) }
-                    DslRef.filler.funcname -> { DslRef.filler(elementLevelRefAtom.simpleName, groupRef) }
-                    DslRef.allModels.funcname -> { DslRef.allModels(elementLevelRefAtom.simpleName, groupRef) }
-                    else -> { throw DslException("unknown Imodelgroup.funcname '${elementLevelRefAtom}'") }
-                }
-            }
-        }
-        return elementRef
-    }
-    fun modelElementRef(refString: String, dslDiscriminator: DslDiscriminator) : DslRef.model {
-        val elementRef = elementRef(refString, dslDiscriminator)
-        if (elementRef !is DslRef.model) throw DslException("DslRef '$refString' does not point to a model")
-        return elementRef
-    }
+//    fun groupRef(refString: String, dslDiscriminator: DslDiscriminator) : DslRef.IGroupLevel = groupRef(DslRef.refAtomsListFull(refString), dslDiscriminator)
+//    private fun groupRef(refAtomsList: List<DslRef.DslRefAtom>, dslDiscriminator: DslDiscriminator) : DslRef.IGroupLevel {
+//        if(refAtomsList.size < 2) {// first element is DslDiscriminator
+//            throw DslException("cannot extract groupRef from '${DslRef.refListJoin(refAtomsList)}' as it has less than 2 elements ")
+//        }
+//        // sentinel exhaustive when to get a compile error here, when DSL adds/removes on grouplevel
+//        WhensDslRef.whenGroup(IDslRef.NULL, isApigroup = {}, isModelgroup = {})
+//        val (groupLevelRefAtom, _) = DslRef.getDslRefFuncname(DslRef.IGroupLevel::class, refAtomsList, 1)
+//        val dslGroupRef = when (groupLevelRefAtom.functionName) {
+//            DslRef.modelgroup.funcname -> { DslRef.modelgroup(groupLevelRefAtom.simpleName, dslDiscriminator) }
+//            DslRef.apigroup.funcname ->   { DslRef.apigroup(groupLevelRefAtom.simpleName, dslDiscriminator) }
+//            else -> { throw DslException("Forgot to add groupLevel when case here for group '${groupLevelRefAtom.functionName}' ???") }
+//        }
+//        return dslGroupRef
+//    }
+//    fun modelgroupRef(refString: String, dslDiscriminator: DslDiscriminator) : DslRef.modelgroup {
+//        val groupRef = groupRef(refString, dslDiscriminator)
+//        if (groupRef !is DslRef.modelgroup) throw DslException("DslRef '$refString' does not point to a modelgroup")
+//        return groupRef
+//    }
+//    fun elementRef(refString: String, dslDiscriminator: DslDiscriminator) : DslRef.IElementLevel {
+//        val refAtomsList = DslRef.refAtomsListFull(refString)
+//        if(refAtomsList.size < 3) {// first element is DslDiscriminator
+//            throw DslException("cannot extract elementRef from '${DslRef.refListJoin(refAtomsList)}' as it has less than 3 elements ")
+//        }
+//        // sentinel exhaustive when to get a compile error here, when DSL adds/removes on grouplevel
+//        WhensDslRef.whenApigroupElement(IDslRef.NULL, isApiRef = {})
+//        WhensDslRef.whenModelgroupElement(IDslRef.NULL, isModelRef = {}, isFillerRef = {}, isAllmodelsRef = {})
+//        val groupRef = groupRef(refAtomsList, dslDiscriminator)
+//        val (elementLevelRefAtom, _) = DslRef.getDslRefFuncname(DslRef.IElementLevel::class, refAtomsList, 2)
+//        val elementRef = when (groupRef) {
+//            //DslRef.IGroupLevel.NULL -> { throw DslException("trying to get elementRef on NULL") }
+//            is DslRef.apigroup -> {
+//                when (elementLevelRefAtom.functionName) {
+//                    DslRef.api.funcname -> { DslRef.api(elementLevelRefAtom.simpleName, groupRef)}
+//                    else -> { throw DslException("unknown Iapigroup.funcname '${elementLevelRefAtom}'") }
+//                }
+//            }
+//            is DslRef.modelgroup -> {
+//                when (elementLevelRefAtom.functionName) {
+//                    DslRef.model.funcname -> { DslRef.model(elementLevelRefAtom.simpleName, groupRef) }
+//                    DslRef.filler.funcname -> { DslRef.filler(elementLevelRefAtom.simpleName, groupRef) }
+//                    DslRef.allModels.funcname -> { DslRef.allModels(elementLevelRefAtom.simpleName, groupRef) }
+//                    else -> { throw DslException("unknown Imodelgroup.funcname '${elementLevelRefAtom}'") }
+//                }
+//            }
+//        }
+//        return elementRef
+//    }
+//    fun modelElementRef(refString: String, dslDiscriminator: DslDiscriminator) : DslRef.model {
+//        val elementRef = elementRef(refString, dslDiscriminator)
+//        if (elementRef !is DslRef.model) throw DslException("DslRef '$refString' does not point to a model")
+//        return elementRef
+//    }
 
     fun REF(dslRefAtomList: List<DslRef.DslRefAtom>, dslDiscriminator: DslDiscriminator): DslRef = REF("disc${DslRef.ATOMSEP}$dslDiscriminator${DslRef.REFSEP}${DslRef.refListJoin(dslRefAtomList)}")
     fun REF(dslRef: DslRef): DslRef = REF(dslRef.toString())
@@ -387,31 +386,31 @@ object DslRefString {
             is DslRef.showcase -> {}
             is DslRef.table -> {}
         }
-        var parentDslRef: DslRef = DslRef.modelgroup("DUMMY", DslDiscriminator(C.NULLSTRING)) // dummy
+        var currentDslRef: DslRef = DslRef.modelgroup("DUMMY", DslDiscriminator(C.NULLSTRING)) // dummy
         for ((i, refAtom) in refAtomsListFull.withIndex()) {
             if (i == 0) continue // DslDiscriminator
             when (refAtom.functionName) {
-                DslRef.apigroup.funcname -> { parentDslRef = DslRef.apigroup(refAtom.simpleName, dslDiscriminator)}
-                DslRef.modelgroup.funcname -> { parentDslRef = DslRef.modelgroup(refAtom.simpleName, dslDiscriminator)}
+                DslRef.apigroup.funcname -> { currentDslRef = DslRef.apigroup(refAtom.simpleName, dslDiscriminator)}
+                DslRef.modelgroup.funcname -> { currentDslRef = DslRef.modelgroup(refAtom.simpleName, dslDiscriminator)}
                 DslRef.dslRun.funcname -> DslRef.dslRun(refAtom.simpleName)
-                DslRef.allModels.funcname -> { parentDslRef = DslRef.allModels(refAtom.simpleName, parentDslRef) }
-                DslRef.api.funcname -> { parentDslRef = DslRef.api(refAtom.simpleName, parentDslRef)}
-                DslRef.apifun.funcname -> { parentDslRef = DslRef.apifun(refAtom.simpleName, parentDslRef)}
-                DslRef.classMods.funcname -> { parentDslRef = DslRef.classMods(refAtom.simpleName, parentDslRef)}
-                DslRef.dto.funcname -> { parentDslRef = DslRef.dto(refAtom.simpleName, parentDslRef)}
-                DslRef.extends.funcname -> { parentDslRef = DslRef.extends(refAtom.simpleName, parentDslRef)}
-                DslRef.filler.funcname -> { parentDslRef = DslRef.filler(refAtom.simpleName, parentDslRef)}
-                DslRef.model.funcname -> { parentDslRef = DslRef.model(refAtom.simpleName, parentDslRef)}
-                DslRef.nameAndWhereto.funcname -> { parentDslRef = DslRef.nameAndWhereto(refAtom.simpleName, parentDslRef)}
-                DslRef.prop.funcname -> { parentDslRef = DslRef.prop(refAtom.simpleName, parentDslRef)}
-                DslRef.propertiesOf.funcname -> { parentDslRef = DslRef.propertiesOf(refAtom.simpleName, parentDslRef)}
-                DslRef.showcase.funcname -> { parentDslRef = DslRef.showcase(refAtom.simpleName, parentDslRef)}
-                DslRef.table.funcname -> { parentDslRef = DslRef.table(refAtom.simpleName, parentDslRef)}
+                DslRef.allModels.funcname -> { currentDslRef = DslRef.allModels(refAtom.simpleName, currentDslRef) }
+                DslRef.api.funcname -> { currentDslRef = DslRef.api(refAtom.simpleName, currentDslRef)}
+                DslRef.apifun.funcname -> { currentDslRef = DslRef.apifun(refAtom.simpleName, currentDslRef)}
+                DslRef.classMods.funcname -> { currentDslRef = DslRef.classMods(refAtom.simpleName, currentDslRef)}
+                DslRef.dto.funcname -> { currentDslRef = DslRef.dto(refAtom.simpleName, currentDslRef)}
+                DslRef.extends.funcname -> { currentDslRef = DslRef.extends(refAtom.simpleName, currentDslRef)}
+                DslRef.filler.funcname -> { currentDslRef = DslRef.filler(refAtom.simpleName, currentDslRef)}
+                DslRef.model.funcname -> { currentDslRef = DslRef.model(refAtom.simpleName, currentDslRef)}
+                DslRef.nameAndWhereto.funcname -> { currentDslRef = DslRef.nameAndWhereto(refAtom.simpleName, currentDslRef)}
+                DslRef.prop.funcname -> { currentDslRef = DslRef.prop(refAtom.simpleName, currentDslRef)}
+                DslRef.propertiesOf.funcname -> { currentDslRef = DslRef.propertiesOf(refAtom.simpleName, currentDslRef)}
+                DslRef.showcase.funcname -> { currentDslRef = DslRef.showcase(refAtom.simpleName, currentDslRef)}
+                DslRef.table.funcname -> { currentDslRef = DslRef.table(refAtom.simpleName, currentDslRef)}
             }
         }
-        return parentDslRef
+        return currentDslRef
     }
-    fun MODELREF(dslRefString: String): DslRef.IModelOrModelSubelement {
+    fun REFmodelOrModelSubelement(dslRefString: String): DslRef.IModelOrModelSubelement {
         val dslRef = REF(dslRefString)
         if ( dslRef !is DslRef.IModelOrModelSubelement) {
             throw DslException("ref: '$dslRef' is not a model or modelSubelement")

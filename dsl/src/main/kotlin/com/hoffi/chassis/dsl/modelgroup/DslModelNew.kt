@@ -19,7 +19,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import org.slf4j.LoggerFactory
 
 @ChassisDslMarker
-interface IDslApiClassObjectOrInterface {
+interface IDslApiKindClassObjectOrInterface {
     var kind: DslClassObjectOrInterface
 }
 
@@ -87,7 +87,7 @@ class DslModel constructor(
     //val showcaseImpl: DslShowcaseDelegateImpl                 = this@DslCtxWrapper.dslCtx.ctxObjOrCreate(DslRef.showcase(simpleName, modelRef))
 ) : ADslClass(),
     IDslApiModel,
-    IDslApiClassObjectOrInterface,
+    IDslApiKindClassObjectOrInterface,
     IDslApiClassModifiers by classModifiersImpl,
     IDslApiPropFuns by propsImpl,
     IDslApiNameAndWheretoWithSubelements by nameAndWheretoWithSubelements,
@@ -111,8 +111,8 @@ class DslModel constructor(
     val dslDtos = mutableMapOf<String, DslDto>()
     val dslTables = mutableMapOf<String, DslTable>()
 
-    // IDslApiClassObjectOrInterface
-    override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.CLASS
+    // IDslApiKindClassObjectOrInterface
+    override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.UNDEFINED
 
     @DslBlockOn(DslDto::class)
     override fun dto(simpleName: String, dslBlock: IDslApiDto.() -> Unit) {
@@ -228,16 +228,14 @@ globalDslCtx = dslCtx // TODO remove workaround
 @ChassisDslMarker
 interface IDslApiModelAndModelSubelementsCommon
 // interfaces implemented by Model And Elements
-    :   IDslApiGatherPropertiesModelAndModelSubelementsCommon,
+    :   IDslApiKindClassObjectOrInterface,
+        IDslApiGatherPropertiesModelAndModelSubelementsCommon,
         IDslApiClassModifiers,
         IDslApiGatherPropertiesProp,
         IDslApiPropFuns,
         IDslApiClassModsDelegate,
         IDslApiExtendsDelegate,
         IDslApiShowcaseDelegate
-{
-    var kind: DslClassObjectOrInterface
-}
 @ChassisDslMarker
 interface IDslApiModelOnlyCommon // TODO remove trailing Common postfix
     :   IDslApiNameAndWheretoWithSubelements
@@ -279,7 +277,7 @@ class DslDto(
     : AModelSubelement(simpleName, dtoRef),
     IDslApiDto,
     IDslApiModelAndModelSubelementsCommon,
-    IDslApiClassObjectOrInterface,
+    IDslApiKindClassObjectOrInterface,
 
     IDslImplClassModifiers by classModifiersImpl,
     IDslApiPropFuns by propsImpl,
@@ -334,8 +332,7 @@ class DslDto(
                     DslClassObjectOrInterface.CLASS -> dtoModel.kind = TypeSpec.Kind.CLASS
                     DslClassObjectOrInterface.OBJECT -> dtoModel.kind = TypeSpec.Kind.OBJECT
                     DslClassObjectOrInterface.INTERFACE -> dtoModel.kind = TypeSpec.Kind.INTERFACE
-                    DslClassObjectOrInterface.UNDEFINED -> { throw DslException("ref: $selfDslRef has undefined kind, neither set in ModelSubelement, nor in parent model() { }")
-                    }
+                    DslClassObjectOrInterface.UNDEFINED -> dtoModel.kind = TypeSpec.Kind.CLASS
                 }
             }
         }
@@ -352,7 +349,7 @@ class DslDto(
         if (sharedGatheredExtends.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a map.entry of Extends for simpleName '${simpleName}' in dslCtx for '${selfDslRef}'")
         //val setOfGatheredExtends: MutableSet<Extends> = mutableSetOf()
         sharedGatheredExtends.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.putAll(extendsImpl.theExtendBlocks.values.map { it.simpleName to it.extends })
-        val modelGatherExtends: MutableMap<String, Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.UNION, selfDslRef, sharedGatheredExtends)
+        val modelGatherExtends: MutableMap<String, Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.DEFAULT, selfDslRef, sharedGatheredExtends)
         dtoModel.extends.putAll(modelGatherExtends)
 
         val sharedGatheredGatherPropertys: SharedGatheredGatherPropertys = dslCtx.gatheredGatherPropertys(selfDslRef.parentRef as DslRef.IElementLevel)
@@ -411,7 +408,7 @@ class DslTable(
     : AModelSubelement(simpleName, tableRef),
     IDslApiTable,
     IDslApiModelAndModelSubelementsCommon,
-    IDslApiClassObjectOrInterface,
+    IDslApiKindClassObjectOrInterface,
 
     IDslImplClassModifiers by classModifiersImpl,
     IDslApiPropFuns by propsImpl,
@@ -486,7 +483,7 @@ class DslTable(
         if (sharedGatheredExtends.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a map.entry of Extends for simpleName '${simpleName}' in dslCtx for '${selfDslRef}'")
         //val setOfGatheredExtends: MutableSet<Extends> = mutableSetOf()
         sharedGatheredExtends.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.putAll(extendsImpl.theExtendBlocks.values.map { it.simpleName to it.extends })
-        val modelGatherExtends: MutableMap<String, Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.UNION, selfDslRef, sharedGatheredExtends)
+        val modelGatherExtends: MutableMap<String, Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.DEFAULT, selfDslRef, sharedGatheredExtends)
         tableModel.extends.putAll(modelGatherExtends)
 
         val sharedGatheredGatherPropertys: SharedGatheredGatherPropertys = dslCtx.gatheredGatherPropertys(selfDslRef.parentRef as DslRef.IElementLevel)

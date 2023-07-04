@@ -10,7 +10,7 @@ import com.hoffi.chassis.shared.shared.Tag
 import com.squareup.kotlinpoet.KModifier
 
 const val PERSISTENTGROUP = "Persistentgroup"
-const val PERSISTENT__INTFC                 = "IPersistent"
+const val PERSISTENT__INTFCPERSISTENT       = "IPersistent"
 const val PERSISTENT__BASE                  = "Base"
 const val PERSISTENT__PERSISTENT            = "Persistent"
 const val PERSISTENT__TRANSIENT_STATE       = "TransientState"
@@ -31,7 +31,7 @@ fun baseModelsPersistent() {
                 packageName("table")
             }
         }
-        model(PERSISTENT__INTFC) {
+        model(PERSISTENT__INTFCPERSISTENT) {
             dto {
                 kind = INTERFACE
             }
@@ -45,7 +45,7 @@ fun baseModelsPersistent() {
             classModifiers(KModifier.ABSTRACT)
             dto {
                 + KModifier.ABSTRACT
-                extends { -PERSISTENT__INTFC }
+                extends { -PERSISTENT__INTFCPERSISTENT }
             }
         }
         model(PERSISTENT__PERSISTENT) {
