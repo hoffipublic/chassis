@@ -82,7 +82,8 @@ fun entities() {
                 }
 //                annotateProperty("someObject", AnnotationSpec.builder(Contextual::class))
                 property("dtoSpecificProp", TYP.STRING, mutable, Tag.CONSTRUCTOR)
-                //propertiesOf( (MODELREFENUM.DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__TRANSIENT_STATE), GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+                //propertiesOf( (MODEL inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) )
+
 //                initBusinessValues {
 //                    "someObject"      with Initializer.of("%T(%L)", Dummy::class.asTypeName(), 43)
 //                    "dtoSpecificProp" with Initializer.of("%S", "businessInitialized")

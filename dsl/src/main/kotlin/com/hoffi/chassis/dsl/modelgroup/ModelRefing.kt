@@ -24,17 +24,17 @@ class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelRef
 
     override infix fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): DslRef.IModelOrModelSubelement {
         // TODO see also IDslRef.unaryPlus() of DslExtends DslExtendsBlockImpl
-        var elementLevelDslRef = dslClass.selfDslRef.parentRef
+        var elementLevelDslRef = dslClass.parentDslRef
         while (elementLevelDslRef !is DslRef.IElementLevel) {
             if (elementLevelDslRef.level == 1) throw DslException("no elementLevel dslRef in parents of ${dslClass.selfDslRef}")
-            elementLevelDslRef = elementLevelDslRef.parentRef
+            elementLevelDslRef = elementLevelDslRef.parentDslRef
         }
-        //if (this == MODELREFENUM.MODEL && (elementLevelDslRef == dslClass.selfDslRef.parentRef) ) {
+        //if (this == MODELREFENUM.MODEL && (elementLevelDslRef == dslClass.parentDslRef) ) {
         //    throw DslException("extends directly on model|api|..., we cannot determine what subelement (dto, table, ...) to extend! (use e.g.: '+ (DTO of $this)'")
         //}
         //// so we are an ISubElementLevel here, or an IElementLevel, but MODELELEMENT is NOT Model
 
-        val groupRef = elementLevelDslRef.parentRef
+        val groupRef = elementLevelDslRef.parentDslRef
         return when (this) {
             MODELREFENUM.MODEL -> DslRef.model(thisModelgroupSubElementSimpleName, groupRef)
             MODELREFENUM.DTO ->   DslRef.dto(  C.DEFAULT, DslRef.model(thisModelgroupSubElementSimpleName, groupRef))
@@ -45,10 +45,10 @@ class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelRef
     fun fakeInModelgroup(modelelement: MODELREFENUM, otherModelgroupSimpleName: String): OtherModelgroupSubelementWithSimpleNameDefault = modelelement inModelgroup otherModelgroupSimpleName
 
     override infix fun MODELREFENUM.inModelgroup(otherModelgroupSimpleName: String): OtherModelgroupSubelementWithSimpleNameDefault {
-        //if (dslClass.selfDslRef.parentRef is DslRef.IElementLevel && this != MODELREFENUM.MODEL) {
+        //if (dslClass.parentDslRef is DslRef.IElementLevel && this != MODELREFENUM.MODEL) {
         //    throw DslException("extends:  'MODEL inModelgroup \"$otherModelgroupSimpleName\"' directly on model|api|..., we cannot determine what subelement (dto, table, ...) to extend! (use e.g.: '+ (DTO inModelgroup $otherModelgroupSimpleName)'")
         //}
-        //if (dslClass.selfDslRef.parentRef is DslRef.IGroupLevel && this != MODELREFENUM.MODEL) {
+        //if (dslClass.parentDslRef is DslRef.IGroupLevel && this != MODELREFENUM.MODEL) {
         //    throw DslException("extends:  'MODEL inModelgroup \"$otherModelgroupSimpleName\"' directly on modelgroup|apigroup|..., we cannot determine what subelement (dto, table, ...) to extend! (use e.g.: '+ (DTO inModelgroup $otherModelgroupSimpleName)'")
         //}
 
@@ -56,7 +56,7 @@ class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelRef
         //val dslModelgroup = try {
         //    dslCtx.getModelgroupBySimpleName(otherModelgroupSimpleName)
         //} catch (e: DslCtxException) {
-        //    throw DslException("ref: '${dslClass.selfDslRef.parentRef}' ${e.message}")
+        //    throw DslException("ref: '${dslClass.parentDslRef}' ${e.message}")
         //}
 
         val groupRef = DslRef.modelgroup(otherModelgroupSimpleName, DslDiscriminator("reffed"))
@@ -68,7 +68,7 @@ class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelRef
     override infix fun OtherModelgroupSubelementWithSimpleNameDefault.withModelName(modelName: String): DslRef.IModelOrModelSubelement {
         //val modelgroupDslClass = this.modelgroupDslRef
         //// TODO hardcoded: possible only on modelgroup by now
-        //val dslModel = modelgroupDslClass.dslModels.firstOrNull { it.simpleName == modelName } ?: throw DslException("ref: '${dslClass.selfDslRef.parentRef} +\"${this.modelgroupDslRef}\" extends '${this.modelrefEnumOfReffedElementOrSubelement}' with simplename '$modelName' ref not found in dslCtx!")
+        //val dslModel = modelgroupDslClass.dslModels.firstOrNull { it.simpleName == modelName } ?: throw DslException("ref: '${dslClass.parentDslRef} +\"${this.modelgroupDslRef}\" extends '${this.modelrefEnumOfReffedElementOrSubelement}' with simplename '$modelName' ref not found in dslCtx!")
         ////// parent DslClass of extends { }
         ////val elementLevelDslClass = dslExtendsDelegateImpl.dslCtxWrapper.dslCtx.getDslClass(dslExtendsDelegateImpl.parentRef.parentRef)
         //val elementLevelDslClass = dslModel

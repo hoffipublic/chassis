@@ -12,9 +12,9 @@ interface IDslParticipator
 interface IDslClass : IDslParticipator {
     val selfDslRef: IDslRef
     val parentDslRef: IDslRef
-        get() = selfDslRef.parentRef
+        get() = selfDslRef.parentDslRef
     //val parent: IDslClass
-    //    get() = dslCtx.ctxObjOrCreate(selfDslRef.parentRef)
+    //    get() = dslCtx.ctxObjOrCreate(parentDslRef)
 
     //companion object {
     ////    context(DslCtxWrapper)
@@ -45,7 +45,7 @@ abstract class ADslClass() : IDslClass {
 }
 context(DslCtxWrapper)
 abstract class ADslDelegateClass(
-    val simpleNameOfParentDslBlock: String, // TODO rename to simpleNameOfDelegator
-    val parentRef: IDslRef, // TODO rename to delegaatorRef
+    val simpleNameOfDelegator: String,
+    val delegatorRef: IDslRef,
 ) : ADslClass() {
 }

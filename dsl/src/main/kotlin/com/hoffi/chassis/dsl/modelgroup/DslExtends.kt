@@ -120,7 +120,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
             if (extends.typeClassOrDslRef is EitherTypOrModelOrPoetType.NOTHING) {
                 extends.typeClassOrDslRef = this.createPoetType()
             } else {
-                throw DslException("${dslExtendsDelegateImpl.parentRef} already extends ${extends.typeClassOrDslRef}")
+                throw DslException("${dslExtendsDelegateImpl.delegatorRef} already extends ${extends.typeClassOrDslRef}")
             }
         }
     }
@@ -143,21 +143,21 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
             if (extends.typeClassOrDslRef is EitherTypOrModelOrPoetType.NOTHING) {
                 extends.typeClassOrDslRef = EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface, Initializer.REFFED)
             } else {
-                throw DslException("${dslExtendsDelegateImpl.parentRef} already extends ${extends.typeClassOrDslRef}")
+                throw DslException("${dslExtendsDelegateImpl.delegatorRef} already extends ${extends.typeClassOrDslRef}")
             }
         }
     }
 
     /** inherit from same SubElement Type (e.g. dto/table/...) with simpleName C.DEFAULT, of an element (e.g. model) in the same group which has this name */
     override operator fun String.unaryPlus() {
-        var elementLevelDslRef = dslExtendsDelegateImpl.selfDslRef.parentRef
+        var elementLevelDslRef = dslExtendsDelegateImpl.parentDslRef
         while (elementLevelDslRef !is DslRef.IElementLevel) {
             if (elementLevelDslRef.level == 1) throw DslException("no elementLevel dslRef in parents of ${dslExtendsDelegateImpl.selfDslRef}")
-            elementLevelDslRef = elementLevelDslRef.parentRef
+            elementLevelDslRef = elementLevelDslRef.parentDslRef
         }
-        val groupRef = elementLevelDslRef.parentRef
+        val groupRef = elementLevelDslRef.parentDslRef
 
-        val refTarget: DslRef.IModelOrModelSubelement = WhensDslRef.whenModelOrModelSubelement(dslExtendsDelegateImpl.selfDslRef.parentRef,
+        val refTarget: DslRef.IModelOrModelSubelement = WhensDslRef.whenModelOrModelSubelement(dslExtendsDelegateImpl.parentDslRef,
             isModelRef = { DslRef.model(this, groupRef) },
             isDtoRef =   { DslRef.dto(C.DEFAULT, DslRef.model(this, groupRef)) },
             isTableRef = { DslRef.table(C.DEFAULT, DslRef.model(this, groupRef)) },
@@ -197,7 +197,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
 
     override fun IDslRef.unaryMinus() {
         //val refTarget = if (this !is DslRef.IModelSubelement) {
-        //    val theExtendsBlockParentRef = this@DslExtendsBlockImpl.dslExtendsDelegateImpl.selfDslRef.parentRef
+        //    val theExtendsBlockParentRef = this@DslExtendsBlockImpl.dslExtendsDelegateImpl.parentDslRef
         //    when (theExtendsBlockParentRef) {
         //        is DslRef.dto ->   DslRef.dto(this@DslExtendsBlockImpl.dslExtendsDelegateImpl.simpleNameOfParentDslBlock, this)
         //        is DslRef.table -> DslRef.table(this@DslExtendsBlockImpl.dslExtendsDelegateImpl.simpleNameOfParentDslBlock, this)
@@ -224,14 +224,14 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
 
     /** inherit from same SubElement Type (e.g. dto/table/...) with simpleName C.DEFAULT, of an element (e.g. model) in the same group which has this name */
     override operator fun String.unaryMinus() {
-        var elementLevelDslRef = dslExtendsDelegateImpl.selfDslRef.parentRef
+        var elementLevelDslRef = dslExtendsDelegateImpl.parentDslRef
         while (elementLevelDslRef !is DslRef.IElementLevel) {
             if (elementLevelDslRef.level == 1) throw DslException("no elementLevel dslRef in parents of ${dslExtendsDelegateImpl.selfDslRef}")
-            elementLevelDslRef = elementLevelDslRef.parentRef
+            elementLevelDslRef = elementLevelDslRef.parentDslRef
         }
-        val groupRef = elementLevelDslRef.parentRef
+        val groupRef = elementLevelDslRef.parentDslRef
 
-        val refTarget: DslRef.IModelOrModelSubelement = WhensDslRef.whenModelOrModelSubelement(dslExtendsDelegateImpl.selfDslRef.parentRef,
+        val refTarget: DslRef.IModelOrModelSubelement = WhensDslRef.whenModelOrModelSubelement(dslExtendsDelegateImpl.parentDslRef,
             isModelRef = { DslRef.model(this, groupRef) },
             isDtoRef =   { DslRef.dto(C.DEFAULT, DslRef.model(this, groupRef)) },
             isTableRef = { DslRef.table(C.DEFAULT, DslRef.model(this, groupRef)) },

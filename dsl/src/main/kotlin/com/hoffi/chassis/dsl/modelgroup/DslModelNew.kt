@@ -32,7 +32,7 @@ abstract class AModelSubelement(
 {
     override val selfDslRef = modelSubelementRef
 
-    protected fun thePropertiesOf(
+    protected fun directPropertiesOf(
         subelementPropsImpl: DslPropsDelegate,
         elementPropsImpl: DslPropsDelegate
     ): MutableMap<String, Property> {
@@ -303,7 +303,7 @@ class DslDto(
 
 
     fun finish(dslCtx: DslCtx) {
-        val sharedGatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(selfDslRef.parentRef as DslRef.IElementLevel)
+        val sharedGatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(parentDslRef as DslRef.IElementLevel)
         for (dslNameAndWhereto in nameAndWheretoWithoutModelSubelementsImpl.nameAndWheretos.values) {
             sharedGatheredNameAndWheretos.createForSubelement(selfDslRef, SharedNameAndWhereto(
                 dslNameAndWhereto.simpleName,
@@ -321,7 +321,7 @@ class DslDto(
         val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS, selfDslRef, sharedGatheredNameAndWheretos)
         val dtoModel = GenModel.DtoModel(selfDslRef as DslRef.dto, modelClassName)
         dslCtx.genCtx.putModel(selfDslRef, dtoModel)
-        val dslModel: DslModel = dslCtx.ctxObj(selfDslRef.parentRef)
+        val dslModel: DslModel = dslCtx.ctxObj(parentDslRef)
 
         when (kind) {
             DslClassObjectOrInterface.CLASS -> dtoModel.kind = TypeSpec.Kind.CLASS
@@ -352,18 +352,18 @@ class DslDto(
         val modelGatherExtends: MutableMap<String, Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.DEFAULT, selfDslRef, sharedGatheredExtends)
         dtoModel.extends.putAll(modelGatherExtends)
 
-        val sharedGatheredGatherPropertys: SharedGatheredGatherPropertys = dslCtx.gatheredGatherPropertys(selfDslRef.parentRef as DslRef.IElementLevel)
+        val sharedGatheredGatherPropertys: SharedGatheredGatherPropertys = dslCtx.gatheredGatherPropertys(parentDslRef as DslRef.IElementLevel)
         if (sharedGatheredGatherPropertys.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a set of GatherPropertys in dslCtx for '${selfDslRef}")
         val setOfGatheredPropertysOfThis: MutableSet<GatherPropertys> = mutableSetOf()
         sharedGatheredGatherPropertys.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.put(selfDslRef.simpleName, setOfGatheredPropertysOfThis)
         setOfGatheredPropertysOfThis.addAll(gatherPropertiesImpl.theGatherPropertys)
         val modelGatherProperties: Set<GatherPropertys> = StrategyGatherProperties.resolve(StrategyGatherProperties.STRATEGY.UNION, selfDslRef, sharedGatheredGatherPropertys)
-        dtoModel.gatheredFromDslRefs.addAll(modelGatherProperties)
+        dtoModel.gatheredPropsDslModelRefs.addAll(modelGatherProperties)
 
         // the gathered properties will be fetched into the model                      in Modelgroup's PASS_GENMODELSCREATED fun gatherInheritedPropertys()
         // the ModelClassName of GenModel's will be set in Modelgroup's PASS_GENMODELSCREATED fun setModelClassNameOfReffedModelProperties()
-        val mapOfPropertys = thePropertiesOf(this.propsImpl, dslModel.propsImpl)
-        dtoModel.propertys.putAll(mapOfPropertys)
+        val mapOfPropertys = directPropertiesOf(this.propsImpl, dslModel.propsImpl)
+        dtoModel.directProps.putAll(mapOfPropertys)
 
         // TODO XXX Continue here
     }
@@ -436,7 +436,7 @@ class DslTable(
 
 
     fun finish(dslCtx: DslCtx) {
-        val sharedGatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(selfDslRef.parentRef as DslRef.IElementLevel)
+        val sharedGatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(parentDslRef as DslRef.IElementLevel)
         for (dslNameAndWhereto in nameAndWheretoWithoutModelSubelementsImpl.nameAndWheretos.values) {
             sharedGatheredNameAndWheretos.createForSubelement(selfDslRef, SharedNameAndWhereto(
                 dslNameAndWhereto.simpleName,
@@ -454,7 +454,7 @@ class DslTable(
         val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS, selfDslRef, sharedGatheredNameAndWheretos)
         val tableModel = GenModel.TableModel(selfDslRef as DslRef.table, modelClassName)
         dslCtx.genCtx.putModel(selfDslRef, tableModel)
-        val dslModel: DslModel = dslCtx.ctxObj(selfDslRef.parentRef)
+        val dslModel: DslModel = dslCtx.ctxObj(parentDslRef)
 
         when (kind) {
             DslClassObjectOrInterface.CLASS -> tableModel.kind = TypeSpec.Kind.CLASS
@@ -486,17 +486,17 @@ class DslTable(
         val modelGatherExtends: MutableMap<String, Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.DEFAULT, selfDslRef, sharedGatheredExtends)
         tableModel.extends.putAll(modelGatherExtends)
 
-        val sharedGatheredGatherPropertys: SharedGatheredGatherPropertys = dslCtx.gatheredGatherPropertys(selfDslRef.parentRef as DslRef.IElementLevel)
+        val sharedGatheredGatherPropertys: SharedGatheredGatherPropertys = dslCtx.gatheredGatherPropertys(parentDslRef as DslRef.IElementLevel)
         if (sharedGatheredGatherPropertys.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a set of GatherPropertys in dslCtx for '${selfDslRef}")
         val setOfGatheredPropertysOfThis: MutableSet<GatherPropertys> = mutableSetOf()
         sharedGatheredGatherPropertys.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.put(selfDslRef.simpleName, setOfGatheredPropertysOfThis)
         setOfGatheredPropertysOfThis.addAll(gatherPropertiesImpl.theGatherPropertys)
         val modelGatherProperties: Set<GatherPropertys> = StrategyGatherProperties.resolve(StrategyGatherProperties.STRATEGY.UNION, selfDslRef, sharedGatheredGatherPropertys)
-        tableModel.gatheredFromDslRefs.addAll(modelGatherProperties)
+        tableModel.gatheredPropsDslModelRefs.addAll(modelGatherProperties)
 
         // the gathered properties will be fetched into the model in Modelgroup's PASS_GENMODELSCREATED fun gatherInheritedPropertys()
-        val mapOfPropertys = thePropertiesOf(this.propsImpl, dslModel.propsImpl)
-        tableModel.propertys.putAll(mapOfPropertys)
+        val mapOfPropertys = directPropertiesOf(this.propsImpl, dslModel.propsImpl)
+        tableModel.directProps.putAll(mapOfPropertys)
 
        // TODO XXX Continue here
     }

@@ -111,7 +111,7 @@ class DslCtx private constructor(){
                     it.parameters[1].type.isSubtypeOf(IDslRef::class.createType()) && ! it.parameters[0].type.isMarkedNullable
         } ?: throw DslCtxException("${T::class.simpleName} does not have a constructor(String, IDslRef")
         log.debug("{}.constr({}) in DslCtx.ctxObjCreate(dslRef = '{}')", T::class.simpleName, dslRef::class.simpleName, dslRef)
-        val theObj: T = constr.call(this@DslCtxWrapper, dslRef.simpleName, dslRef.parentRef)
+        val theObj: T = constr.call(this@DslCtxWrapper, dslRef.simpleName, dslRef.parentDslRef)
         log.debug("ok.")
         //theObj = T::class.getDeclaredConstructor().newInstance()
         allCtxObjs[dslRef] = theObj
@@ -142,7 +142,7 @@ class DslCtx private constructor(){
     private val modelgroups = mutableMapOf<DslRef.modelgroup, DslModelgroup>()
     private val models = mutableMapOf<DslRef.model, DslModel>()
     fun modelgroups() = modelgroups.values
-    fun countModelsOfModelgroup(modelgroupRef: DslRef.modelgroup) = models.values.count { it.selfDslRef.parentRef == modelgroupRef }
+    fun countModelsOfModelgroup(modelgroupRef: DslRef.modelgroup) = models.values.count { it.parentDslRef == modelgroupRef }
 
     context(DslCtxWrapper)
     fun createModelgroup(simpleName: String): DslModelgroup {
@@ -215,7 +215,7 @@ class DslCtx private constructor(){
 
     fun isInterface(dslRef: IDslRef, callerDslClass: ADslClass): Boolean {
         val reffedDslClass = ctxObj<ADslClass>(dslRef) as IDslApiKindClassObjectOrInterface
-        val callerExtendsParent: IDslApiKindClassObjectOrInterface = ctxObj(callerDslClass.selfDslRef.parentRef)
+        val callerExtendsParent: IDslApiKindClassObjectOrInterface = ctxObj(callerDslClass.parentDslRef)
         return WhensModelgroup.whenModelOrModelSubelement(callerExtendsParent as ADslClass,
             isDslModel = {
                 WhensDslRef.whenModelOrModelSubelement(dslRef,
@@ -235,7 +235,7 @@ class DslCtx private constructor(){
                         if (reffedDslClass.kind != DslClassObjectOrInterface.UNDEFINED) {
                             reffedDslClass.kind == DslClassObjectOrInterface.INTERFACE
                         } else {
-                            val reffedDslClassParent: DslModel = ctxObj(dslRef.parentRef)
+                            val reffedDslClassParent: DslModel = ctxObj(dslRef.parentDslRef)
                             reffedDslClassParent.kind == DslClassObjectOrInterface.INTERFACE
                         }
                     }
@@ -264,7 +264,7 @@ class DslCtx private constructor(){
                         if (reffedDslClass.kind != DslClassObjectOrInterface.UNDEFINED) {
                             reffedDslClass.kind == DslClassObjectOrInterface.INTERFACE
                         } else {
-                            val reffedDslClassParent: DslModel = ctxObj(dslRef.parentRef)
+                            val reffedDslClassParent: DslModel = ctxObj(dslRef.parentDslRef)
                             reffedDslClassParent.kind == DslClassObjectOrInterface.INTERFACE
                         }
                     }

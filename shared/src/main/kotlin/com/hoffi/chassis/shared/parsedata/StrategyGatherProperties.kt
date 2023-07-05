@@ -24,9 +24,9 @@ object StrategyGatherProperties {
             STRATEGY.SPECIAL_WINS -> specialWins(ownModelSubelementRef, sharedGatheredGatherPropertys)
         }
         for (gatherPropertys in result) {
-            val modelOrModelSubelementRef = gatherPropertys.modelOrModelSubelementRefOriginal
-            val expandedRef = WhensDslRef.expandRefToSubelement(modelOrModelSubelementRef, ownModelSubelementRef)
-            if (expandedRef != gatherPropertys.modelSubelementRef) gatherPropertys.modelSubelementRefExpanded = expandedRef
+            val modelOrModelSubelementRefOriginal = gatherPropertys.modelOrModelSubelementRefOriginal
+            val expandedRef = WhensDslRef.expandRefToSubelement(modelOrModelSubelementRefOriginal, ownModelSubelementRef)
+            if (expandedRef != modelOrModelSubelementRefOriginal) gatherPropertys.modelSubelementRefExpanded = expandedRef
         }
         return result
     }

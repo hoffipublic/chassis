@@ -27,7 +27,7 @@ fun main() {
 interface IDslRef {
     var level: Int
     val simpleName: String
-    val parentRef: IDslRef
+    val parentDslRef: IDslRef
     var disc: DslDiscriminator
     val refList: MutableList<DslRef.DslRefAtom>
     val dslBlockName: String
@@ -48,7 +48,7 @@ interface IDslRef {
             set(@Suppress("UNUSED_PARAMETER")value) {}
         override val simpleName: String
             get() = C.NULLSTRING
-        override val parentRef: IDslRef
+        override val parentDslRef: IDslRef
             get() = NULL
         override var disc: DslDiscriminator
             get() = DslDiscriminator.NULL
@@ -64,7 +64,7 @@ interface IDslRef {
 abstract class ADslRef(
     override var level: Int,
     override val simpleName: String,
-    override val parentRef: IDslRef,
+    override val parentDslRef: IDslRef,
     override var disc: DslDiscriminator,
     override val refList: MutableList<DslRef.DslRefAtom> = mutableListOf()
 ) : IDslRef {

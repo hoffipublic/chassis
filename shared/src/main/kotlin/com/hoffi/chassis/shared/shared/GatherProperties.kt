@@ -4,14 +4,14 @@ import com.hoffi.chassis.shared.dsl.DslRef
 
 enum class GatherPropertiesEnum {
     NONE,
-    PROPERTIES,
+    PROPERTIES_ONLY_DIRECT_ONES,
     PROPERTIES_AND_SUPERCLASS_PROPERTIES,
     SUPERCLASS_PROPERTIES_ONLY
 }
 
 class GatherPropertys(
     val modelOrModelSubelementRefOriginal: DslRef.IModelOrModelSubelement,
-    val gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES
+    val gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES
 ) {
     override fun toString() = "$gatherPropertiesEnum of $modelSubelementRef"
 
@@ -25,5 +25,5 @@ class GatherPropertys(
         if (gatherPropertiesEnum != other.gatherPropertiesEnum) return false
         return modelSubelementRef == other.modelSubelementRef
     }
-    override fun hashCode() = 31 * modelSubelementRef.hashCode() + gatherPropertiesEnum.hashCode()
+    override fun hashCode() = 31 * modelOrModelSubelementRefOriginal.hashCode() + gatherPropertiesEnum.hashCode()
 }

@@ -1,5 +1,6 @@
 package com.hoffi.chassis.shared.parsedata
 
+import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.IModelClassName
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.ModelClassName
@@ -23,32 +24,43 @@ abstract class ModelClassData(
 {
     override fun toString() = "${this::class.simpleName} ${classModifiers.joinToString(" ")} $kind $modelClassName"
     var kind: TypeSpec.Kind = TypeSpec.Kind.CLASS
-    val classModifiers = mutableSetOf<KModifier>()
-    val extends = mutableMapOf<String, Extends>()
+    val classModifiers: MutableSet<KModifier> = mutableSetOf()
+    val extends: MutableMap<String, Extends> = mutableMapOf()
     var constructorVisibility = true
-    val propertys = mutableMapOf<String, Property>()
-    val gatheredPropertys = mutableMapOf<String, Property>()
-    val gatheredFromDslRefs = mutableSetOf<GatherPropertys>()
+    val directProps: MutableMap<String, Property> = mutableMapOf()
+    val gatheredProps: MutableMap<String, Property> = mutableMapOf()
+    val gatheredPropsDslModelRefs: MutableSet<GatherPropertys> = mutableSetOf()
+    // convenience maps for codeGen
+    val allProps: MutableMap<String, Property> by lazy { (directProps + gatheredProps).toMutableMap() }
+    //val superclassPropsMap: MutableMap<String, Property> by lazy {
+    //    val allInclSuperclassesProps: MutableMap<String, Property> = mutableMapOf()
+    //    val defaultExtendsGenModels: MutableList<Extends> = mutableListOf<Extends>()
+    //    var extendsEither = extends[C.DEFAULT]?.typeClassOrDslRef
+    //    var extendsModel: EitherTypOrModelOrPoetType.EitherModel? = null
+    //    if (extendsEither != null && extendsEither is EitherTypOrModelOrPoetType.EitherModel) {
+    //        extendsModel = extendsEither
+    //    }
+    //    while (extendsModel != null) {
+    //        val genModel: GenModel = genCtx.genModel(extendsModel.modelSubElementRef)
+    //        allInclSuperclassesProps.putAll(genModel.allProps)
+    //        extendsEither = genModel.extends[C.DEFAULT]?.typeClassOrDslRef
+    //        if (extendsEither != null && extendsEither is EitherTypOrModelOrPoetType.EitherModel) {
+    //            extendsModel = extendsEither
+    //        }
+    //    }
+    //    allInclSuperclassesProps
+    //}
+    //val propsInclSuperclassPropsMap: MutableMap<String, Property> by lazy { (allProps + superclassPropsMap).toMutableMap() }
 
     // TODO delegate to concrete sealed class implementation
-//    val className: ClassName
-//        get() = typeWrapper.className
-//    val varName: String
-//        get() = typeWrapper.className.simpleName.modifyVarname()
-//    val tableName: String
-//        get() = typeWrapper.className.simpleName.removeSuffix("Table").modifyDbTableName()
-
-//    val businessInitializers = mutableMapOf<String, DslClass.EitherInitializerOrBusinessInit>()
-//    var didGatherPropsFromSuperclasses: GENS = GENS.COMMON // GENS.COMMON means did IGNORE gather Propertys of superclasses
 //    val modelFunSpecs = mutableMapOf<String, FunSpec.Builder>()
-//    var eitherExtendsModelOrClass: EitherExtendsModelOrClass = EitherTypeOrDslRef.ExtendsNothing.INSTANCE
-//    val superInterfaces = mutableListOf<EitherExtendsModelOrClass>()
-
 //    val incomingFKs = sortedSetOf<Models.DslFK>() // TODO are these really used? see AKotlinClass
 //    val outgoingFKs = sortedSetOf<Models.DslFK>() // TODO are these really used? see AKotlinClass
-    fun allPropertys(propFilter: (Property) -> Boolean = { true }): MutableSet<Property> = propertys.values.filter(propFilter).toMutableSet()
-    fun allGatheredPropertys(propFilter: (Property) -> Boolean = { true }): MutableSet<Property> = gatheredPropertys.values.filter(propFilter).toMutableSet()
-    fun getProp(name: String): Property = propertys[name]!!
+
+    fun filterProps(propFilter: (Property) -> Boolean): MutableSet<Property> = allProps.values.filter(propFilter).toMutableSet()
+    fun filterGatheredProps(propFilter: (Property) -> Boolean = { true }): MutableSet<Property> = gatheredProps.values.filter(propFilter).toMutableSet()
+    //fun filterInclSuperclassPropsMap(propFilter: (Property) -> Boolean = { true }): MutableSet<Property> = propsInclSuperclassPropsMap.values.filter(propFilter).toMutableSet()
+    fun getProp(name: String): Property = allProps[name] ?: throw GenException("$this does not contain a property named $name")
 
 //    data class SuperModelsAndClasses(val models: MutableList<EitherModelNew> = mutableListOf(), var nonModel: EitherExtendsModelOrClass = ExtendsNothing.INSTANCE)
 //    fun superClasses(): SuperModelsAndClasses {

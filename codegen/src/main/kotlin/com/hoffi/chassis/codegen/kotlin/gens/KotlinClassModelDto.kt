@@ -3,6 +3,8 @@ package com.hoffi.chassis.codegen.kotlin.gens
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.shared.*
 import com.hoffi.chassis.shared.codegen.GenCtxWrapper
+import com.hoffi.chassis.shared.fix.ENV
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.WAS_GENERATED_INTERFACE_ClassName
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.Tag
@@ -50,10 +52,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                 is EitherTypOrModelOrPoetType.EitherModel -> {
                     val eitherModel = extends.typeClassOrDslRef as EitherTypOrModelOrPoetType.EitherModel
                     val reffedModel = genCtx.genModel(eitherModel.modelSubElementRef)
-                    for (superConstrProp: Property in reffedModel.propertys.values.filter { Tag.CONSTRUCTOR in it.tags }) {
-                        builder.addSuperclassConstructorParameter(superConstrProp.name)
-                    }
-                    for (superConstrProp: Property in reffedModel.gatheredPropertys.values.filter { Tag.CONSTRUCTOR in it.tags }) {
+                    for (superConstrProp: Property in reffedModel.allProps.values.filter { Tag.CONSTRUCTOR in it.tags }) {
                         builder.addSuperclassConstructorParameter(superConstrProp.name)
                     }
                 }
@@ -67,9 +66,10 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
             }
         }
         for (superinterface in extends?.superInterfaces ?: mutableSetOf()) {
-            // TODO add preGenerated fix interface GENERATED
             builder.addSuperinterface(superinterface.modelClassName.poetType)
         }
+        builder.addSuperinterface(WAS_GENERATED_INTERFACE_ClassName)
+        builder.addKdoc("generated at %L on %L", ENV.generationLocalDateTime, ENV.hostname)
     }
 
     fun buildConstructorsAndPropertys() {
@@ -84,18 +84,15 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
         when (superModelEither) {
             is EitherTypOrModelOrPoetType.EitherModel -> {
                 val superModel = genCtx.genModel(superModelEither.modelSubElementRef)
-                superConstructorProps.addAll(superModel.propertys.values.filter { Tag.CONSTRUCTOR in it.tags })
-                superConstructorProps.addAll(superModel.gatheredPropertys.values.filter { Tag.CONSTRUCTOR in it.tags })
+                superConstructorProps.addAll(superModel.allProps.values.filter { Tag.CONSTRUCTOR in it.tags })
             }
             is EitherTypOrModelOrPoetType.EitherPoetType -> TODO()
             is EitherTypOrModelOrPoetType.EitherTyp -> TODO()
             is EitherTypOrModelOrPoetType.NOTHING, null -> {}
         }
 
-        val allProps = dtoModel.propertys.values + dtoModel.gatheredPropertys.values
-
         // add primary constructor propertys
-        for (theProp in allProps) {
+        for (theProp in dtoModel.allProps.values) {
             if (Tag.CONSTRUCTOR in theProp.tags) {
                 if (theProp in superConstructorProps) {
                     val paramBuilder = paramBuilder(theProp)

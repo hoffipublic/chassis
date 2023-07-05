@@ -4,6 +4,7 @@ plugins {
     application
     id("buildLogic.binaryPlugins.ProjectSetupBuildLogicPlugin")
     id("buildLogic.binaryPlugins.ProjectInfosBuildLogicPlugin")
+    id("VersionsUpgradeBuildLogic")
 }
 
 group = "com.hoffi"

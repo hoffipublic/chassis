@@ -34,7 +34,7 @@ class ModelClassName constructor(
     var classPrefix = NameAndWheretoDefaults.classPrefix
     var classPostfix = NameAndWheretoDefaults.classPostfix
 
-    override var modelOrTypeNameString: String = modelSubElRef.parentRef.simpleName.ifBlank { log.warn("empty simpleName of model '${modelSubElRef.parentRef}'") ; "" }
+    override var modelOrTypeNameString: String = modelSubElRef.parentDslRef.simpleName.ifBlank { log.warn("empty simpleName of model '${modelSubElRef.parentDslRef}'") ; "" }
 
     // we need to wait until all properties are set on the instance before we can pre-calculate the "derived" properties via strategies:
     override var poetType: ClassName
