@@ -22,7 +22,6 @@ import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.GatherPropertys
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.hoffi.chassis.shared.whens.WhensDslRef
-import com.squareup.kotlinpoet.TypeSpec
 import org.slf4j.LoggerFactory
 
 context(DslCtxWrapper)
@@ -233,7 +232,6 @@ globalDslCtx = dslCtx // TODO remove workaround
                     val reffedModel: GenModel = subelementGenModel(genPropEitherModel, dslSubel, dslCtx)
                     val reffedModelClassName = reffedModel.modelClassName
                     genPropEitherModel.modelClassName = reffedModelClassName
-                    genPropEitherModel.isInterface = reffedModel.kind == TypeSpec.Kind.INTERFACE
                 }
                 val listOfExtendsModelClass = genModel.extends.values.filter { it.typeClassOrDslRef is EitherTypOrModelOrPoetType.EitherModel }.map { it.typeClassOrDslRef as EitherTypOrModelOrPoetType.EitherModel }
                 for (extendsEitherModel in listOfExtendsModelClass) {
@@ -241,7 +239,6 @@ globalDslCtx = dslCtx // TODO remove workaround
                     val reffedModel = subelementGenModel(extendsEitherModel, dslSubel, dslCtx)
                     val reffedModelClassName = reffedModel.modelClassName
                     extendsEitherModel.modelClassName = reffedModelClassName
-                    extendsEitherModel.isInterface = reffedModel.kind == TypeSpec.Kind.INTERFACE
                 }
                 for (extends in genModel.extends.values) {
                     var extendsTypClassOrDslRef = extends.typeClassOrDslRef
@@ -251,7 +248,6 @@ globalDslCtx = dslCtx // TODO remove workaround
                             val reffedModel = subelementGenModel(extendsTypClassOrDslRef, dslSubel, dslCtx)
                             val reffedModelClassName = reffedModel.modelClassName
                             extendsTypClassOrDslRef.modelClassName = reffedModelClassName
-                            extendsTypClassOrDslRef.isInterface = reffedModel.kind == TypeSpec.Kind.INTERFACE
                         }
                         else -> {}
                     }
@@ -262,7 +258,6 @@ globalDslCtx = dslCtx // TODO remove workaround
                                 val reffedModel = subelementGenModel(extendsInterface, dslSubel, dslCtx)
                                 val reffedModelClassName = reffedModel.modelClassName
                                 extendsInterface.modelClassName = reffedModelClassName
-                                extendsInterface.isInterface = reffedModel.kind == TypeSpec.Kind.INTERFACE
                             }
                             else -> {}
                         }

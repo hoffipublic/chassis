@@ -21,7 +21,10 @@ dependencies {
     implementation(project(":chassismodel"))
     implementation(project(":shared"))
     implementation(kotlin("reflect"))
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.get()}")
+    implementation("io.arrow-kt:arrow-core:${libs.versions.arrow.get()}")
     implementation("com.github.ajalt.clikt:clikt:${libs.versions.clikt.get()}")
+    implementation("com.squareup.okio:okio:${libs.versions.okio.get()}")
     implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.get()}")
 }
 

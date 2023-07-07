@@ -9,7 +9,7 @@ version = "${rootProject.version}"
 val artifactName: String by extra { "${rootProject.name.lowercase()}-${project.name.lowercase()}" }
 
 val rootPackage: String by rootProject.extra
-val projectPackage: String by extra { "${rootPackage}.${project.name.lowercase()}" }
+val projectPackage: String by extra { "${rootPackage}.dbwrappers.${project.name.lowercase()}" }
 val theMainClass: String by extra { "scratch.Main" }
 application {
     mainClass.set("${projectPackage}.${theMainClass}" + "Kt") // + "Kt" if fun main is outside a class
@@ -17,12 +17,11 @@ application {
 
 
 dependencies {
-    implementation(project(":chassismodel"))
-    implementation(project(":shared"))
+    implementation(project(":dbwrappers"))
     implementation(kotlin("reflect"))
     implementation("com.github.ajalt.clikt:clikt:${libs.versions.clikt.get()}")
-    implementation("com.squareup.okio:okio:${libs.versions.okio.get()}")
     implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.get()}")
+    implementation("org.jetbrains.exposed:exposed-core:${libs.versions.exposed.get()}")
 }
 
 tasks {

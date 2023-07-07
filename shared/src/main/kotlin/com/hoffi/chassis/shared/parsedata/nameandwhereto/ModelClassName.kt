@@ -3,6 +3,7 @@ package com.hoffi.chassis.shared.parsedata.nameandwhereto
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.helpers.Validate.failIfIdentifierInvalid
 import com.hoffi.chassis.shared.helpers.ifNotBlank
+import com.hoffi.chassis.shared.parsedata.ModelClassData
 import com.hoffi.chassis.shared.strategies.ClassNameStrategy
 import com.hoffi.chassis.shared.strategies.IClassNameStrategy
 import com.hoffi.chassis.shared.strategies.ITableNameStrategy
@@ -24,6 +25,8 @@ class ModelClassName constructor(
 ) : IModelClassName {
     val log = LoggerFactory.getLogger(javaClass)
     override fun toString() = poetType.toString()
+
+    lateinit var modelClassData: ModelClassData
     var classNameStrategy = ClassNameStrategy.get(IClassNameStrategy.STRATEGY.DEFAULT)
     var tableNameStrategy = TableNameStrategy.get(ITableNameStrategy.STRATEGY.DEFAULT)
     var basePath: Path = NameAndWheretoDefaults.basePath
@@ -40,7 +43,7 @@ class ModelClassName constructor(
     override var poetType: ClassName
         get() = poetTypeDirect ?: poetTypeDslModel
         set(value) { poetTypeDirect = value }
-    private val poetTypeDslModel by lazy { classNameStrategy.poetType(modelOrTypeNameString, "${basePackage.ifNotBlank{"$basePackage."}}$packageName", classPrefix, classPostfix) as ClassName }
+    private val poetTypeDslModel by lazy { classNameStrategy.poetType(modelClassData, modelOrTypeNameString, "${basePackage.ifNotBlank{"$basePackage."}}$packageName", classPrefix, classPostfix) as ClassName }
     override val asVarName: String by lazy { classNameStrategy.asVarname(modelOrTypeNameString, classPrefix, classPostfix) }
     override val tableName: String by lazy { tableNameStrategy.tableName(modelOrTypeNameString) /*, classPrefix, classPostfix)*/ }
 

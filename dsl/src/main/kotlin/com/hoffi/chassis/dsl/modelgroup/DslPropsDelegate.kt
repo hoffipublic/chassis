@@ -129,7 +129,7 @@ class DslPropsDelegate(
 
         if (Tag.NULLABLE in tags) log.warn("Tag.NULLABLE for Class property $name of $delegatorRef")
         // isInterface of GenModel will be set to correct value in setModelClassNameOfReffedModelProperties()
-        val prop = DslModelProp(name, DslRef.prop(name, delegatorRef), EitherTypOrModelOrPoetType.EitherModel(modelSubElementRef as DslRef.IModelSubelement, true, initializer), mutable, modifiers, tags, length, collectionType)
+        val prop = DslModelProp(name, DslRef.prop(name, delegatorRef), EitherTypOrModelOrPoetType.EitherModel(modelSubElementRef as DslRef.IModelSubelement, initializer), mutable, modifiers, tags, length, collectionType)
         addProp(name, prop)
     }
 }

@@ -60,7 +60,7 @@ fun entities() {
             //property("someObject", Dummy::class, mutable, Tag.NO_DEFAULT_INITIALIZER, Tag.TRANSIENT)
             property("someObject", Dummy::class, mutable, Initializer.of("%T.%L", Dummy::class, "NULL"), length = C.DEFAULT_INT, Tag.TRANSIENT)
             property("someModelObject", MODELREFENUM.DTO of ENTITY__SUBENTITY, mutable)
-            property("subentitys", "modelgroup:$ENTITYGROUP;model:$ENTITY__SUBENTITY", MODELREFENUM.DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER, Tag.NULLABLE)
+            property("subentitys", "modelgroup:$ENTITYGROUP|model:$ENTITY__SUBENTITY", MODELREFENUM.DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER, Tag.NULLABLE)
             property("listOfStrings", TYP.STRING, COLLECTIONTYP.LIST, Tag.COLLECTION_IMMUTABLE, Tag.CONSTRUCTOR, Tag.TRANSIENT)
 
 //            initBusinessValues {

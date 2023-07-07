@@ -20,19 +20,24 @@ interface ITypOrModelOrPoetType {
 }
 
 sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) : ITypOrModelOrPoetType {
+    /** for EitherModel's modelClassName is not "valid" to use for DSL Logic,
+     * it is only valid to use in CodeGen or things further down the stream
+     * a valid modelClassName (with poetType and interface information) will be init'ed in finish of modelSubelement */
     lateinit var modelClassName: ModelClassName
 
     class EitherTyp constructor(val typ: TYP, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
-        override fun toString() = "${this::class.simpleName}($typ)"
-        init { modelClassName = fakePoetTypeClassName(typ.poetType) }
-        override val isInterface = false
+        override fun toString() = "${this::class.simpleName!!.removePrefix("Either")}($typ)"
+        init { modelClassName = fakePoetTypeClassName(typ.poetType, typ.isInterface) }
+        override val isInterface = typ.isInterface
         override fun validate(any: Any) {
             modelClassName.validate(any)
         }
     }
-    class EitherModel constructor(val modelSubElementRefOriginal: DslRef.IModelOrModelSubelement, override var isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
-        override fun toString() = "${this::class.simpleName}($modelSubElementRef)"
+    class EitherModel constructor(val modelSubElementRefOriginal: DslRef.IModelOrModelSubelement, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
+        override fun toString() = "${this::class.simpleName!!.removePrefix("Either")}($modelSubElementRef)"
         // modelClassName (with poetType) init'ed in finish of modelSubelement
+        /** invalid to use before modelsubelement finish'ed */
+        override val isInterface: Boolean by lazy { modelClassName.modelClassData.isInterface }
         val modelSubElementRef: DslRef.IModelSubelement
             get() = modelSubElementRefExpanded ?: modelSubElementRefOriginal as DslRef.IModelSubelement
         var modelSubElementRefExpanded: DslRef.IModelSubelement? = null
@@ -47,9 +52,9 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
         }
         override fun hashCode() = modelSubElementRef.hashCode()
     }
-    class EitherPoetType constructor(val poetType: ClassName, override val isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
-        override fun toString() = "${this::class.simpleName}($poetType)"
-        init { modelClassName = fakePoetTypeClassName(poetType) }
+    class EitherPoetType constructor(val poetType: ClassName, override var isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
+        override fun toString() = "${this::class.simpleName!!.removePrefix("Either")}($poetType)"
+        init { modelClassName = fakePoetTypeClassName(poetType, isInterface) }
         override fun validate(any: Any) {
             modelClassName.validate(any)
         }
@@ -73,7 +78,7 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
     override fun hashCode() = modelClassName.hashCode()
 
 
-    protected fun fakePoetTypeClassName(thePoetType: ClassName): ModelClassName = ModelClassName(IDslRef.NULL, thePoetType).apply {
+    protected fun fakePoetTypeClassName(thePoetType: ClassName, isInterface: Boolean): ModelClassName = ModelClassName(IDslRef.NULL, thePoetType).apply {
             classNameStrategy = NameAndWheretoDefaults.classNameStrategy
             tableNameStrategy = NameAndWheretoDefaults.tableNameStrategy
             basePath = NameAndWheretoDefaults.basePath

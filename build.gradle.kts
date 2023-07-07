@@ -54,19 +54,19 @@ allprojects {
         println("${project.name}: starting configure for kotlin JVM project ...")
     }
 
-    afterEvaluate { // needed so that plugins already have been applied to subprojects
-        dependencies {
-            implementation("org.slf4j:slf4j-api:${libs.versions.slf4j.get()}")
-            //runtimeOnly("ch.qos.logback:logback-classic:${libs.versions.logback.v()}")
-            implementation("ch.qos.logback:logback-classic:${libs.versions.logback.get()}")
-            implementation("com.squareup.okio:okio:${libs.versions.okio.get()}")
-            implementation("io.arrow-kt:arrow-core:${libs.versions.arrow.get()}")
-            //implementation("org.apache.commons:commons-lang3".depAndVersion())
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.versions.kotlinx.coroutines.get()}")
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.get()}")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${libs.versions.kotlinx.serialization.json.get()}")
-            //implementation("com.benasher44:uuid:${libs.versions.benasher44.uuid.get()}")
-
+   afterEvaluate { // needed so that plugins already have been applied to subprojects
+       dependencies {
+           implementation("org.slf4j:slf4j-api:${libs.versions.slf4j.get()}")
+           //runtimeOnly("ch.qos.logback:logback-classic:${libs.versions.logback.v()}")
+           implementation("ch.qos.logback:logback-classic:${libs.versions.logback.get()}")
+//            implementation("com.squareup.okio:okio:${libs.versions.okio.get()}")
+//            implementation("io.arrow-kt:arrow-core:${libs.versions.arrow.get()}")
+//            //implementation("org.apache.commons:commons-lang3".depAndVersion())
+//            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.versions.kotlinx.coroutines.get()}")
+//            implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.get()}")
+//            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${libs.versions.kotlinx.serialization.json.get()}")
+//            //implementation("com.benasher44:uuid:${libs.versions.benasher44.uuid.get()}")
+//
             testImplementation("io.kotest:kotest-framework-engine:${libs.versions.kotest.asProvider().get()}")
             testImplementation("io.kotest:kotest-framework-datatest:${libs.versions.kotest.asProvider().get()}")
             testImplementation("io.kotest:kotest-assertions-core:${libs.versions.kotest.asProvider().get()}")

@@ -34,7 +34,7 @@ sealed class COLLECTIONTYP {
     }
 }
 
-sealed class TYP(val kClass: KClass<*>, val defaultInitializer: Initializer) {
+sealed class TYP(val kClass: KClass<*>, val defaultInitializer: Initializer, isInterface: Boolean = kClass.java.isInterface) {
     override fun toString() = this::class.simpleName!!
     val isInterface = kClass.java.isInterface
     //val kType = kClass.createType()
@@ -43,7 +43,7 @@ sealed class TYP(val kClass: KClass<*>, val defaultInitializer: Initializer) {
     //class CLASS : TYP(KClass::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_CLASS)
     //class MODEL : TYP(Any::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_MODEL)
     class INT : TYP(Integer::class, RuntimeDefaults.DEFAULT_INITIALIZER_INT)
-    class LONG : TYP(Long::class, RuntimeDefaults.DEFAULT_INITIALIZER_LOCALDATETIME)
+    class LONG : TYP(Long::class, RuntimeDefaults.DEFAULT_INITIALIZER_LONG)
     class STRING : TYP(String::class, RuntimeDefaults.DEFAULT_INITIALIZER_STRING)
     class BOOL : TYP(Boolean::class, RuntimeDefaults.DEFAULT_INITIALIZER_BOOL)
     class UUID : TYP(java.util.UUID::class, RuntimeDefaults.DEFAULT_INITIALIZER_UUID)

@@ -3,12 +3,11 @@ package com.hoffi.chassis.codegen.kotlin.gens
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.shared.*
 import com.hoffi.chassis.shared.codegen.GenCtxWrapper
-import com.hoffi.chassis.shared.fix.ENV
 import com.hoffi.chassis.shared.fix.RuntimeDefaults.WAS_GENERATED_INTERFACE_ClassName
+import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGenerated
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.Tag
-import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -17,29 +16,12 @@ context(GenCtxWrapper)
 class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
     : AKotlinClass(dtoModel)
 {
-    override fun toString() = "${this::class.simpleName}(${dtoModel})"
-
-    override var builder = when (dtoModel.kind) {
-        TypeSpec.Kind.OBJECT -> {
-            TypeSpec.objectBuilder(dtoModel.poetType)
-        }
-        TypeSpec.Kind.INTERFACE -> {
-            TypeSpec.interfaceBuilder(dtoModel.poetType)
-        }
-        else -> {
-            TypeSpec.classBuilder(dtoModel.poetType)
-        }
-    }.apply {
-        if (dtoModel.kind != TypeSpec.Kind.OBJECT && dtoModel.kind != TypeSpec.Kind.INTERFACE) {
-            //addNullCompanion() // TODO addNullCompanion()
-        }
-    }
-    val constructorBuilder = FunSpec.constructorBuilder()
-
     fun build(): TypeSpec.Builder {
         builder.addModifiers(dtoModel.classModifiers)
         buildExtends()
         buildConstructorsAndPropertys()
+        buildFeatures()
+        buildFunctions()
         buildAuxiliaryFunctions()
         return builder
     }
@@ -69,7 +51,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
             builder.addSuperinterface(superinterface.modelClassName.poetType)
         }
         builder.addSuperinterface(WAS_GENERATED_INTERFACE_ClassName)
-        builder.addKdoc("generated at %L on %L", ENV.generationLocalDateTime, ENV.hostname)
+        builder.kdocGenerated(modelClassData)
     }
 
     fun buildConstructorsAndPropertys() {
@@ -168,6 +150,16 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
 //            builder.addProperty(propSpec)
 //        }
 //    }
+
+    fun buildFeatures() {
+        if (modelClassData.modelClassName.modelOrTypeNameString == "Entity") {
+            println(modelClassData.poetType)
+            propsInclSuperclassPropsMap.values.forEach {
+                println(it)
+            }
+
+        }
+    }
 
     fun buildFunctions() {
 

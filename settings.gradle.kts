@@ -35,4 +35,6 @@ include(":codegen")
 include(":dsl")
 include(":examples")
 include(":shared")
+include(":dbwrappers")
+include(":dbwrappers:exposed")
 

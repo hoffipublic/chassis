@@ -11,8 +11,8 @@ import com.squareup.kotlinpoet.TypeSpec
 
 sealed class GenModel(modelSubElRef: DslRef.IModelSubelement, modelClassName: ModelClassName)
     : ModelClassData(modelSubElRef, modelClassName) {
-    class DtoModel(dtoRef: DslRef.dto, modelClassName: ModelClassName) : GenModel(dtoRef, modelClassName)
-    class TableModel(tableRef: DslRef.table, modelClassName: ModelClassName) : GenModel(tableRef, modelClassName)
+    class DtoModel(dtoRef: DslRef.dto, modelClassName: ModelClassName) : GenModel(dtoRef, modelClassName) { init { modelClassName.modelClassData = this } }
+    class TableModel(tableRef: DslRef.table, modelClassName: ModelClassName) : GenModel(tableRef, modelClassName) { init { modelClassName.modelClassData = this } }
 }
 
 /** all props and sub-props are set on chassis DSL PASS_FINISH */
@@ -24,6 +24,8 @@ abstract class ModelClassData(
 {
     override fun toString() = "${this::class.simpleName} ${classModifiers.joinToString(" ")} $kind $modelClassName"
     var kind: TypeSpec.Kind = TypeSpec.Kind.CLASS
+    val isInterface: Boolean
+        get() = kind == TypeSpec.Kind.INTERFACE
     val classModifiers: MutableSet<KModifier> = mutableSetOf()
     val extends: MutableMap<String, Extends> = mutableMapOf()
     var constructorVisibility = true
@@ -32,25 +34,6 @@ abstract class ModelClassData(
     val gatheredPropsDslModelRefs: MutableSet<GatherPropertys> = mutableSetOf()
     // convenience maps for codeGen
     val allProps: MutableMap<String, Property> by lazy { (directProps + gatheredProps).toMutableMap() }
-    //val superclassPropsMap: MutableMap<String, Property> by lazy {
-    //    val allInclSuperclassesProps: MutableMap<String, Property> = mutableMapOf()
-    //    val defaultExtendsGenModels: MutableList<Extends> = mutableListOf<Extends>()
-    //    var extendsEither = extends[C.DEFAULT]?.typeClassOrDslRef
-    //    var extendsModel: EitherTypOrModelOrPoetType.EitherModel? = null
-    //    if (extendsEither != null && extendsEither is EitherTypOrModelOrPoetType.EitherModel) {
-    //        extendsModel = extendsEither
-    //    }
-    //    while (extendsModel != null) {
-    //        val genModel: GenModel = genCtx.genModel(extendsModel.modelSubElementRef)
-    //        allInclSuperclassesProps.putAll(genModel.allProps)
-    //        extendsEither = genModel.extends[C.DEFAULT]?.typeClassOrDslRef
-    //        if (extendsEither != null && extendsEither is EitherTypOrModelOrPoetType.EitherModel) {
-    //            extendsModel = extendsEither
-    //        }
-    //    }
-    //    allInclSuperclassesProps
-    //}
-    //val propsInclSuperclassPropsMap: MutableMap<String, Property> by lazy { (allProps + superclassPropsMap).toMutableMap() }
 
     // TODO delegate to concrete sealed class implementation
 //    val modelFunSpecs = mutableMapOf<String, FunSpec.Builder>()

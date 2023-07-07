@@ -138,10 +138,10 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         if (isInterface) throw DslException("extends { unaryPlus(+) Some::class only is for class, NOT for interfaces!")
         extends.superclassHasBeenSet = true
         if (extends.replaceSuperclass) {
-            extends.typeClassOrDslRef = EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface, Initializer.REFFED)
+            extends.typeClassOrDslRef = EitherTypOrModelOrPoetType.EitherModel(refTarget, Initializer.REFFED)
         } else {
             if (extends.typeClassOrDslRef is EitherTypOrModelOrPoetType.NOTHING) {
-                extends.typeClassOrDslRef = EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface, Initializer.REFFED)
+                extends.typeClassOrDslRef = EitherTypOrModelOrPoetType.EitherModel(refTarget, Initializer.REFFED)
             } else {
                 throw DslException("${dslExtendsDelegateImpl.delegatorRef} already extends ${extends.typeClassOrDslRef}")
             }
@@ -216,9 +216,9 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         if ( ! isInterface) throw DslException("extends { unaryMinus(-) someDslRef } only is for interfaces, NOT for classes! '${dslExtendsDelegateImpl.selfDslRef}' is reffing non-interface '$this'")
         if (extends.replaceSuperInterfaces) {
             extends.superInterfaces.clear()
-            extends.superInterfaces.add(EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface, Initializer.REFFED))
+            extends.superInterfaces.add(EitherTypOrModelOrPoetType.EitherModel(refTarget, Initializer.REFFED))
         } else {
-            extends.superInterfaces.add(EitherTypOrModelOrPoetType.EitherModel(refTarget, isInterface, Initializer.REFFED))
+            extends.superInterfaces.add(EitherTypOrModelOrPoetType.EitherModel(refTarget, Initializer.REFFED))
         }
     }
 

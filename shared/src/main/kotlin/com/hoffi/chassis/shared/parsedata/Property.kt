@@ -24,7 +24,7 @@ class Property constructor(
     var length: Int = C.DEFAULT_INT,
     val collectionType: COLLECTIONTYP = COLLECTIONTYP.NONE
 ) {
-    override fun toString() = "${this::class.simpleName}[${if (tags.contains(Tag.CONSTRUCTOR)) "C " else "  "}${if (mutable.bool) "var " else "fix "}${if (collectionType != COLLECTIONTYP.NONE) "$collectionType " else ""}${name}/${eitherTypModelOrClass}})${if (tags.isNotEmpty()) ", tags:$tags" else ""}] OF $propRef"
+    override fun toString() = "${"%-38s".format("${this::class.simpleName} ${if (tags.contains(Tag.CONSTRUCTOR)) "C " else "  "}${if (mutable.bool) "var " else "val "}${if (collectionType != COLLECTIONTYP.NONE) "$collectionType " else ""}$name")} : ${eitherTypModelOrClass}${if (tags.isNotEmpty()) ", tags:[$tags" else ""}] of $propRef"
     var classNameStrategy = ClassNameStrategy.get(IClassNameStrategy.STRATEGY.DEFAULT)
     var tableNameStrategy = TableNameStrategy.get(ITableNameStrategy.STRATEGY.DEFAULT)
     var varNameStrategy = VarNameStrategy.get(IVarNameStrategy.STRATEGY.DEFAULT)

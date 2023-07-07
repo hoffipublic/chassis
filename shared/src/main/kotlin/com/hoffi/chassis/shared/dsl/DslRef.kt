@@ -19,7 +19,7 @@ value class DslDiscriminator(val dslDiscriminator: String) { companion object { 
     override fun toString() = dslDiscriminator }
 
 fun main() {
-    val theRef = REF("disc:debugDisk;modelgroup:CommonModel;model:Intfc;dto:debugDto")
+    val theRef = REF("disc:debugDisk|modelgroup:CommonModel|model:Intfc|dto:debugDto")
     val x: DslRef = theRef.parentRef(-3)
     println("DslRef.${x::class.simpleName} -> $x")
 }
@@ -68,8 +68,8 @@ abstract class ADslRef(
     override var disc: DslDiscriminator,
     override val refList: MutableList<DslRef.DslRefAtom> = mutableListOf()
 ) : IDslRef {
+    override fun toString() = "disc:${disc}${DslRef.REFSEP}${DslRef.refListJoin(refList)}"
     private val log = LoggerFactory.getLogger(javaClass)
-    override fun toString() = "disc:${disc};${DslRef.refListJoin(refList)}"
     fun refListJoin() = DslRef.refListJoin(refList)
     fun createRefList(forLevelOrMinusOne: Int, parentDslRef: IDslRef, funcname: String, simpleName: String) {
         if (forLevelOrMinusOne != -1 && parentDslRef.refList.size > parentDslRef.level && parentDslRef.refList[0].simpleName != C.NULLSTRING) {
@@ -240,7 +240,7 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
     companion object {
         val NULL = IDslRef.NULL
         val ATOMSEP = ":"
-        val REFSEP  = ";"
+        val REFSEP  = "|"
         val COUNTSEP = "/"
         fun refListJoin(refList: List<DslRefAtom>) = refList.joinToString(REFSEP)
         fun refAtomsListFull(refString: String, dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEFAULT)) = refString.split(REFSEP).map { DslRefAtom.from(it) }.toMutableList().also {if (it.isNotEmpty() && it.first().functionName != "disc") it.add(0, DslRefAtom("disc", dslDiscriminator.dslDiscriminator))}
@@ -273,7 +273,7 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
                     refAtomOfLevel.functionName -> { funcClass = javaClass.kotlin; break }
                 }
             }
-            if (funcClass == null) throw Exception("unknown ${level}. part func '$refAtomOfLevel' in DslRef '${refAtomsInclDiscriminator.joinToString(";")}'")
+            if (funcClass == null) throw Exception("unknown ${level}. part func '$refAtomOfLevel' in DslRef '${refAtomsInclDiscriminator.joinToString(REFSEP)}'")
             return Pair(refAtomOfLevel, funcClass)
         }
         val reflections = Reflections(ConfigurationBuilder().forPackage("com.hoffi.chassis.shared.dsl"))
