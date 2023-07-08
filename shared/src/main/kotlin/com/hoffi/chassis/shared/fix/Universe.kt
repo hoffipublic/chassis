@@ -6,6 +6,8 @@ import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_LONG
 import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_STRING
 import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_UUID
 import com.hoffi.chassis.shared.db.DB
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.ANNOTATION_DTO_CLASSNAME
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.ANNOTATION_TABLE_CLASSNAME
 import com.hoffi.chassis.shared.fix.RuntimeDefaults.DEFAULT_MEMBER_INT
 import com.hoffi.chassis.shared.fix.RuntimeDefaults.UNIVERSE___DEFAULTS
 import com.hoffi.chassis.shared.fix.RuntimeDefaults.UNIVERSE___PACKAGE
@@ -21,6 +23,7 @@ import com.hoffi.chassis.shared.fix.RuntimeDefaults.classNameUUID
 import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGenerated
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 object Universe {
@@ -31,7 +34,7 @@ object Universe {
     fun codeGen() {
         universe()
         fixedClasses()
-        //annotations()
+        annotations()
         dummy()
     }
 
@@ -212,6 +215,50 @@ object Universe {
         //val universeEitherModelNew = EitherModelNew.DtoModel(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
         //ctx.fileSpecs.getOrPut(universeEitherModelNew){ mutableListOf()}.add(fileSpec)
 
+        fileSpec.writeTo(RuntimeDefaults.UNIVERSE__BASEDIR.toNioPath())
+    }
+
+    fun annotations() {
+        val fileSpec = FileSpec.builder(ANNOTATION_DTO_CLASSNAME.packageName, "Annotations")
+            .addType(TypeSpec.annotationBuilder(ANNOTATION_DTO_CLASSNAME.simpleName)
+                .primaryConstructor(FunSpec.constructorBuilder()
+                    .addParameter("targetClass", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+                    .build())
+                .addProperty(PropertySpec.builder("targetClass", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+                    .initializer("targetClass")
+                    .build())
+                .build())
+            .addType(TypeSpec.annotationBuilder(ANNOTATION_TABLE_CLASSNAME.simpleName)
+                .primaryConstructor(FunSpec.constructorBuilder()
+                    .addParameter("targetClass", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+                    .build())
+                .addProperty(PropertySpec.builder("targetClass", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+                    .initializer("targetClass")
+                    .build())
+                .build())
+            //.addType(TypeSpec.annotationBuilder("FKFROM")
+            //    .primaryConstructor(FunSpec.constructorBuilder()
+            //        .addParameter("targetClass", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+            //        .build())
+            //    .addProperty(PropertySpec.builder("targetClass", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+            //        .initializer("targetClass")
+            //        .build())
+            //    .build())
+            //// .addType(TypeSpec.annotationBuilder("FKTO")
+            ////     .primaryConstructor(FunSpec.constructorBuilder()
+            ////         .addParameter("targetClass", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+            ////         .build())
+            ////     .addProperty(PropertySpec.builder("targetClass", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+            ////         .initializer("targetClass")
+            ////         .build())
+            ////     .build())
+            .addType(TypeSpec.annotationBuilder("TABLEMETADATA")
+                .build())
+            .build()
+
+        //val universeModelGenRef = ModelGenRef(ModelRef(ModelgroupName(UNIVERSE___MODELGROUP), ModelName("Annotations")), GENS.TABLE)
+        //val universeEitherModelNew = EitherModelNew.DtoModel(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
+        //ctx.fileSpecs.getOrPut(universeEitherModelNew){ mutableListOf()}.add(fileSpec)
         fileSpec.writeTo(RuntimeDefaults.UNIVERSE__BASEDIR.toNioPath())
     }
 }

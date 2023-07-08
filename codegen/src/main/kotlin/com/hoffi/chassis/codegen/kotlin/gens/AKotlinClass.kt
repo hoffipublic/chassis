@@ -4,6 +4,7 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.codegen.GenCtxWrapper
+import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGenerated
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.ModelClassData
 import com.hoffi.chassis.shared.parsedata.Property
@@ -28,8 +29,10 @@ abstract class AKotlinClass(modelClassData: ModelClassData) : AHasPropertys(mode
             TypeSpec.classBuilder(modelClassData.poetType)
         }
     }.apply {
+        kdocGenerated(modelClassData)
+        addSuperinterface(com.hoffi.chassis.shared.fix.RuntimeDefaults.WAS_GENERATED_INTERFACE_ClassName)
         if (modelClassData.kind != TypeSpec.Kind.OBJECT && modelClassData.kind != TypeSpec.Kind.INTERFACE) {
-            //addNullCompanion() // TODO addNullCompanion()
+            //addNullCompanion() // TODO("addNullCompanion()")
         }
     }
     val constructorBuilder = FunSpec.constructorBuilder()

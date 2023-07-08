@@ -1,6 +1,7 @@
 package com.hoffi.chassis.codegen.kotlin
 
 import com.hoffi.chassis.codegen.kotlin.gens.KotlinClassModelDto
+import com.hoffi.chassis.codegen.kotlin.gens.KotlinClassModelTable
 import com.hoffi.chassis.shared.codegen.GenCtxWrapper
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
@@ -29,6 +30,12 @@ class KotlinCodeGen() {
             val kcmDto = KotlinClassModelDto(model)
             kcmDto.build()
             kcmDto.generate()
+        }
+        for(model in genCtx.allGenModels().filterIsInstance<GenModel.TableModel>()) {
+            println("${this::class.simpleName}.${object{}.javaClass.enclosingMethod.name}() for $model ${model.extends.values.firstOrNull{it.simpleName == "default"} ?: "extends NOTHING"} ") //-> ${model.modelSubElRef}")
+            val kcmTable = KotlinClassModelTable(model)
+            kcmTable.build()
+            kcmTable.generate()
         }
     }
 

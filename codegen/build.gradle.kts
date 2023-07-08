@@ -19,6 +19,8 @@ application {
 dependencies {
     implementation(project(":chassismodel"))
     implementation(project(":shared"))
+    implementation(project(":dbwrappers"))
+    implementation(project(":dbwrappers:exposed"))
     implementation(kotlin("reflect"))
     implementation("com.github.ajalt.clikt:clikt:${libs.versions.clikt.get()}")
     implementation("com.squareup.okio:okio:${libs.versions.okio.get()}")

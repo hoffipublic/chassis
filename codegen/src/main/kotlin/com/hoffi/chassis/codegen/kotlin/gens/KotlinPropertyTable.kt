@@ -8,7 +8,7 @@ import com.hoffi.chassis.shared.shared.Initializer
 import com.hoffi.chassis.shared.shared.Tag
 import com.squareup.kotlinpoet.PropertySpec
 
-class KotlinPropertyDto(property: Property, genModel: ModelClassData) : AKotlinProperty(property, genModel) {
+class KotlinPropertyTable(property: Property, genModel: ModelClassData) : AKotlinProperty(property, genModel) {
     override val builder: PropertySpec.Builder
     init {
         when (property.collectionType) {
@@ -42,4 +42,5 @@ class KotlinPropertyDto(property: Property, genModel: ModelClassData) : AKotlinP
         if (property.mutable.bool) builder.mutable() // val or var
         //if (Tag.NULLABLE in property.tags) builder = builder.cop decide if either the generic type is nullable or the collection itself
     }
+
 }

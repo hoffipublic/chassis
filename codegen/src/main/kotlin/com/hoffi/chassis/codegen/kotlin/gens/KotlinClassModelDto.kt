@@ -1,13 +1,15 @@
 package com.hoffi.chassis.codegen.kotlin.gens
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.dsl.GenCtxException
 import com.hoffi.chassis.shared.*
 import com.hoffi.chassis.shared.codegen.GenCtxWrapper
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.WAS_GENERATED_INTERFACE_ClassName
-import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGenerated
+import com.hoffi.chassis.shared.dsl.DslRef
+import com.hoffi.chassis.shared.fix.RuntimeDefaults.ANNOTATION_TABLE_CLASSNAME
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.Tag
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -23,6 +25,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
         buildFeatures()
         buildFunctions()
         buildAuxiliaryFunctions()
+        buildAnnotations()
         return builder
     }
 
@@ -50,8 +53,6 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
         for (superinterface in extends?.superInterfaces ?: mutableSetOf()) {
             builder.addSuperinterface(superinterface.modelClassName.poetType)
         }
-        builder.addSuperinterface(WAS_GENERATED_INTERFACE_ClassName)
-        builder.kdocGenerated(modelClassData)
     }
 
     fun buildConstructorsAndPropertys() {
@@ -81,7 +82,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                     constructorBuilder.addParameter(paramBuilder.build())
                     //constrParamsWithInitializersForCompanionCreate.add(paramBuilder)
                 } else {
-                    val kotlinProp = KotlinPropertyDto(theProp, this)
+                    val kotlinProp = KotlinPropertyDto(theProp, this.modelClassData)
                     kotlinProp.mergePropertyIntoConstructor()
                     builder.addProperty(kotlinProp.build())
                     val paramBuilder = paramBuilder(theProp)
@@ -89,7 +90,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                     //constrParamsWithInitializersForCompanionCreate.add(paramBuilder) // ?
                 }
             } else {
-                val kotlinProp = KotlinPropertyDto(theProp, this)
+                val kotlinProp = KotlinPropertyDto(theProp, this.modelClassData)
                 builder.addProperty(kotlinProp.build())
             }
         }
@@ -169,6 +170,16 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
 
     }
 
+    fun buildAnnotations() {
+        val tableModel = try { genCtx.genModel(DslRef.table(C.DEFAULT, dtoModel.modelSubElRef.parentDslRef)) } catch(e: GenCtxException) { null }
+        if (tableModel != null) {
+            builder.addAnnotation(
+                AnnotationSpec.builder(ANNOTATION_TABLE_CLASSNAME)
+                    .addMember("%T::class", tableModel.modelClassName.poetType)
+                    .build()
+            )
+        }
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

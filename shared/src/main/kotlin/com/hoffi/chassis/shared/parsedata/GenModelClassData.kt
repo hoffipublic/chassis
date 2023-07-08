@@ -35,6 +35,8 @@ abstract class ModelClassData(
     // convenience maps for codeGen
     val allProps: MutableMap<String, Property> by lazy { (directProps + gatheredProps).toMutableMap() }
 
+    var isUuidPrimary = false
+
     // TODO delegate to concrete sealed class implementation
 //    val modelFunSpecs = mutableMapOf<String, FunSpec.Builder>()
 //    val incomingFKs = sortedSetOf<Models.DslFK>() // TODO are these really used? see AKotlinClass
