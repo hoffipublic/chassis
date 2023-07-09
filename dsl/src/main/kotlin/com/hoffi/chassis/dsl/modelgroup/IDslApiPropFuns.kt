@@ -1,12 +1,13 @@
 package com.hoffi.chassis.dsl.modelgroup
 
+import com.hoffi.chassis.chassismodel.Initializer
+import com.hoffi.chassis.chassismodel.ReplaceAppendOrModify
+import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
+import com.hoffi.chassis.chassismodel.typ.Mutable
+import com.hoffi.chassis.chassismodel.typ.TYP
+import com.hoffi.chassis.chassismodel.typ.immutable
 import com.hoffi.chassis.dsl.internal.ChassisDslMarker
-import com.hoffi.chassis.shared.COLLECTIONTYP
-import com.hoffi.chassis.shared.Mutable
-import com.hoffi.chassis.shared.TYP
 import com.hoffi.chassis.shared.dsl.IDslRef
-import com.hoffi.chassis.shared.immutable
-import com.hoffi.chassis.shared.shared.Initializer
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.Tags
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
@@ -14,6 +15,11 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asTypeName
 import kotlin.reflect.KClass
+
+@ChassisDslMarker
+interface IDslApiInitializer {
+    /** only operate on 'addendum' properties, never on 'original' properties if you want to "alter" the original props, use ReplaceAppendOrModify.REPLACE*/
+    fun initializer(name: String, replaceAppendOrModify: ReplaceAppendOrModify, format: String, vararg args: Any, modifyInitializerBlock: Initializer.() -> Unit = {}) }
 
 @ChassisDslMarker
 interface IDslApiPropFuns {

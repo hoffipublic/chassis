@@ -1,6 +1,7 @@
 package com.hoffi.chassis.dsl.modelgroup
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.Initializer
 import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.dsl.internal.ADslDelegateClass
 import com.hoffi.chassis.dsl.internal.ChassisDslMarker
@@ -11,7 +12,6 @@ import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType.Companion.createPoetT
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.shared.Extends
-import com.hoffi.chassis.shared.shared.Initializer
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.hoffi.chassis.shared.whens.WhensDslRef
 import com.squareup.kotlinpoet.CodeBlock

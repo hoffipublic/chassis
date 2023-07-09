@@ -1,25 +1,27 @@
 package com.hoffi.chassis.shared.fix
 
-import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_INSTANT
-import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_INT
-import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_LONG
-import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_STRING
-import com.hoffi.chassis.shared.TYP.Companion.DEFAULT_UUID
+import com.hoffi.chassis.chassismodel.PoetHelpers.nullable
+import com.hoffi.chassis.chassismodel.RuntimeDefaults
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.ANNOTATION_DTO_CLASSNAME
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.ANNOTATION_TABLE_CLASSNAME
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.DEFAULT_MEMBER_INT
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.UNIVERSE___DEFAULTS
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.UNIVERSE___PACKAGE
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.UUIDDTO_INTERFACE_CLASSNAME
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.UUIDTABLE_CLASSNAME
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.UUID_PROPNAME
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.WAS_GENERATED_INTERFACE_ClassName
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.classNameInstant
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.classNameInstant_toLocalDateTime
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.classNameLocalDateTime
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.classNameTimeZone
+import com.hoffi.chassis.chassismodel.RuntimeDefaults.classNameUUID
+import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_INSTANT
+import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_INT
+import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_LONG
+import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_STRING
+import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_UUID
 import com.hoffi.chassis.shared.db.DB
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.ANNOTATION_DTO_CLASSNAME
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.ANNOTATION_TABLE_CLASSNAME
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.DEFAULT_MEMBER_INT
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.UNIVERSE___DEFAULTS
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.UNIVERSE___PACKAGE
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.UUIDDTO_INTERFACE_CLASSNAME
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.UUIDTABLE_CLASSNAME
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.UUID_PROPNAME
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.WAS_GENERATED_INTERFACE_ClassName
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.classNameInstant
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.classNameInstant_toLocalDateTime
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.classNameLocalDateTime
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.classNameTimeZone
-import com.hoffi.chassis.shared.fix.RuntimeDefaults.classNameUUID
 import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGenerated
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -139,75 +141,66 @@ object Universe {
             .addModifiers(KModifier.ABSTRACT)
             .primaryConstructor(
                 FunSpec.constructorBuilder()
-                .addParameter("name", String::class)
-                .build())
+                    .addParameter("name", String::class)
+                    .build())
             .superclass(DB.TableClassName)
             .addSuperclassConstructorParameter("name")
             .addProperty(
-                PropertySpec.builder(
-                UUID_PROPNAME, DB.Column(RuntimeDefaults.classNameUUID) )
-                .initializer("uuid(%S)", UUID_PROPNAME)
-                .build())
+                PropertySpec.builder(UUID_PROPNAME, DB.Column(RuntimeDefaults.classNameUUID))
+                    .initializer("uuid(%S)", UUID_PROPNAME)
+                    .build())
             .addProperty(
-                PropertySpec.builder(
-                "primaryKey", DB.TablePrimaryKeyClassName, KModifier.OVERRIDE)
-                .initializer("this.PrimaryKey(uuid, name = %P)", "PK_\$name")
-                .build())
+                PropertySpec.builder("primaryKey", DB.TablePrimaryKeyClassName, KModifier.OVERRIDE)
+                    .initializer("this.PrimaryKey(uuid, name = %P)", "PK_\$name")
+                    .build())
             .addType(
                 TypeSpec.classBuilder("FK")
-                .addModifiers(KModifier.DATA)
-                .primaryConstructor(
-                    FunSpec.constructorBuilder()
-                    .addParameter(ParameterSpec.builder("uuidTable", UUIDTABLE_CLASSNAME).build())
-                    .addParameter(ParameterSpec.builder("parentUuidTable", UUIDTABLE_CLASSNAME).build())
-                    .addParameter(
-                        ParameterSpec.builder("via", KProperty1::class.asTypeName().parameterizedBy(
-                            WildcardTypeName.producerOf(ANY), ANY
-                        )).defaultValue("NULL").build())
-                    .addParameter(ParameterSpec.builder("multiplicity", Int::class.asTypeName()).build())
+                    .addModifiers(KModifier.DATA)
+                    .primaryConstructor(
+                        FunSpec.constructorBuilder()
+                            .addParameter(ParameterSpec.builder("uuidTable", UUIDTABLE_CLASSNAME).build())
+                            .addParameter(ParameterSpec.builder("parentUuidTable", UUIDTABLE_CLASSNAME).build())
+                            .addParameter(ParameterSpec.builder("via", KProperty1::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY), ANY.nullable())).defaultValue("NULL").build())
+                            .addParameter(ParameterSpec.builder("multiplicity", Int::class.asTypeName()).build())
+                            .build())
+                    .addProperty(PropertySpec.builder("uuidTable", UUIDTABLE_CLASSNAME).initializer("uuidTable").build())
+                    .addProperty(PropertySpec.builder("parentUuidTable", UUIDTABLE_CLASSNAME).initializer("parentUuidTable").build())
+                    .addProperty(PropertySpec.builder("via", KProperty1::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY), ANY.nullable())).initializer("via").build())
+                    .addProperty(PropertySpec.builder("multiplicity", Int::class.asTypeName()).initializer("multiplicity").build())
+                    .addProperty(PropertySpec.builder("NULLPROP", String::class.asTypeName(), KModifier.PRIVATE).initializer("%S", "NULLPROP").build())
+                    .addType(
+                        TypeSpec.companionObjectBuilder()
+                        .addProperty(PropertySpec.builder("NULL", KProperty1::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY), ANY)).initializer("FK::NULLPROP").build())
+                        .build())
+                    .addFunction(
+                        FunSpec.builder("via")
+                        .addModifiers(KModifier.INFIX)
+                        .returns(ClassName(UUIDTABLE_CLASSNAME.packageName, UUIDTABLE_CLASSNAME.simpleName, "FK"))
+                        .addParameter("via", KProperty1::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY), ANY.nullable()))
+                        .addStatement("return this.copy(via = %L)", "via")
+                        .build())
                     .build())
-                .addProperty(PropertySpec.builder("uuidTable", UUIDTABLE_CLASSNAME).initializer("uuidTable").build())
-                .addProperty(PropertySpec.builder("parentUuidTable", UUIDTABLE_CLASSNAME).initializer("parentUuidTable").build())
-                .addProperty(
-                    PropertySpec.builder("via", KProperty1::class.asTypeName().parameterizedBy(
-                        WildcardTypeName.producerOf(ANY), ANY
-                    )).initializer("via").build())
-                .addProperty(PropertySpec.builder("multiplicity", Int::class.asTypeName()).initializer("multiplicity").build())
-                .addProperty(PropertySpec.builder("NULLPROP", String::class.asTypeName(), KModifier.PRIVATE).initializer("%S", "NULLPROP").build())
-                .addType(
-                    TypeSpec.companionObjectBuilder()
-                    .addProperty(
-                        PropertySpec.builder("NULL", KProperty1::class.asTypeName().parameterizedBy(
-                            WildcardTypeName.producerOf(ANY), ANY
-                        )).initializer("FK::NULLPROP").build())
-                    .build())
-                .addFunction(
-                    FunSpec.builder("via")
-                    .addModifiers(KModifier.INFIX)
-                    .returns(ClassName(UUIDTABLE_CLASSNAME.packageName, UUIDTABLE_CLASSNAME.simpleName, "FK"))
-                    .addParameter("via", KProperty1::class.asTypeName().parameterizedBy(
-                        WildcardTypeName.producerOf(
-                            ANY
-                        ), ANY
-                    ))
-                    .addStatement("return this.copy(via = %L)", "via")
-                    .build())
-                .build()
-            )
             .addFunction(
                 FunSpec.builder("hasOne")
-                .addModifiers(KModifier.INFIX)
-                .returns(ClassName(UUIDTABLE_CLASSNAME.packageName, UUIDTABLE_CLASSNAME.simpleName, "FK"))
-                .addParameter("parentUuidTable", UUIDTABLE_CLASSNAME)
-                .addStatement("return FK(this, parentUuidTable, multiplicity=1)")
-                .build())
+                    .addModifiers(KModifier.INFIX)
+                    .returns(ClassName(UUIDTABLE_CLASSNAME.packageName, UUIDTABLE_CLASSNAME.simpleName, "FK"))
+                    .addParameter("parentUuidTable", UUIDTABLE_CLASSNAME)
+                    .addStatement("return FK(this, parentUuidTable, multiplicity=1)")
+                    .build())
             .addFunction(
                 FunSpec.builder("hasMany")
-                .addModifiers(KModifier.INFIX)
-                .returns(ClassName(UUIDTABLE_CLASSNAME.packageName, UUIDTABLE_CLASSNAME.simpleName, "FK"))
-                .addParameter("parentUuidTable", UUIDTABLE_CLASSNAME)
-                .addStatement("return FK(this, parentUuidTable, multiplicity=2)")
-                .build())
+                    .addModifiers(KModifier.INFIX)
+                    .returns(ClassName(UUIDTABLE_CLASSNAME.packageName, UUIDTABLE_CLASSNAME.simpleName, "FK"))
+                    .addParameter("parentUuidTable", UUIDTABLE_CLASSNAME)
+                    .addStatement("return FK(this, parentUuidTable, multiplicity=2)")
+                    .build())
+            .addFunction(
+                FunSpec.builder("mappedBy")
+                    .addModifiers(KModifier.INFIX)
+                    .returns(UUIDTABLE_CLASSNAME)
+                    .addParameter("mappedBy", KProperty1::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY), ANY.nullable()))
+                    .addStatement("return this")
+                    .build())
             .build()
         fileSpec = FileSpec.builder(UUIDTABLE_CLASSNAME.packageName, UUIDTABLE_CLASSNAME.simpleName)
             .addType(typeSpec).build()
@@ -222,18 +215,26 @@ object Universe {
         val fileSpec = FileSpec.builder(ANNOTATION_DTO_CLASSNAME.packageName, "Annotations")
             .addType(TypeSpec.annotationBuilder(ANNOTATION_DTO_CLASSNAME.simpleName)
                 .primaryConstructor(FunSpec.constructorBuilder()
-                    .addParameter("targetClass", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+                    .addParameter("thisTable", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+                    .addParameter("targetDto", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
                     .build())
-                .addProperty(PropertySpec.builder("targetClass", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
-                    .initializer("targetClass")
+                .addProperty(PropertySpec.builder("thisTable", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+                    .initializer("thisTable")
+                    .build())
+                .addProperty(PropertySpec.builder("targetDto", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+                    .initializer("targetDto")
                     .build())
                 .build())
             .addType(TypeSpec.annotationBuilder(ANNOTATION_TABLE_CLASSNAME.simpleName)
                 .primaryConstructor(FunSpec.constructorBuilder()
-                    .addParameter("targetClass", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+                    .addParameter("thisDto", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+                    .addParameter("targetTable", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
                     .build())
-                .addProperty(PropertySpec.builder("targetClass", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
-                    .initializer("targetClass")
+                .addProperty(PropertySpec.builder("thisDto", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+                    .initializer("thisDto")
+                    .build())
+                .addProperty(PropertySpec.builder("targetTable", KClass::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY)))
+                    .initializer("targetTable")
                     .build())
                 .build())
             //.addType(TypeSpec.annotationBuilder("FKFROM")

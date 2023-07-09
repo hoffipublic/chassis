@@ -1,10 +1,11 @@
-package com.hoffi.chassis.shared
+package com.hoffi.chassis.chassismodel.typ
 
 import com.hoffi.chassis.chassismodel.C
-import com.hoffi.chassis.shared.fix.RuntimeDefaults
-import com.hoffi.chassis.shared.helpers.PoetHelpers.nullable
-import com.hoffi.chassis.shared.shared.Initializer
+import com.hoffi.chassis.chassismodel.Initializer
+import com.hoffi.chassis.chassismodel.PoetHelpers.nullable
+import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asTypeName
@@ -33,6 +34,8 @@ sealed class COLLECTIONTYP {
         val ITERABLE = ITERABLE()
     }
 }
+
+data class TYPTranslation(val typeName: ParameterizedTypeName, val initializer: Initializer)
 
 sealed class TYP(val kClass: KClass<*>, val defaultInitializer: Initializer, isInterface: Boolean = kClass.java.isInterface) {
     override fun toString() = this::class.simpleName!!

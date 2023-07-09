@@ -33,7 +33,7 @@ abstract class ModelClassData(
     val gatheredProps: MutableMap<String, Property> = mutableMapOf()
     val gatheredPropsDslModelRefs: MutableSet<GatherPropertys> = mutableSetOf()
     // convenience maps for codeGen
-    val allProps: MutableMap<String, Property> by lazy { (directProps + gatheredProps).toMutableMap() }
+    val allProps: MutableMap<String, Property> by lazy { (gatheredProps + directProps).toMutableMap() }
 
     var isUuidPrimary = false
 

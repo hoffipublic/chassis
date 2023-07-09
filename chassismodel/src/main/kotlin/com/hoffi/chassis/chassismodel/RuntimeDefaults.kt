@@ -1,6 +1,5 @@
-package com.hoffi.chassis.shared.fix
+package com.hoffi.chassis.chassismodel
 
-import com.hoffi.chassis.shared.shared.Initializer
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.MemberName.Companion.member
@@ -16,10 +15,10 @@ object RuntimeDefaults {
     const val UNIVERSE___GENERATED = "WasGenerated"
 
     val WAS_GENERATED_INTERFACE_ClassName = ClassName(UNIVERSE___PACKAGE, UNIVERSE___GENERATED)
-    val ANNOTATION_DTO_CLASSNAME = ClassName(UNIVERSE___PACKAGE, "DTO")
-    val ANNOTATION_TABLE_CLASSNAME = ClassName(UNIVERSE___PACKAGE, "TABLE")
+    val ANNOTATION_DTO_CLASSNAME = ClassName(UNIVERSE___PACKAGE, "TABLEsDTO")
+    val ANNOTATION_TABLE_CLASSNAME = ClassName(UNIVERSE___PACKAGE, "DTOsTABLE")
     val UUIDTABLE_CLASSNAME = ClassName(UNIVERSE___PACKAGE, "UuidTable")
-    val UUIDDTO_INTERFACE_CLASSNAME = ClassName(UNIVERSE___PACKAGE, "UuidDto")
+    val UUIDDTO_INTERFACE_CLASSNAME = ClassName(UNIVERSE___PACKAGE, "IUuidDto")
     val UUID_PROPNAME = "uuid"
 
     val DEFAULTS_CLASSNAME = ClassName(UNIVERSE___PACKAGE, UNIVERSE___DEFAULTS)

@@ -1,21 +1,22 @@
 package com.hoffi.chassis.shared.parsedata
 
 import com.hoffi.chassis.chassismodel.C
-import com.hoffi.chassis.shared.COLLECTIONTYP
+import com.hoffi.chassis.chassismodel.Initializer
+import com.hoffi.chassis.chassismodel.PoetHelpers.nullable
+import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
+import com.hoffi.chassis.chassismodel.typ.Mutable
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
-import com.hoffi.chassis.shared.Mutable
 import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.helpers.PoetHelpers.nullable
 import com.hoffi.chassis.shared.helpers.Validate.failIfIdentifierInvalid
-import com.hoffi.chassis.shared.shared.Initializer
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.Tags
-import com.hoffi.chassis.shared.strategies.*
+import com.hoffi.chassis.shared.strategies.IVarNameStrategy
+import com.hoffi.chassis.shared.strategies.VarNameStrategy
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeName
 
 class Property constructor(
-    val name: String,
+    val dslPropName: String,
     val propRef: DslRef.prop,
     var eitherTypModelOrClass: EitherTypOrModelOrPoetType,
     val mutable: Mutable = Mutable(false),
@@ -24,12 +25,13 @@ class Property constructor(
     var length: Int = C.DEFAULT_INT,
     val collectionType: COLLECTIONTYP = COLLECTIONTYP.NONE
 ) {
-    override fun toString() = "${"%-38s".format("${this::class.simpleName} ${if (tags.contains(Tag.CONSTRUCTOR)) "C " else "  "}${if (mutable.bool) "var " else "val "}${if (collectionType != COLLECTIONTYP.NONE) "$collectionType " else ""}$name")} : ${eitherTypModelOrClass}${if (tags.isNotEmpty()) ", tags:[$tags" else ""}] of $propRef"
-    var classNameStrategy = ClassNameStrategy.get(IClassNameStrategy.STRATEGY.DEFAULT)
-    var tableNameStrategy = TableNameStrategy.get(ITableNameStrategy.STRATEGY.DEFAULT)
+    override fun toString() = "${"%-38s".format("${this::class.simpleName} ${if (tags.contains(Tag.CONSTRUCTOR)) "C " else "  "}${if (mutable.bool) "var " else "val "}${if (collectionType != COLLECTIONTYP.NONE) "$collectionType " else ""}$dslPropName")} : ${eitherTypModelOrClass}${if (tags.isNotEmpty()) ", tags:[$tags" else ""}] of $propRef"
     var varNameStrategy = VarNameStrategy.get(IVarNameStrategy.STRATEGY.DEFAULT)
+    var columnNameStrategy = VarNameStrategy.get(IVarNameStrategy.STRATEGY.LOWERSNAKECASE)
 
+    val name: String = varNameStrategy.nameLowerFirst(dslPropName)
     fun name(prefix: String = "", postfix: String = "") = varNameStrategy.nameLowerFirst(name, prefix, postfix)
+    val columnName = columnNameStrategy.nameLowerFirst(dslPropName)
 
     // convenience methods
 
@@ -54,15 +56,14 @@ class Property constructor(
     // housekeeping methods
 
     fun validate(any: Any) {
-        name.failIfIdentifierInvalid(any)
+        dslPropName.failIfIdentifierInvalid(any)
         eitherTypModelOrClass.validate("$any->$this")
     }
 
-    // TODO better decide on name, AND(!) eitherTypModelOrClass AND(!) if prop isNullable
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Property) return false
-        return name == other.name
+        return propRef == other.propRef
     }
-    override fun hashCode() = name.hashCode()
+    override fun hashCode() = propRef.hashCode()
 }

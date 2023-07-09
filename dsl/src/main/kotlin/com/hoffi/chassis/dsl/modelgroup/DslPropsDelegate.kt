@@ -1,17 +1,19 @@
 package com.hoffi.chassis.dsl.modelgroup
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.Initializer
+import com.hoffi.chassis.chassismodel.ReplaceAppendOrModify
 import com.hoffi.chassis.chassismodel.dsl.DslException
+import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
+import com.hoffi.chassis.chassismodel.typ.Mutable
+import com.hoffi.chassis.chassismodel.typ.TYP
 import com.hoffi.chassis.dsl.internal.ADslDelegateClass
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
-import com.hoffi.chassis.shared.COLLECTIONTYP
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
-import com.hoffi.chassis.shared.Mutable
-import com.hoffi.chassis.shared.TYP
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.DslRefString
 import com.hoffi.chassis.shared.dsl.IDslRef
-import com.hoffi.chassis.shared.shared.Initializer
+import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.Tags
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
@@ -32,14 +34,33 @@ class DslModelProp constructor(
     val collectionType: COLLECTIONTYP = COLLECTIONTYP.NONE
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
-    override fun toString(): String =
-        "${DslModelProp::class.simpleName}[${if (tags.contains(Tag.CONSTRUCTOR)) "C " else "  "}${if (mutable.bool) "var " else "fix "}${if (collectionType != COLLECTIONTYP.NONE) "$collectionType " else ""}${name}/${eitherTypModelOrClass}})${if (tags.isNotEmpty()) ", tags:$tags" else ""}] OF ${propRef}"
+    override fun toString(): String = "${DslModelProp::class.simpleName}[${if (tags.contains(Tag.CONSTRUCTOR)) "C " else "  "}${if (mutable.bool) "var " else "fix "}${if (collectionType != COLLECTIONTYP.NONE) "$collectionType " else ""}${name}/${eitherTypModelOrClass}})${if (tags.isNotEmpty()) ", tags:$tags" else ""}] OF ${propRef}"
+
+    val initializer: Initializer
+        get() = eitherTypModelOrClass.initializer
+    var initializerReplaceAppendOrModify: MutableMap<DslRef.IModelSubelement, ReplaceAppendOrModify> = mutableMapOf()
+    var initializerFormatAddendum: MutableMap<DslRef.IModelSubelement, String> = mutableMapOf()
+    var initializerArgsAddendum: MutableMap<DslRef.IModelSubelement, MutableList<Any>> = mutableMapOf()
+
+    fun toProperty(modelSubelementRef: DslRef.IModelSubelement): Property {
+        val genProperty = Property(
+            name,
+            propRef,
+            eitherTypModelOrClass.finish(initializerReplaceAppendOrModify[modelSubelementRef] ?: ReplaceAppendOrModify.APPEND, initializerFormatAddendum[modelSubelementRef] ?: "", initializerArgsAddendum[modelSubelementRef] ?: mutableListOf()),
+            Mutable(mutable.bool),
+            modifiers.toMutableSet(),
+            tags.copy(),
+            length,
+            collectionType
+        )
+        return genProperty
+    }
 }
 context(DslCtxWrapper)
 class DslPropsDelegate(
     simpleNameOfParentDslBlock: String,
     parentRef: IDslRef
-) : ADslDelegateClass(simpleNameOfParentDslBlock, parentRef), IDslApiPropFuns {
+) : ADslDelegateClass(simpleNameOfParentDslBlock, parentRef), IDslApiPropFuns, IDslApiInitializer {
     val log = LoggerFactory.getLogger(javaClass)
 
     override val selfDslRef = DslRef.showcase(simpleNameOfParentDslBlock, parentRef)
@@ -131,5 +152,33 @@ class DslPropsDelegate(
         // isInterface of GenModel will be set to correct value in setModelClassNameOfReffedModelProperties()
         val prop = DslModelProp(name, DslRef.prop(name, delegatorRef), EitherTypOrModelOrPoetType.EitherModel(modelSubElementRef as DslRef.IModelSubelement, initializer), mutable, modifiers, tags, length, collectionType)
         addProp(name, prop)
+    }
+
+    override fun initializer(name: String, replaceAppendOrModify: ReplaceAppendOrModify, format: String, vararg args: Any, modifyInitializerBlock: Initializer.() -> Unit) {
+        if (dslCtx.currentPASS != dslCtx.PASS_5_REFERENCING) return // do something only in this PASS
+        val subelementClass: AModelSubelement = dslCtx.ctxObj(parentDslRef)
+        val modelClass: DslModel = dslCtx.ctxObj(subelementClass.parentDslRef)
+        val directDslProps: MutableMap<String, DslModelProp> = subelementClass.directDslPropertiesOf(subelementClass.propsImpl, modelClass.propsImpl)
+        val dslProp: DslModelProp = directDslProps[name] ?: throw DslException("$parentDslRef neither its parent contain a property named '$name' to attach initializer '${Initializer.of(format, *args)}'")
+        dslProp.initializerReplaceAppendOrModify[delegatorRef as DslRef.IModelSubelement] = replaceAppendOrModify
+        when (replaceAppendOrModify) {
+            ReplaceAppendOrModify.REPLACE -> {
+                dslProp.initializerFormatAddendum[delegatorRef] = format
+                dslProp.initializerArgsAddendum[delegatorRef] = mutableListOf(*args)
+            }
+            ReplaceAppendOrModify.APPEND -> {
+                dslProp.initializerFormatAddendum[delegatorRef] = format
+                val argsAddList = dslProp.initializerArgsAddendum.getOrPut(delegatorRef) { mutableListOf() }
+                argsAddList.addAll(mutableListOf(*args))
+            }
+            ReplaceAppendOrModify.MODIFY -> {
+                val initializerCopy: Initializer = dslProp.initializer.copy()
+                initializerCopy.modifyInitializerBlock()
+                // dslProp.initializer.originalFormat // CANNOT do this, because if it is a model property (not on dto/table/...) it would be altered FOR ALL subelements
+                dslProp.initializerReplaceAppendOrModify[delegatorRef] = initializerCopy.replaceAppendOrModify
+                dslProp.initializerFormatAddendum[delegatorRef] = initializerCopy.formatAddendum
+                dslProp.initializerArgsAddendum[delegatorRef] = initializerCopy.argsAddendum
+            }
+        }
     }
 }

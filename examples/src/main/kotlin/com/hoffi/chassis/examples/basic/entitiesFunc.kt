@@ -1,15 +1,16 @@
 package com.hoffi.chassis.examples.basic
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.Initializer
+import com.hoffi.chassis.chassismodel.ReplaceAppendOrModify.APPEND
+import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
+import com.hoffi.chassis.chassismodel.typ.TYP
+import com.hoffi.chassis.chassismodel.typ.mutable
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.dsl.scratchdslEXAMPLES.COMMON__PERSISTENT_OPTIMISTIC
-import com.hoffi.chassis.shared.COLLECTIONTYP
-import com.hoffi.chassis.shared.TYP
-import com.hoffi.chassis.shared.mutable
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
-import com.hoffi.chassis.shared.shared.Initializer
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.MODEL
@@ -61,7 +62,7 @@ fun entities() {
             property("someObject", Dummy::class, mutable, Initializer.of("%T.%L", Dummy::class, "NULL"), length = C.DEFAULT_INT, Tag.TRANSIENT)
             property("someModelObject", MODELREFENUM.DTO of ENTITY__SUBENTITY, mutable)
             property("subentitys", "modelgroup:$ENTITYGROUP|model:$ENTITY__SUBENTITY", MODELREFENUM.DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER, Tag.NULLABLE)
-            property("listOfStrings", TYP.STRING, COLLECTIONTYP.LIST, Tag.COLLECTION_IMMUTABLE, Tag.CONSTRUCTOR, Tag.TRANSIENT)
+            property("listOfStrings", TYP.STRING, COLLECTIONTYP.LIST, Tag.COLLECTION_IMMUTABLE, Tag.CONSTRUCTOR)
 
 //            initBusinessValues {
 //                init("someObject", Initializer.of("%T(%L)", Dummy::class.asTypeName(), 42))
@@ -81,8 +82,10 @@ fun entities() {
                     //+ ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT_OPTIMISTIC) ) // withName COMMON__PERSISTENT) //
                 }
 //                annotateProperty("someObject", AnnotationSpec.builder(Contextual::class))
-                property("dtoSpecificProp", TYP.STRING, mutable, Tag.CONSTRUCTOR)
+                property("dtoSpecificProp", TYP.STRING, mutable, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER)
                 //propertiesOf( (MODEL inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) )
+                initializer("dtoSpecificProp", APPEND, "/* some dto specific comment */")
+                initializer("prio", APPEND, "/* some dto prio comment */")
 
 //                initBusinessValues {
 //                    "someObject"      with Initializer.of("%T(%L)", Dummy::class.asTypeName(), 43)
@@ -98,6 +101,8 @@ fun entities() {
                 }
 
                 propertiesOf(MODELREFENUM.DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+                initializer("name", APPEND, ".uniqueIndex()")
+                initializer("prio", APPEND, "/* some table prio comment */")
                 //alterPropertyForDB("name", "uniqueIndex()")
             }
 //            filler {

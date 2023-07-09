@@ -1,4 +1,4 @@
-package com.hoffi.chassis.shared.fix
+package com.hoffi.chassis.chassismodel
 
 import java.net.InetAddress
 import java.time.Instant

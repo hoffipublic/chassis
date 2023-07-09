@@ -17,10 +17,12 @@ application {
 
 
 dependencies {
+    implementation(project(":chassismodel"))
     implementation(project(":dbwrappers"))
     implementation(kotlin("reflect"))
     implementation("com.github.ajalt.clikt:clikt:${libs.versions.clikt.get()}")
     implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.get()}")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.get()}")
     implementation("org.jetbrains.exposed:exposed-core:${libs.versions.exposed.get()}")
 }
 

@@ -75,12 +75,12 @@ object VarNameStrategy {
     fun get(strategy: IVarNameStrategy.STRATEGY) =
         when (strategy) {
             IVarNameStrategy.STRATEGY.DEFAULT, IVarNameStrategy.STRATEGY.LOWERCAMELCASE -> VarNameStrategyLowerCamelCase
+            IVarNameStrategy.STRATEGY.LOWERSNAKECASE -> TableNameStrategyLowerSnakeCase
         }
 }
 
 interface IVarNameStrategy : INamingStrategy {
-    enum class STRATEGY { DEFAULT, LOWERCAMELCASE }
-
+    enum class STRATEGY { DEFAULT, LOWERCAMELCASE, LOWERSNAKECASE }
 }
 
 object VarNameStrategyLowerCamelCase : IVarNameStrategy {

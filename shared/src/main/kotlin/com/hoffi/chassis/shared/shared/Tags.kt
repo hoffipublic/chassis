@@ -37,6 +37,7 @@ class Tags {
     constructor(tags: Set<Tag>) {
         this.tags.addAll(tags)
     }
+    fun copy() = Tags().also { it.tags.addAll(tags) }
 
     companion object {
         val NONE = Tags()

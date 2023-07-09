@@ -1,12 +1,14 @@
 package com.hoffi.chassis.shared
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.Initializer
+import com.hoffi.chassis.chassismodel.ReplaceAppendOrModify
 import com.hoffi.chassis.chassismodel.dsl.DslException
+import com.hoffi.chassis.chassismodel.typ.TYP
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.ModelClassName
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.NameAndWheretoDefaults
-import com.hoffi.chassis.shared.shared.Initializer
 import com.hoffi.chassis.shared.whens.WhensDslRef
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.asClassName
@@ -24,11 +26,15 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
      * it is only valid to use in CodeGen or things further down the stream
      * a valid modelClassName (with poetType and interface information) will be init'ed in finish of modelSubelement */
     lateinit var modelClassName: ModelClassName
+    abstract fun finish(replaceAppendOrModify: ReplaceAppendOrModify, formatAddendum: String, argsAddendum: MutableList<Any>): EitherTypOrModelOrPoetType
 
     class EitherTyp constructor(val typ: TYP, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName!!.removePrefix("Either")}($typ)"
         init { modelClassName = fakePoetTypeClassName(typ.poetType, typ.isInterface) }
         override val isInterface = typ.isInterface
+        override fun finish(replaceAppendOrModify: ReplaceAppendOrModify, formatAddendum: String, argsAddendum: MutableList<Any>): EitherTypOrModelOrPoetType {
+            return EitherTyp(typ, Initializer.of(initializer.originalFormat, initializer.originalArgs, replaceAppendOrModify, formatAddendum, argsAddendum))
+        }
         override fun validate(any: Any) {
             modelClassName.validate(any)
         }
@@ -38,6 +44,9 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
         // modelClassName (with poetType) init'ed in finish of modelSubelement
         /** invalid to use before modelsubelement finish'ed */
         override val isInterface: Boolean by lazy { modelClassName.modelClassData.isInterface }
+        override fun finish(replaceAppendOrModify: ReplaceAppendOrModify, formatAddendum: String, argsAddendum: MutableList<Any>): EitherTypOrModelOrPoetType {
+            return EitherModel(modelSubElementRefOriginal, Initializer.of(initializer.originalFormat, initializer.originalArgs, replaceAppendOrModify, formatAddendum, argsAddendum))
+        }
         val modelSubElementRef: DslRef.IModelSubelement
             get() = modelSubElementRefExpanded ?: modelSubElementRefOriginal as DslRef.IModelSubelement
         var modelSubElementRefExpanded: DslRef.IModelSubelement? = null
@@ -55,6 +64,9 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
     class EitherPoetType constructor(val poetType: ClassName, override var isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName!!.removePrefix("Either")}($poetType)"
         init { modelClassName = fakePoetTypeClassName(poetType, isInterface) }
+        override fun finish(replaceAppendOrModify: ReplaceAppendOrModify, formatAddendum: String, argsAddendum: MutableList<Any>): EitherTypOrModelOrPoetType {
+            return EitherPoetType(poetType, isInterface, Initializer.of(initializer.originalFormat, initializer.originalArgs, replaceAppendOrModify, formatAddendum, argsAddendum))
+        }
         override fun validate(any: Any) {
             modelClassName.validate(any)
         }
@@ -62,6 +74,11 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
     class NOTHING : EitherTypOrModelOrPoetType(Initializer.EMPTY) {
         override fun toString() = "${this::class.simpleName}"
         override val isInterface = false
+        override fun finish(
+            replaceAppendOrModify: ReplaceAppendOrModify,
+            formatAddendum: String,
+            argsAddendum: MutableList<Any>
+        ): EitherTypOrModelOrPoetType = NOTHING
         override fun validate(any: Any) {}
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

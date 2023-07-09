@@ -70,6 +70,7 @@ benasher44-uuid = { module = "com.benasher44:uuid", version.ref = "benasher44-uu
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 compose = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "compose" }
 exposed = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
 gradle-versions-catalogUpdate = { module = "nl.littlerobots.vcu:plugin", version.ref = "gradle-versions-catalogUpdate" }
 gradle-versions-filter = { module = "se.ascp.gradle:gradle-versions-filter", version.ref = "gradle-versions-filter" }
 gradle-versions-plugin = { module = "com.github.ben-manes:gradle-versions-plugin", version.ref = "gradle-versions-plugin" }

@@ -16,7 +16,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.get()}")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${libs.versions.kotlinx.serialization.json.get()}")
     implementation("com.squareup.okio:okio:${libs.versions.okio.get()}")
-
+    implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.get()}")
 }
 
 tasks {

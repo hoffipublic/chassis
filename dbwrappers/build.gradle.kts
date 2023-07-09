@@ -17,6 +17,7 @@ application {
 
 
 dependencies {
+    implementation(project(":chassismodel"))
     implementation(kotlin("reflect"))
     implementation("com.github.ajalt.clikt:clikt:${libs.versions.clikt.get()}")
     implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.get()}")

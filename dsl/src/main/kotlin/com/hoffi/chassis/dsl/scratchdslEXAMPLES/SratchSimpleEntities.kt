@@ -1,15 +1,15 @@
 package com.hoffi.chassis.dsl.scratchdslEXAMPLES
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.Initializer
+import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
+import com.hoffi.chassis.chassismodel.typ.TYP
+import com.hoffi.chassis.chassismodel.typ.mutable
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.INTERFACE
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.OBJECT
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
-import com.hoffi.chassis.shared.COLLECTIONTYP
-import com.hoffi.chassis.shared.TYP
-import com.hoffi.chassis.shared.mutable
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
-import com.hoffi.chassis.shared.shared.Initializer
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.DTO
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.MODEL
