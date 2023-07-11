@@ -9,6 +9,8 @@ import com.hoffi.chassis.chassismodel.typ.mutable
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
+import com.hoffi.chassis.dsl.modelgroup.IDslApiConstructorVisibility.VISIBILITY.PROTECTED
+import com.hoffi.chassis.dsl.modelgroup.IDslApiConstructorVisibility.VISIBILITY.PUBLIC
 import com.hoffi.chassis.dsl.scratchdslEXAMPLES.COMMON__PERSISTENT_OPTIMISTIC
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.Tag
@@ -33,6 +35,8 @@ fun entities() {
             classPostfix("Dto")
             packageName("entity")
         }
+
+        constructorVisibility = PROTECTED
 
         // ================================================================================================================================
 
@@ -64,10 +68,6 @@ fun entities() {
             property("subentitys", "modelgroup:$ENTITYGROUP|model:$ENTITY__SUBENTITY", MODELREFENUM.DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER, Tag.NULLABLE)
             property("listOfStrings", TYP.STRING, COLLECTIONTYP.LIST, Tag.COLLECTION_IMMUTABLE, Tag.CONSTRUCTOR)
 
-//            initBusinessValues {
-//                init("someObject", Initializer.of("%T(%L)", Dummy::class.asTypeName(), 42))
-//            }
-//
 //            manyToMany(SIMPLE__SUBENTITY) {
 //                // not implemented yet, and not sure if an own clause or via property(...)
 //            }
@@ -87,11 +87,6 @@ fun entities() {
                 initializer("dtoSpecificProp", APPEND, "/* some dto specific comment */")
                 initializer("prio", APPEND, "/* some dto prio comment */")
 
-//                initBusinessValues {
-//                    "someObject"      with Initializer.of("%T(%L)", Dummy::class.asTypeName(), 43)
-//                    "dtoSpecificProp" with Initializer.of("%S", "businessInitialized")
-//                    "someModelObject" with BUSINESSINIT.INIT
-//                }
 //                addToStringMembers("dtoSpecificProp")
             }
             table {
@@ -125,15 +120,13 @@ fun entities() {
             ////addToStringMembers(toStringMembersList = COMMON_MODEL___toStringMembers)
 
             dto {
+                constructorVisibility = PUBLIC
                 extends {
                     + ( (MODEL inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) ) // withName COMMON__PERSISTENT) //
                 }
                 property("subEntityDtoSpecificProp", TYP.STRING, mutable = mutable, Tag.CONSTRUCTOR)
                 property("entityBackreference", MODELREFENUM.DTO of ENTITY__ENTITY, mutable, Tag.TRANSIENT)
 
-                //initBusinessValues {
-                //    "dtoSpecificProp" with Initializer.of("%S", "subentity businessInitialized")
-                //}
 //                function("someInit") {
 //                    addModifiers(KModifier.OVERRIDE, KModifier.PROTECTED)
 //                    returns(dslCtx.typeWrapper(modelGenRef).typeName)

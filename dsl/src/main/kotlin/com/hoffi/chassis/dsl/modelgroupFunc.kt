@@ -39,6 +39,7 @@ fun modelgroup(simpleName: String, modelgroupBlock: DslModelgroup.() -> Unit) {
             val dslModelgroup = dslCtx.getModelgroup(modelgroupRef)
             dslModelgroup.setModelClassNameOfReffedModelPropertiesAndExtendsModel(dslCtx)
             dslModelgroup.gatherReferencedPropertys(dslCtx)
+            dslModelgroup.gatherSuperclassPropertys(dslCtx)
         }
         else -> {
             val modelgroupRef = DslRef.modelgroup(simpleName, dslDiscriminator)

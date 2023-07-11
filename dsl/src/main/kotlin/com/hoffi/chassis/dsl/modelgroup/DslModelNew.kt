@@ -22,6 +22,11 @@ import org.slf4j.LoggerFactory
 interface IDslApiKindClassObjectOrInterface {
     var kind: DslClassObjectOrInterface
 }
+@ChassisDslMarker
+interface IDslApiConstructorVisibility {
+    enum class VISIBILITY { PUBLIC, PROTECTED, UNSET}
+    var constructorVisibility: VISIBILITY
+}
 
 context(DslCtxWrapper)
 abstract class AModelSubelement(
@@ -148,6 +153,7 @@ class DslModel constructor(
 ) : ADslClass(),
     IDslApiModel,
     IDslApiKindClassObjectOrInterface,
+    IDslApiConstructorVisibility,
     IDslApiClassModifiers by classModifiersImpl,
     IDslApiPropFuns by propsImpl,
     IDslApiNameAndWheretoWithSubelements by nameAndWheretoWithSubelements,
@@ -173,6 +179,7 @@ class DslModel constructor(
 
     // IDslApiKindClassObjectOrInterface
     override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.UNDEFINED
+    override var constructorVisibility: IDslApiConstructorVisibility.VISIBILITY = IDslApiConstructorVisibility.VISIBILITY.UNSET
 
     @DslBlockOn(DslDto::class)
     override fun dto(simpleName: String, dslBlock: IDslApiDto.() -> Unit) {
@@ -289,6 +296,7 @@ globalDslCtx = dslCtx // TODO remove workaround
 interface IDslApiModelAndModelSubelementsCommon
 // interfaces implemented by Model And Elements
     :   IDslApiKindClassObjectOrInterface,
+        IDslApiConstructorVisibility,
         IDslApiGatherPropertiesModelAndModelSubelementsCommon,
         IDslApiClassModifiers,
         IDslApiGatherPropertiesProp,
@@ -339,6 +347,7 @@ class DslDto(
     IDslApiDto,
     IDslApiModelAndModelSubelementsCommon,
     IDslApiKindClassObjectOrInterface,
+    IDslApiConstructorVisibility,
 
     IDslImplClassModifiers by classModifiersImpl,
     IDslApiPropFuns by propsImpl,
@@ -362,7 +371,7 @@ class DslDto(
         this@DslCtxWrapper.dslCtx.addToCtx(showcaseImpl)
     }
     override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.UNDEFINED
-
+    override var constructorVisibility: IDslApiConstructorVisibility.VISIBILITY = IDslApiConstructorVisibility.VISIBILITY.UNSET
 
     fun finish(dslCtx: DslCtx) {
         val sharedGatheredNameAndWheretos: SharedGatheredNameAndWheretos = finishSharedGatheredNameAndWheretos(nameAndWheretoWithoutModelSubelementsImpl)
@@ -371,6 +380,7 @@ class DslDto(
         val dtoModel = GenModel.DtoModel(selfDslRef as DslRef.dto, modelClassName)
         dslCtx.genCtx.putModel(selfDslRef, dtoModel)
         val dslModel: DslModel = dslCtx.ctxObj(parentDslRef)
+        val dslGroup: DslModelgroup = dslCtx.ctxObj((parentDslRef.parentDslRef))
 
         when (kind) {
             DslClassObjectOrInterface.CLASS -> dtoModel.kind = TypeSpec.Kind.CLASS
@@ -385,6 +395,17 @@ class DslDto(
                 }
             }
         }
+        dtoModel.constructorVisibility =
+            if (constructorVisibility == IDslApiConstructorVisibility.VISIBILITY.UNSET)
+                if (dslModel.constructorVisibility == IDslApiConstructorVisibility.VISIBILITY.UNSET)
+                    if (dslGroup.constructorVisibility == IDslApiConstructorVisibility.VISIBILITY.UNSET)
+                        true
+                    else
+                        dslGroup.constructorVisibility == IDslApiConstructorVisibility.VISIBILITY.PUBLIC
+                else
+                    dslModel.constructorVisibility == IDslApiConstructorVisibility.VISIBILITY.PUBLIC
+            else
+                constructorVisibility == IDslApiConstructorVisibility.VISIBILITY.PUBLIC
 
         finishModelClassData(dslModel, dtoModel, classModifiersImpl, extendsImpl, gatherPropertiesImpl, propsImpl)
     }
@@ -430,6 +451,7 @@ class DslTable(
     IDslApiTable,
     IDslApiModelAndModelSubelementsCommon,
     IDslApiKindClassObjectOrInterface,
+    IDslApiConstructorVisibility,
 
     IDslImplClassModifiers by classModifiersImpl,
     IDslApiPropFuns by propsImpl,
@@ -455,7 +477,7 @@ class DslTable(
     }
 
     override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.OBJECT
-
+    override var constructorVisibility: IDslApiConstructorVisibility.VISIBILITY = IDslApiConstructorVisibility.VISIBILITY.UNSET
 
     fun finish(dslCtx: DslCtx) {
         val sharedGatheredNameAndWheretos: SharedGatheredNameAndWheretos = finishSharedGatheredNameAndWheretos(nameAndWheretoWithoutModelSubelementsImpl)
@@ -464,8 +486,11 @@ class DslTable(
         val tableModel = GenModel.TableModel(selfDslRef as DslRef.table, modelClassName)
         dslCtx.genCtx.putModel(selfDslRef, tableModel)
         val dslModel: DslModel = dslCtx.ctxObj(parentDslRef)
+        val dslGroup: DslModelgroup = dslCtx.ctxObj(parentDslRef.parentDslRef)
 
         tableModel.kind = TypeSpec.Kind.OBJECT
+        //tableModel.constructorVisibility = if (constructorVisibility) if (dslModel.constructorVisibility) dslGroup.constructorVisibility else dslModel.constructorVisibility else constructorVisibility
+        tableModel.constructorVisibility = true
 
         finishModelClassData(dslModel, tableModel, classModifiersImpl, extendsImpl, gatherPropertiesImpl, propsImpl)
     }

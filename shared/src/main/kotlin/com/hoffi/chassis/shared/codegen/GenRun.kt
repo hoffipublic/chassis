@@ -11,7 +11,6 @@ class GenRun(val genCtx: GenCtx, var runIdentifier: String) : IRun {
         genCtx.genRun = this
     }
 
-    context(GenCtxWrapper)
     fun start(runBlock: GenRun.() -> Unit = {}): GenRun {
         this@GenRun.apply(runBlock)
         return this@GenRun

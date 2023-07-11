@@ -21,11 +21,17 @@ import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_INT
 import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_LONG
 import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_STRING
 import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_UUID
+import com.hoffi.chassis.chassismodel.typ.TYP.Companion.NULL_INSTANT
+import com.hoffi.chassis.chassismodel.typ.TYP.Companion.NULL_INT
+import com.hoffi.chassis.chassismodel.typ.TYP.Companion.NULL_LONG
+import com.hoffi.chassis.chassismodel.typ.TYP.Companion.NULL_STRING
+import com.hoffi.chassis.chassismodel.typ.TYP.Companion.NULL_UUID
 import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGenerated
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty0
 import kotlin.reflect.KProperty1
 
 object Universe {
@@ -82,34 +88,20 @@ object Universe {
         val typeSpecBuilder = TypeSpec.objectBuilder(UNIVERSE___DEFAULTS)
             .kdocGenerated("Universe $UNIVERSE___DEFAULTS")
             .addSuperinterface(WAS_GENERATED_INTERFACE_ClassName)
-            .addProperty(
-                PropertySpec.builder("DEFAULT_INT", Int::class)
-                .initializer("%L", DEFAULT_INT)
-                .build())
-            .addProperty(
-                PropertySpec.builder("DEFAULT_LONG", Long::class)
-                .initializer("%LL", DEFAULT_LONG)
-                .build())
-            .addProperty(
-                PropertySpec.builder("DEFAULT_STRING", String::class)
-                .initializer("%S", DEFAULT_STRING)
-                .build())
-            .addProperty(
-                PropertySpec.builder("DEFAULT_UUID", classNameUUID)
-                .initializer("%T.fromString(\"${DEFAULT_UUID}\")", classNameUUID)
-                .build())
-            .addProperty(
-                PropertySpec.builder("DEFAULT_INSTANT", classNameInstant)
-                .initializer("%T.fromEpochMilliseconds(${DEFAULT_INSTANT.toEpochMilliseconds()}L)", classNameInstant)
-                .build())
-            .addProperty(
-                PropertySpec.builder("DEFAULT_LOCALDATETIME", classNameLocalDateTime)
-                .initializer("DEFAULT_INSTANT.%M(%T.UTC)", classNameInstant_toLocalDateTime, classNameTimeZone)
-                .build())
-            .addProperty(
-                PropertySpec.builder("DEFAULT_LOCALDATETIME_DB", classNameLocalDateTime)
-                .initializer("%L", "DEFAULT_LOCALDATETIME")
-                .build())
+            .addProperty(PropertySpec.builder("DEFAULT_INT", Int::class).initializer("%L", DEFAULT_INT).build())
+            .addProperty(PropertySpec.builder("DEFAULT_LONG", Long::class).initializer("%LL", DEFAULT_LONG).build())
+            .addProperty(PropertySpec.builder("DEFAULT_STRING", String::class).initializer("%S", DEFAULT_STRING).build())
+            .addProperty(PropertySpec.builder("DEFAULT_UUID", classNameUUID).initializer("%T.fromString(\"${DEFAULT_UUID}\")", classNameUUID).build())
+            .addProperty(PropertySpec.builder("DEFAULT_INSTANT", classNameInstant).initializer("%T.fromEpochMilliseconds(${DEFAULT_INSTANT.toEpochMilliseconds()}L)", classNameInstant).build())
+            .addProperty(PropertySpec.builder("DEFAULT_LOCALDATETIME", classNameLocalDateTime).initializer("DEFAULT_INSTANT.%M(%T.UTC)", classNameInstant_toLocalDateTime, classNameTimeZone).build())
+            .addProperty(PropertySpec.builder("DEFAULT_LOCALDATETIME_DB", classNameLocalDateTime).initializer("%L", "DEFAULT_LOCALDATETIME").build())
+            .addProperty(PropertySpec.builder("NULL_INT", Int::class).initializer("%L", NULL_INT).build())
+            .addProperty(PropertySpec.builder("NULL_LONG", Long::class).initializer("%LL", NULL_LONG).build())
+            .addProperty(PropertySpec.builder("NULL_STRING", String::class).initializer("%S", NULL_STRING).build())
+            .addProperty(PropertySpec.builder("NULL_UUID", classNameUUID).initializer("%T.fromString(\"${NULL_UUID}\")", classNameUUID).build())
+            .addProperty(PropertySpec.builder("NULL_INSTANT", classNameInstant).initializer("%T.fromEpochMilliseconds(${NULL_INSTANT.toEpochMilliseconds()}L)", classNameInstant).build())
+            .addProperty(PropertySpec.builder("NULL_LOCALDATETIME", classNameLocalDateTime).initializer("NULL_INSTANT.%M(%T.UTC)", classNameInstant_toLocalDateTime, classNameTimeZone).build())
+            .addProperty(PropertySpec.builder("NULL_LOCALDATETIME_DB", classNameLocalDateTime).initializer("%L", "NULL_LOCALDATETIME").build())
         val fileSpecUniverseDefaults = FileSpec.builder(universeDefaultsClassName.packageName, universeDefaultsClassName.simpleName)
             .addType(typeSpecBuilder.build()).build()
 
@@ -196,10 +188,9 @@ object Universe {
                     .build())
             .addFunction(
                 FunSpec.builder("mappedBy")
-                    .addModifiers(KModifier.INFIX)
-                    .returns(UUIDTABLE_CLASSNAME)
-                    .addParameter("mappedBy", KProperty1::class.asTypeName().parameterizedBy(WildcardTypeName.producerOf(ANY), ANY.nullable()))
-                    .addStatement("return this")
+                    .returns(Any::class.asTypeName().nullable())
+                    .addParameter("mappedBy", KProperty0::class.asTypeName().parameterizedBy(STAR))
+                    .addStatement("return null")
                     .build())
             .build()
         fileSpec = FileSpec.builder(UUIDTABLE_CLASSNAME.packageName, UUIDTABLE_CLASSNAME.simpleName)

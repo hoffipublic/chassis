@@ -5,8 +5,8 @@ import com.hoffi.chassis.chassismodel.RuntimeDefaults.UUID_PROPNAME
 import com.hoffi.chassis.chassismodel.typ.CollectionTypWrapper
 import com.hoffi.chassis.chassismodel.typ.immutable
 import com.hoffi.chassis.chassismodel.typ.mutable
+import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.codegen.kotlin.whens.WhensGen
-import com.hoffi.chassis.shared.codegen.GenCtxWrapper
 import com.hoffi.chassis.shared.parsedata.ModelClassData
 import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.Tag

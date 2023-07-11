@@ -29,6 +29,12 @@ object RuntimeDefaults {
     val DEFAULT_MEMBER_INSTANT =          DEFAULTS_CLASSNAME.member("DEFAULT_INSTANT")
     val DEFAULT_MEMBER_LOCALDATETIME =    DEFAULTS_CLASSNAME.member("DEFAULT_LOCALDATETIME")
     val DEFAULT_MEMBER_LOCALDATETIME_DB = DEFAULTS_CLASSNAME.member("DEFAULT_LOCALDATETIME_DB")
+    val NULL_MEMBER_INT =              DEFAULTS_CLASSNAME.member("NULL_INT")
+    val NULL_MEMBER_LONG =             DEFAULTS_CLASSNAME.member("NULL_LONG")
+    val NULL_MEMBER_STRING =           DEFAULTS_CLASSNAME.member("NULL_STRING")
+    val NULL_MEMBER_UUID =             DEFAULTS_CLASSNAME.member("NULL_UUID")
+    val NULL_MEMBER_INSTANT =          DEFAULTS_CLASSNAME.member("NULL_INSTANT")
+    val NULL_MEMBER_LOCALDATETIME =    DEFAULTS_CLASSNAME.member("NULL_LOCALDATETIME")
 
     val classNameUUID = ClassName("java.util", "UUID")
     val classNameUUID_randomUUID = classNameUUID.member("randomUUID")
@@ -52,6 +58,13 @@ object RuntimeDefaults {
     val DEFAULT_INITIALIZER_UUID = Initializer.of("%M", DEFAULT_MEMBER_UUID)
     val DEFAULT_INITIALIZER_INSTANT = Initializer.of("%M", DEFAULT_MEMBER_INSTANT)
     val DEFAULT_INITIALIZER_LOCALDATETIME = Initializer.of("%M", DEFAULT_MEMBER_LOCALDATETIME)
+    val NULL_INITIALIZER_INT = Initializer.of("%M", NULL_MEMBER_INT)
+    val NULL_INITIALIZER_LONG = Initializer.of("%M", NULL_MEMBER_LONG)
+    val NULL_INITIALIZER_STRING = Initializer.of("%M", NULL_MEMBER_STRING)
+    val NULL_INITIALIZER_BOOL = Initializer.of("%L", false)
+    val NULL_INITIALIZER_UUID = Initializer.of("%M", NULL_MEMBER_UUID)
+    val NULL_INITIALIZER_INSTANT = Initializer.of("%M", NULL_MEMBER_INSTANT)
+    val NULL_INITIALIZER_LOCALDATETIME = Initializer.of("%M", NULL_MEMBER_LOCALDATETIME)
 
     // kotlin exposed types from kotlinx-datetime are extension functions and not part of the superClass "DslTable"
     val DB_MEMBER_timestamp = MemberName("org.jetbrains.exposed.sql.kotlin.datetime", "timestamp")

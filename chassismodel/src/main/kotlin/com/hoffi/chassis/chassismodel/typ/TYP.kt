@@ -37,7 +37,7 @@ sealed class COLLECTIONTYP {
 
 data class TYPTranslation(val typeName: ParameterizedTypeName, val initializer: Initializer)
 
-sealed class TYP(val kClass: KClass<*>, val defaultInitializer: Initializer, isInterface: Boolean = kClass.java.isInterface) {
+sealed class TYP(val kClass: KClass<*>, val defaultInitializer: Initializer, val defaultNull: Initializer) {
     override fun toString() = this::class.simpleName!!
     val isInterface = kClass.java.isInterface
     //val kType = kClass.createType()
@@ -45,13 +45,13 @@ sealed class TYP(val kClass: KClass<*>, val defaultInitializer: Initializer, isI
 
     //class CLASS : TYP(KClass::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_CLASS)
     //class MODEL : TYP(Any::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_MODEL)
-    class INT : TYP(Integer::class, RuntimeDefaults.DEFAULT_INITIALIZER_INT)
-    class LONG : TYP(Long::class, RuntimeDefaults.DEFAULT_INITIALIZER_LONG)
-    class STRING : TYP(String::class, RuntimeDefaults.DEFAULT_INITIALIZER_STRING)
-    class BOOL : TYP(Boolean::class, RuntimeDefaults.DEFAULT_INITIALIZER_BOOL)
-    class UUID : TYP(java.util.UUID::class, RuntimeDefaults.DEFAULT_INITIALIZER_UUID)
-    class INSTANT : TYP(Instant::class, RuntimeDefaults.DEFAULT_INITIALIZER_INSTANT)
-    class LOCALDATETIME : TYP(LocalDateTime::class, RuntimeDefaults.DEFAULT_INITIALIZER_LOCALDATETIME)
+    class INT : TYP(Integer::class, RuntimeDefaults.DEFAULT_INITIALIZER_INT, RuntimeDefaults.NULL_INITIALIZER_INT)
+    class LONG : TYP(Long::class, RuntimeDefaults.DEFAULT_INITIALIZER_LONG, RuntimeDefaults.NULL_INITIALIZER_LONG)
+    class STRING : TYP(String::class, RuntimeDefaults.DEFAULT_INITIALIZER_STRING, RuntimeDefaults.NULL_INITIALIZER_STRING)
+    class BOOL : TYP(Boolean::class, RuntimeDefaults.DEFAULT_INITIALIZER_BOOL, RuntimeDefaults.NULL_INITIALIZER_BOOL)
+    class UUID : TYP(java.util.UUID::class, RuntimeDefaults.DEFAULT_INITIALIZER_UUID, RuntimeDefaults.NULL_INITIALIZER_UUID)
+    class INSTANT : TYP(Instant::class, RuntimeDefaults.DEFAULT_INITIALIZER_INSTANT, RuntimeDefaults.NULL_INITIALIZER_INSTANT)
+    class LOCALDATETIME : TYP(LocalDateTime::class, RuntimeDefaults.DEFAULT_INITIALIZER_LOCALDATETIME, RuntimeDefaults.NULL_INITIALIZER_LOCALDATETIME)
     companion object {
         val DEFAULT = STRING()
         //val CLASS = CLASS()
@@ -74,6 +74,13 @@ sealed class TYP(val kClass: KClass<*>, val defaultInitializer: Initializer, isI
         val DEFAULT_VARCHAR_LENGTH = C.DEFAULT_VARCHAR_LENGTH
         val DEFAULT_USER = C.DEFAULT_USER
         val DEFAULT_OPTIMISTIC_LOCK_ID = C.DEFAULT_OPTIMISTIC_LOCK_ID
+        val NULL_INT = -2
+        val NULL_LONG = -2L
+        val NULL_STRING = "<NULL>"
+        val NULL_BOOL = false
+        val NULL_UUID = java.util.UUID.fromString("00000000-0000-0000-0000-000000000002")
+        val NULL_INSTANT = Instant.fromEpochMilliseconds(2L)
+        val NULL_LOCALDATETIME = NULL_INSTANT.toLocalDateTime(TimeZone.UTC)
     }
 
     override fun equals(other: Any?): Boolean {

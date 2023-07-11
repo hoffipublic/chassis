@@ -1,14 +1,10 @@
 package com.hoffi.chassis.codegen.kotlin.gens
 
-import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.dsl.GenException
-import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
-import com.hoffi.chassis.shared.codegen.GenCtxWrapper
+import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGenerated
-import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.ModelClassData
-import com.hoffi.chassis.shared.parsedata.Property
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -19,6 +15,10 @@ abstract class AHasPropertys(val modelClassData: ModelClassData)
 context(GenCtxWrapper)
 abstract class AKotlinClass(modelClassData: ModelClassData) : AHasPropertys(modelClassData) {
     override fun toString() = "${this::class.simpleName}(${modelClassData})"
+
+    init {
+        kotlinGenCtx.putKotlinGenClass(modelClassData.modelSubElRef, this)
+    }
 
     var builder = when (modelClassData.kind) {
         TypeSpec.Kind.OBJECT -> {
@@ -39,25 +39,8 @@ abstract class AKotlinClass(modelClassData: ModelClassData) : AHasPropertys(mode
     }
     val constructorBuilder = FunSpec.constructorBuilder()
 
-    var companion: TypeSpec.Builder? = null
-    fun getOrCreateCompanion(): TypeSpec.Builder = if (companion != null) companion!! else { companion = TypeSpec.companionObjectBuilder() ; companion!! }
-
-    val superclassPropsMap: MutableMap<String, Property> by lazy {
-        val allInclSuperclassesProps: MutableMap<String, Property> = mutableMapOf()
-        var extendsEither: EitherTypOrModelOrPoetType? = modelClassData.extends[C.DEFAULT]?.typeClassOrDslRef
-        var extendsModel: EitherTypOrModelOrPoetType.EitherModel? = null
-        if (extendsEither != null && extendsEither is EitherTypOrModelOrPoetType.EitherModel) {
-            extendsModel = extendsEither
-        }
-        while (extendsModel != null) {
-            val genModel: GenModel = genCtx.genModel(extendsModel.modelSubElementRef)
-            allInclSuperclassesProps.putAll(genModel.allProps)
-            extendsEither = genModel.extends[C.DEFAULT]?.typeClassOrDslRef
-            extendsModel = if (extendsEither != null && extendsEither is EitherTypOrModelOrPoetType.EitherModel) extendsEither else null
-        }
-        allInclSuperclassesProps
-    }
-    val propsInclSuperclassPropsMap: MutableMap<String, Property> by lazy { (modelClassData.allProps + superclassPropsMap).toMutableMap() }
+    var companionBuilder: TypeSpec.Builder? = null
+    fun getOrCreateCompanion(): TypeSpec.Builder = companionBuilder ?: TypeSpec.companionObjectBuilder().also { companionBuilder = it }
 
     fun generate(out: Appendable? = null): TypeSpec {
         val fileSpecBuilder = FileSpec.builder(modelClassData.modelClassName.poetType as ClassName)

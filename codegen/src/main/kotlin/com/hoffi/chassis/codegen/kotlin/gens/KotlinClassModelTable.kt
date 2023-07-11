@@ -5,7 +5,7 @@ import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.RuntimeDefaults.UUIDTABLE_CLASSNAME
 import com.hoffi.chassis.chassismodel.RuntimeDefaults.UUID_PROPNAME
 import com.hoffi.chassis.chassismodel.dsl.GenCtxException
-import com.hoffi.chassis.shared.codegen.GenCtxWrapper
+import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
@@ -29,7 +29,7 @@ class KotlinClassModelTable(val tableModel: GenModel.TableModel)
     }
 
     private fun buildExtends() {
-        val isUuidTable = propsInclSuperclassPropsMap.values.filter { Tag.Companion.PRIMARY in it.tags }
+        val isUuidTable = modelClassData.propsInclSuperclassPropsMap.values.filter { Tag.Companion.PRIMARY in it.tags }
         if (isUuidTable.size == 1 && isUuidTable.first().name == UUID_PROPNAME) {
             builder.superclass(UUIDTABLE_CLASSNAME)
             tableModel.isUuidPrimary = true

@@ -2,27 +2,28 @@ package com.hoffi.chassis.codegen.kotlin.gens
 
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.Initializer
+import com.hoffi.chassis.chassismodel.PoetHelpers.nullable
 import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.RuntimeDefaults.UUID_PROPNAME
 import com.hoffi.chassis.chassismodel.dsl.GenException
-import com.hoffi.chassis.chassismodel.typ.CollectionTypWrapper
+import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.chassismodel.typ.TYP
 import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_INT
 import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_VARCHAR_LENGTH
-import com.hoffi.chassis.chassismodel.typ.immutable
-import com.hoffi.chassis.chassismodel.typ.mutable
+import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.codegen.kotlin.whens.WhensGen
 import com.hoffi.chassis.dbwrappers.exposed.DB_EXPOSED.ColumnClassName
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
-import com.hoffi.chassis.shared.codegen.GenCtxWrapper
 import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
+import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.ModelClassData
 import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.Tag
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.asTypeName
 
 context(GenCtxWrapper)
 class KotlinPropertyTable(property: Property, genModel: ModelClassData) : AKotlinProperty(property, genModel) {
@@ -90,12 +91,6 @@ class KotlinPropertyTable(property: Property, genModel: ModelClassData) : AKotli
                 }
             },
             preCollection = {
-                val collMutable = if (Tag.COLLECTION_IMMUTABLE in property.tags) immutable else mutable
-                val collCollectionTypWrapper = CollectionTypWrapper.of(property.collectionType, collMutable, property.isNullable, property.poetType)
-                initBuilder = PropertySpec.builder(property.name, collCollectionTypWrapper.typeName, property.modifiers)
-                if (Tag.NO_DEFAULT_INITIALIZER !in property.tags) {
-                    initializerCodeBlockBuilder.add(Initializer.of(collCollectionTypWrapper.initializer.format, collCollectionTypWrapper.initializer.args).codeBlockFull())
-                }
             },
             isModel = {
                 initBuilder = PropertySpec.builder(property.name, ColumnClassName.parameterizedBy(RuntimeDefaults.classNameUUID), property.modifiers)
@@ -119,18 +114,68 @@ class KotlinPropertyTable(property: Property, genModel: ModelClassData) : AKotli
                 }
             },
             postNonCollection = { },
-            isModelList = { },
-            isModelSet = { },
-            isModelCollection = { },
-            isModelIterable = { },
-            isPoetTypeList = { },
-            isPoetTypeSet = { },
+            isModelList = {
+                //val reffedTable_DTO_GenModel: GenModel = genCtx.genModel(this.modelSubElementRef)
+                val reffedTableDslRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)
+                val reffedTable: GenModel = genCtx.genModel(reffedTableDslRef)
+                val fk = FK(
+                    fromTableRef = reffedTableDslRef,
+                    toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.genModel.modelSubElRef.parentDslRef)),
+                    this@KotlinPropertyTable.property,
+                    COLLECTIONTYP.LIST // <-- differs
+                )
+                kotlinGenCtx.addFK(fk)
+                initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable())
+                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, fk.varName) // placeholder property TODO let's see if exposed explodes on this
+            },
+            isModelSet = {
+                //val reffedTable_DTO_GenModel: GenModel = genCtx.genModel(this.modelSubElementRef)
+                val reffedTableDslRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)
+                val reffedTable: GenModel = genCtx.genModel(reffedTableDslRef)
+                val fk = FK(
+                    fromTableRef = reffedTableDslRef,
+                    toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.genModel.modelSubElRef.parentDslRef)),
+                    this@KotlinPropertyTable.property,
+                    COLLECTIONTYP.SET // <-- differs
+                )
+                kotlinGenCtx.addFK(fk)
+                initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable())
+                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, fk.varName) // placeholder property TODO let's see if exposed explodes on this
+            },
+            isModelCollection = {
+                TODO()
+            },
+            isModelIterable = {
+                TODO()
+            },
+            isPoetTypeList = {
+                initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable()) // TODO()
+                    .addKdoc("not implemented yet")
+                initializerCodeBlockBuilder.add("null")
+            },
+            isPoetTypeSet = {
+                initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable()) // TODO()
+                    .addKdoc("not implemented yet")
+                initializerCodeBlockBuilder.add("null")
+            },
             isPoetTypeCollection = { },
             isPoetTypeIterable = { },
-            isTypList = { },
-            isTypSet = { },
-            isTypCollection = { },
-            isTypIterable = { },
+            isTypList = {
+                initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable()) // TODO()
+                    .addKdoc("not implemented yet")
+                initializerCodeBlockBuilder.add("null")
+            },
+            isTypSet = {
+                initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable()) // TODO()
+                    .addKdoc("not implemented yet")
+                initializerCodeBlockBuilder.add("null")
+            },
+            isTypCollection = {
+                TODO()
+            },
+            isTypIterable = {
+                TODO()
+            },
             postCollection = { },
         )
         //if (property.initializer.hasInitializerAddendum()) {

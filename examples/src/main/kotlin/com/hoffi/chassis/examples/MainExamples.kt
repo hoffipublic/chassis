@@ -5,12 +5,11 @@ import com.hoffi.chassis.codegen.kotlin.KotlinCodeGen
 import com.hoffi.chassis.dsl.internal.DslRun
 import com.hoffi.chassis.examples.basic.baseModelsPersistent
 import com.hoffi.chassis.examples.basic.entities
-import com.hoffi.chassis.shared.codegen.GenCtxWrapper
 import com.hoffi.chassis.shared.codegen.GenRun
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
-import com.hoffi.chassis.shared.dsl.DslRef
+import com.hoffi.chassis.shared.dsl.DslRef.model.Companion.MODELPROTO
 
-object ExamplesMain {
+object MainExamples {
     @JvmStatic
     fun main(args: Array<String>) {
         val examplesRunName = "ExamplesRun"
@@ -50,11 +49,9 @@ object ExamplesMain {
 
         val examplesCodegenRun = GenRun(examplesDslRun.dslCtx.genCtx, examplesRunName)
 
-        with(GenCtxWrapper(examplesCodegenRun.genCtx)) {
-            examplesCodegenRun.start {
-                println("examples/${examplesCodegenRun.runIdentifier}".boxed(postfix = "\n"))
-                KotlinCodeGen().codeGen(DslRef.dto.DTOPROTO)
-            }
+        examplesCodegenRun.start {
+            println("examples/${examplesCodegenRun.runIdentifier}".boxed(postfix = "\n"))
+            KotlinCodeGen(examplesCodegenRun).codeGen(MODELPROTO)
         }
     }
 }

@@ -50,7 +50,7 @@ fun baseModelsPersistent() {
         }
         model(PERSISTENT__PERSISTENT) {
             classModifiers(KModifier.ABSTRACT)
-            property("uuid", TYP.UUID, mutable, Tag.PRIMARY)
+            property("uuid", TYP.UUID, mutable, Tag.PRIMARY, Tag.TO_STRING_MEMBER)
             property("createdAt", TYP.LOCALDATETIME, mutable)
             property("updatedAt", TYP.LOCALDATETIME, mutable)
             property("createUser", TYP.STRING, mutable)

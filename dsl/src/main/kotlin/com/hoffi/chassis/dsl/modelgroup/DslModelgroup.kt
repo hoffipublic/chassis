@@ -15,6 +15,7 @@ import com.hoffi.chassis.shared.helpers.onThrow
 import com.hoffi.chassis.shared.helpers.tryCatch
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.ModelClassData
+import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.parsedata.SharedGatheredExtends
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedNameAndWhereto
@@ -37,6 +38,7 @@ class DslModelgroup(
     val gatherPropertiesImpl: DslGatherPropertiesDelegateImpl                       = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.propertiesOf(simpleName, modelgroupRef)) },
 )
     : ADslClass(),
+    IDslApiConstructorVisibility,
     IDslApiNameAndWheretoWithSubelements by nameAndWheretoWithSubelements,
     IDslApiClassModifiers by classModifiersImpl,
     IDslApiGatherPropertiesModelAndModelSubelementsCommon by gatherPropertiesImpl
@@ -51,6 +53,8 @@ class DslModelgroup(
 
     @DslInstance
     internal val allModelsBlockImpls = mutableSetOf<AllModels>()
+
+    override var constructorVisibility: IDslApiConstructorVisibility.VISIBILITY = IDslApiConstructorVisibility.VISIBILITY.UNSET
 
     context(DslCtxWrapper)
     @DslBlockOn(AllModels::class)
@@ -289,12 +293,12 @@ globalDslCtx = dslCtx // TODO remove workaround
     /** actually gather the reffed propertys */
     fun gatherReferencedPropertys(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
-            for (dslDto: AModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
-                val genModel: ModelClassData = dslCtx.genCtx.genModel(dslDto.selfDslRef)
+            for (modelSubelement: AModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
+                val genModel: ModelClassData = dslCtx.genCtx.genModel(modelSubelement.selfDslRef)
                 val refsToGatherPropsFrom: MutableList<GatherPropertys> = mutableListOf<GatherPropertys>().also { it.addAll(genModel.gatheredPropsDslModelRefs) }
                 while (refsToGatherPropsFrom.isNotEmpty()) {
                     val reffedGatherPropertys: GatherPropertys = refsToGatherPropsFrom.removeFirst()
-                    val reffedDslClass: ADslClass = Either.tryCatch { dslCtx.ctxObj<ADslClass>(reffedGatherPropertys.modelSubelementRef) }.onThrow { throw DslException("$dslDto selfDslRef:'$selfDslRef' tries to gather propertiesOf(...) non-existing ${reffedGatherPropertys.modelSubelementRef} | original: '${reffedGatherPropertys.modelOrModelSubelementRefOriginal}' | expanded: '${reffedGatherPropertys.modelSubelementRefExpanded}'") }
+                    val reffedDslClass: ADslClass = Either.tryCatch { dslCtx.ctxObj<ADslClass>(reffedGatherPropertys.modelSubelementRef) }.onThrow { throw DslException("$modelSubelement selfDslRef:'$selfDslRef' tries to gather propertiesOf(...) non-existing ${reffedGatherPropertys.modelSubelementRef} | original: '${reffedGatherPropertys.modelOrModelSubelementRefOriginal}' | expanded: '${reffedGatherPropertys.modelSubelementRefExpanded}'") }
                     when (reffedDslClass) {
                         is DslModel -> {
                             throw DslException("refs to models should have been resolved while earlier PASSes")
@@ -325,6 +329,27 @@ globalDslCtx = dslCtx // TODO remove workaround
                         }
                     }
                 }
+            }
+        }
+    }
+
+    fun gatherSuperclassPropertys(dslCtx: DslCtx) {
+        val superclassesProps: MutableMap<String, Property> = mutableMapOf()
+        for (dslModel in dslModels) {
+            for (modelSubelement: AModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
+                val genModel: ModelClassData = dslCtx.genCtx.genModel(modelSubelement.selfDslRef)
+                var extendsEither: EitherTypOrModelOrPoetType? = genModel.extends[C.DEFAULT]?.typeClassOrDslRef
+                var extendsModel: EitherTypOrModelOrPoetType.EitherModel? = null
+                if (extendsEither != null && extendsEither is EitherTypOrModelOrPoetType.EitherModel) {
+                    extendsModel = extendsEither
+                }
+                while (extendsModel != null) {
+                    val genModel: GenModel = dslCtx.genCtx.genModel(extendsModel.modelSubElementRef)
+                    superclassesProps.putAll(genModel.allProps)
+                    extendsEither = genModel.extends[C.DEFAULT]?.typeClassOrDslRef
+                    extendsModel = if (extendsEither != null && extendsEither is EitherTypOrModelOrPoetType.EitherModel) extendsEither else null
+                }
+                genModel.superclassProps.putAll(superclassesProps)
             }
         }
     }
