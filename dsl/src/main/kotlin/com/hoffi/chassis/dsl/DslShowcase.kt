@@ -60,12 +60,12 @@ import org.slf4j.LoggerFactory
  */
 
 /** gathered dsl data holder */
-class ShowcaseProps(
+class DslShowcasePropsData(
     var forGen: Int = 0,
     var dslDerivedData: String = C.DEFAULT
 ) {
-    override fun toString() = "ShowcaseProps(forGen=$forGen, dslDerivedData='$dslDerivedData')"
-    override fun equals(other: Any?) = if (this === other) true else { if (other !is ShowcaseProps) false else forGen == other.forGen }
+    override fun toString() = "DslShowcasePropsData(forGen=$forGen, dslDerivedData='$dslDerivedData')"
+    override fun equals(other: Any?) = if (this === other) true else { if (other !is DslShowcasePropsData) false else forGen == other.forGen }
     override fun hashCode() = forGen
 }
 
@@ -97,7 +97,7 @@ interface IDslApiShowcaseBlock : IDslApiShowcaseProps {
 
 interface IDslImplShowcaseProps : IDslApiShowcaseProps {
     /** contains its (simpleName specific) data holder */
-    var showcaseProps: ShowcaseProps
+    var dslShowcasePropsData: DslShowcasePropsData
 }
 interface IDslImplShowcaseDelegate : IDslApiShowcaseDelegate {
     /** contains all (simpleName specific) data holders */
@@ -111,11 +111,12 @@ interface IDslImplShowcaseBlock : IDslImplShowcaseProps, IDslApiShowcaseBlock
 /** outer scope */
 context(DslCtxWrapper)
 class DslShowcaseDelegateImpl(
-    simpleNameOfParentDslBlock: String,
-    parentRef: IDslRef
-) : ADslDelegateClass(simpleNameOfParentDslBlock, parentRef), IDslImplShowcaseDelegate {
+    simpleNameOfDelegator: String,
+    delegatorRef: IDslRef
+) : ADslDelegateClass(simpleNameOfDelegator, delegatorRef), IDslImplShowcaseDelegate {
+    override fun toString() = "${this::class.simpleName}(${theShowcaseBlocks.size})"
     val log = LoggerFactory.getLogger(javaClass)
-    override val selfDslRef = DslRef.showcase(simpleNameOfParentDslBlock, parentRef)
+    override val selfDslRef = DslRef.showcase(simpleNameOfDelegator, delegatorRef)
 
     /** different gathered dsl data holder for different simpleName's inside the BlockImpl's */
     override var theShowcaseBlocks: MutableMap<String, DslShowcaseBlockImpl> = mutableMapOf()
@@ -141,31 +142,34 @@ class DslShowcaseDelegateImpl(
 context(DslCtxWrapper)
 class DslShowcaseBlockImpl(
     val simpleName: String,
-    parentRef: IDslRef // that should be the Delegate of this and NOT the parentRef in the Dsl
+    override val selfDslRef: IDslRef // that should be the Delegate of this and NOT the parentRef in the Dsl
 )
     : ADslClass(), IDslImplShowcaseBlock
 {
-    override val selfDslRef = DslRef.showcase(simpleName, parentRef)
+    override fun toString() = "${this::class.simpleName}(${dslShowcasePropsData})"
+    val log = LoggerFactory.getLogger(javaClass)
+
+    val showcaseDelegate: DslShowcaseDelegateImpl = dslCtx.ctxObj(selfDslRef)
 
     override var dslProp: Int = -1
-    override var showcaseProps = ShowcaseProps()
+    override var dslShowcasePropsData = DslShowcasePropsData()
 
     override fun String.unaryPlus() {
-        showcaseProps.dslDerivedData = this
+        dslShowcasePropsData.dslDerivedData = this
     }
     override fun String.unaryMinus() {
-        showcaseProps.dslDerivedData = this
+        dslShowcasePropsData.dslDerivedData = this
     }
 
     override fun IDslApiShowcaseProps.minusAssign(s: String) {
-        this@DslShowcaseBlockImpl.showcaseProps.dslDerivedData = s
+        this@DslShowcaseBlockImpl.dslShowcasePropsData.dslDerivedData = s
     }
 
     override fun String.not() {
-        showcaseProps.dslDerivedData = "before '${showcaseProps.dslDerivedData}' got '$this' -> opposite of what it was before"
+        dslShowcasePropsData.dslDerivedData = "before '${dslShowcasePropsData.dslDerivedData}' got '$this' -> opposite of what it was before"
     }
 
     override fun IDslApiShowcaseProps.rem(rem: String) {
-        this@DslShowcaseBlockImpl.showcaseProps.dslDerivedData += " % $rem"
+        this@DslShowcaseBlockImpl.dslShowcasePropsData.dslDerivedData += " % $rem"
     }
 }

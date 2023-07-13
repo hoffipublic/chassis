@@ -1,7 +1,7 @@
 package com.hoffi.chassis.dsl.scratchdslEXAMPLES
 
 import com.hoffi.chassis.chassismodel.C
-import com.hoffi.chassis.dsl.ShowcaseProps
+import com.hoffi.chassis.dsl.DslShowcasePropsData
 import com.hoffi.chassis.dsl.internal.DslRun
 import com.hoffi.chassis.dsl.internal.IDslClass
 import com.hoffi.chassis.dsl.modelgroup.DslModel
@@ -116,8 +116,8 @@ fun main() {
     val element: IDslClass = aDslRun.dslCtx.allCtxObjs.entries.first { it.key == elementRef }.value
     @Suppress("UNUSED_VARIABLE") val breakpoint = 1
     val model = element as DslModel
-    val showcasePropsDefault = model.showcaseImpl.theShowcaseBlocks[C.DEFAULT]?.showcaseProps ?: ShowcaseProps()
-    val derivedData = showcasePropsDefault.dslDerivedData
+    val dslShowcasePropsDataDefault = model.showcaseImpl.theShowcaseBlocks[C.DEFAULT]?.dslShowcasePropsData ?: DslShowcasePropsData()
+    val derivedData = dslShowcasePropsDataDefault.dslDerivedData
     println("derivedData: '$derivedData'")
 
 }

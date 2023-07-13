@@ -12,6 +12,7 @@ import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWh
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedNameAndWhereto
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.StrategyNameAndWhereto
 import com.hoffi.chassis.shared.shared.Extends
+import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.GatherPropertys
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.squareup.kotlinpoet.KModifier
@@ -124,6 +125,7 @@ interface IDslApiModel
     IDslApiPropFuns,
     IDslApiNameAndWheretoWithSubelements,
     IDslApiClassModsDelegate,
+    IDslApiFillerDelegate,
     IDslApiShowcaseDelegate
 {
     @DslBlockOn(DslDto::class)
@@ -143,6 +145,7 @@ class DslModel constructor(
     val gatherPropertiesImpl: DslGatherPropertiesDelegateImpl = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.propertiesOf(simpleName, modelRef)) },
     val classModsImpl: DslClassModsDelegateImpl               = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.classMods(simpleName, modelRef)) },
     val extendsImpl: DslExtendsDelegateImpl                   = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.extends(simpleName, modelRef)) },
+    val fillerImpl: DslFillerDelegateImpl                     = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.filler(simpleName, modelRef)) },
     val showcaseImpl: DslShowcaseDelegateImpl                 = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.showcase(simpleName, modelRef)) },
     //val propsImpl: DslPropsDelegate                           = this@DslCtxWrapper.dslCtx.ctxObjOrCreate(DslRef.properties(simpleName, modelRef)),
     //val nameAndWheretoWithSubelements: DslNameAndWheretoWithSubelementsDelegateImpl = this@DslCtxWrapper.dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto(simpleName, modelRef)),
@@ -160,6 +163,7 @@ class DslModel constructor(
     IDslApiGatherPropertiesModelAndModelSubelementsCommon by gatherPropertiesImpl,
     IDslApiClassModsDelegate by classModsImpl,
     IDslApiExtendsDelegate by extendsImpl,
+    IDslApiFillerDelegate by fillerImpl,
     IDslApiShowcaseDelegate by showcaseImpl
 {
     val log = LoggerFactory.getLogger(javaClass)
@@ -174,8 +178,8 @@ class DslModel constructor(
         this@DslCtxWrapper.dslCtx.addToCtx(showcaseImpl)
     }
 
-    val dslDtos = mutableMapOf<String, DslDto>()
-    val dslTables = mutableMapOf<String, DslTable>()
+    val dslDtos: MutableMap<String, DslDto> = mutableMapOf()
+    val dslTables: MutableMap<String, DslTable> = mutableMapOf()
 
     // IDslApiKindClassObjectOrInterface
     override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.UNDEFINED
@@ -228,7 +232,25 @@ globalDslCtx = dslCtx // TODO remove workaround
     }
 
     fun finish(dslCtx: DslCtx) {
-
+        // consistency check if filler referenced models really exist and do not point into "nirvana"
+        for (entry in fillerImpl.theFillerDatas) {
+            val simpleName = entry.key
+            for (fillerData: FillerData in entry.value) {
+                try {
+                    dslCtx.ctxObj<ADslClass>(fillerData.toDslRef)
+                } catch (e: Exception) {
+                    throw DslException("filler toDslRef: '${fillerData.toDslRef}' does not exist in DslCtx")
+                }
+            }
+            for (fillerData: FillerData in entry.value) {
+                try {
+                    dslCtx.ctxObj<ADslClass>(fillerData.fromDslRef)
+                } catch (e: Exception) {
+                    throw DslException("filler toDslRef: '${fillerData.fromDslRef}' does not exist in DslCtx")
+                }
+            }
+        }
+        dslCtx.genCtx.fillerDatas.putAll(fillerImpl.theFillerDatas)
     }
     fun prepareNameAndWheretos(dslCtx: DslCtx) {
         val gatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(modelRef)
@@ -285,6 +307,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                 DslGatherPropertiesDelegateImpl(C.NULLSTRING, IDslRef.NULL),
                 DslClassModsDelegateImpl(C.NULLSTRING, IDslRef.NULL),
                 DslExtendsDelegateImpl(C.NULLSTRING, IDslRef.NULL),
+                DslFillerDelegateImpl(C.NULLSTRING, IDslRef.NULL),
                 DslShowcaseDelegateImpl(C.NULLSTRING, IDslRef.NULL)
             )
         }

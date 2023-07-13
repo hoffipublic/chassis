@@ -1,6 +1,7 @@
 package com.hoffi.chassis.dsl.modelgroup
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.dsl.internal.ADslDelegateClass
 import com.hoffi.chassis.dsl.internal.ChassisDslMarker
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
@@ -20,7 +21,7 @@ interface IDslApiGatherPropertiesProp
 interface IDslApiGatherPropertiesModelAndModelSubelementsCommon : IDslApiModelReffing {
     fun propertiesOfSuperclasses()
     fun propertiesOf(dslModelOrElementRefString: String,                   gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
-    fun propertiesOf(dslModelOrElementRef: DslRef.IModelOrModelSubelement, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+    fun propertiesOf(dslModelOrElementRef: IDslRef, gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
 }
 @ChassisDslMarker
 interface IDslApiGatherPropertiesElementsOnlyCommon : IDslApiGatherPropertiesProp {
@@ -72,10 +73,11 @@ class DslGatherPropertiesDelegateImpl(
     }
 
     override fun propertiesOf(
-        dslModelOrElementRef: DslRef.IModelOrModelSubelement,
+        dslModelOrElementRef: IDslRef,
         gatherPropertiesEnum: GatherPropertiesEnum
     ) {
         if (dslCtx.currentPASS != dslCtx.PASS_5_REFERENCING) return
+        if (dslModelOrElementRef !is DslRef.IModelOrModelSubelement) throw DslException("$this cannot reference a non-model/non-modelSubelement (dto, table, ...")
         theGatherPropertys.add(GatherPropertys(dslModelOrElementRef, gatherPropertiesEnum))
     }
 
@@ -104,7 +106,11 @@ class DslGatherPropertiesDelegateImpl(
 
     val modelReffing = DslImplModelReffing(this)
 
-    override fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): DslRef.IModelOrModelSubelement {
+    override fun MODELREFENUM.of(thisModelgroupSubElementRef: IDslRef): IDslRef {
+        return modelReffing.fakeOf(this, thisModelgroupSubElementRef)
+    }
+
+    override fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): IDslRef {
         return modelReffing.fakeOf(this, thisModelgroupSubElementSimpleName)
     }
 
@@ -112,7 +118,7 @@ class DslGatherPropertiesDelegateImpl(
         return modelReffing.fakeInModelgroup(this, otherModelgroupSimpleName)
     }
 
-    override fun OtherModelgroupSubelementWithSimpleNameDefault.withModelName(modelName: String): DslRef.IModelOrModelSubelement {
+    override fun OtherModelgroupSubelementWithSimpleNameDefault.withModelName(modelName: String): IDslRef {
         return modelReffing.fakeWithModelName(this, modelName)
     }
 }

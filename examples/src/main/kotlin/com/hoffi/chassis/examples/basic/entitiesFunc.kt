@@ -14,8 +14,7 @@ import com.hoffi.chassis.dsl.modelgroup.IDslApiConstructorVisibility.VISIBILITY.
 import com.hoffi.chassis.dsl.scratchdslEXAMPLES.COMMON__PERSISTENT_OPTIMISTIC
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.Tag
-import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
-import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.MODEL
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.*
 import com.hoffi.generated.universe.Dummy
 
 const val ENTITYGROUP = "Entitygroup"
@@ -64,8 +63,8 @@ fun entities() {
             property("aLocalDateTime", TYP.LOCALDATETIME, mutable)
             //property("someObject", Dummy::class, mutable, Tag.NO_DEFAULT_INITIALIZER, Tag.TRANSIENT)
             property("someObject", Dummy::class, mutable, Initializer.of("%T.%L", Dummy::class, "NULL"), length = C.DEFAULT_INT, Tag.TRANSIENT)
-            property("someModelObject", MODELREFENUM.DTO of ENTITY__SUBENTITY, mutable)
-            property("subentitys", "modelgroup:$ENTITYGROUP|model:$ENTITY__SUBENTITY", MODELREFENUM.DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER, Tag.NULLABLE)
+            property("someModelObject", DTO of ENTITY__SUBENTITY, mutable)
+            property("subentitys", "modelgroup:$ENTITYGROUP|model:$ENTITY__SUBENTITY", DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER, Tag.NULLABLE)
             property("listOfStrings", TYP.STRING, COLLECTIONTYP.LIST, Tag.COLLECTION_IMMUTABLE, Tag.CONSTRUCTOR)
 
 //            manyToMany(SIMPLE__SUBENTITY) {
@@ -95,7 +94,7 @@ fun entities() {
                     replaceSuperclass = true
                 }
 
-                propertiesOf(MODELREFENUM.DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+                propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
                 initializer("name", APPEND, ".uniqueIndex()")
                 initializer("prio", APPEND, "/* some table prio comment */")
                 //alterPropertyForDB("name", "uniqueIndex()")
@@ -125,7 +124,7 @@ fun entities() {
                     + ( (MODEL inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) ) // withName COMMON__PERSISTENT) //
                 }
                 property("subEntityDtoSpecificProp", TYP.STRING, mutable = mutable, Tag.CONSTRUCTOR)
-                property("entityBackreference", MODELREFENUM.DTO of ENTITY__ENTITY, mutable, Tag.TRANSIENT)
+                property("entityBackreference", DTO of ENTITY__ENTITY, mutable, Tag.TRANSIENT)
 
 //                function("someInit") {
 //                    addModifiers(KModifier.OVERRIDE, KModifier.PROTECTED)
@@ -139,14 +138,17 @@ fun entities() {
 //                addToStringMembers("dtoSpecificProp")
             }
             table {
-                propertiesOf(MODELREFENUM.DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+                propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
             }
-//            filler {
-//                +GENS.DTO
-//                fill(GENS.DTO mutual GENS.TABLE)
-//                fill(GENS.DTO from GENS.DTO)
-//                //from(GENS.TABLE to GENS.DTO)
-//            }
+            filler {
+                +DTO // DTO filled by a DTO
+                (DTO mutual TABLE) //.copyBoundries(IGNORE, DTO, TABLE)
+                (DTO mutual TABLE) //.copyBoundry(IGNORE, DTO, "entityBackreference").copyBoundry(IGNORE, TABLE, "entityBackreference")
+                DTO from TABLE
+                TABLE from DTO
+                DTO from (DTO of ENTITY__SUBENTITY)
+                (DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) from DTO
+            }
         }
 
 //        // ================================================================================================================================
