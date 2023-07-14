@@ -124,31 +124,31 @@ class DslFillerBlockImpl(val simpleName: String, override val selfDslRef: IDslRe
 
     override fun MODELREFENUM.mutual(other: MODELREFENUM): FillerData {
         val fillerData = this from other
-        val mutualFillerData = fillerData(fillerData.fromDslRef, fillerData.toDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
+        val mutualFillerData = fillerData(fillerData.sourceDslRef, fillerData.targetDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
         return fillerData
     }
 
     override fun MODELREFENUM.mutual(other: IDslRef): FillerData {
         val fillerData = this from other
-        val mutualFillerData = fillerData(fillerData.fromDslRef, fillerData.toDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
+        val mutualFillerData = fillerData(fillerData.sourceDslRef, fillerData.targetDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
         return fillerData
     }
 
     override fun MODELREFENUM.mutual(other: String): FillerData {
         val fillerData = this from other
-        val mutualFillerData = fillerData(fillerData.fromDslRef, fillerData.toDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
+        val mutualFillerData = fillerData(fillerData.sourceDslRef, fillerData.targetDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
         return fillerData
     }
 
     override fun IDslRef.mutual(other: MODELREFENUM): FillerData {
         val fillerData = this from other
-        val mutualFillerData = fillerData(fillerData.fromDslRef, fillerData.toDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
+        val mutualFillerData = fillerData(fillerData.sourceDslRef, fillerData.targetDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
         return fillerData
     }
 
     override fun IDslRef.mutual(other: IDslRef): FillerData {
         val fillerData = this from other
-        val mutualFillerData = fillerData(fillerData.fromDslRef, fillerData.toDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
+        val mutualFillerData = fillerData(fillerData.sourceDslRef, fillerData.targetDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
         return fillerData
     }
 

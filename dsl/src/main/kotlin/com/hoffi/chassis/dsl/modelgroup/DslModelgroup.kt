@@ -350,6 +350,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                     extendsModel = if (extendsEither != null && extendsEither is EitherTypOrModelOrPoetType.EitherModel) extendsEither else null
                 }
                 genModel.superclassProps.putAll(superclassesProps)
+                //genModel.initByRefProps()
             }
         }
     }

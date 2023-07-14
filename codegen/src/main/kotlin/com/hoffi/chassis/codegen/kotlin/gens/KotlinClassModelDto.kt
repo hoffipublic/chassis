@@ -265,16 +265,14 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                 .initializer(nullInitializerBlock)
                 .build())
 
-        //@JvmStatic
-        //public fun _internal_create(): SimpleEntityDto = SimpleEntityDto(DEFAULT_STRING, DEFAULT_STRING, DEFAULT_STRING, mutableListOf(), mutableSetOf())
+        //@JvmStatic /public fun _internal_create(): SimpleEntityDto = SimpleEntityDto(DEFAULT_STRING, DEFAULT_STRING, DEFAULT_STRING, mutableListOf(), mutableSetOf())
             .addFunction(FunSpec.builder("_internal_create")
                 .returns(modelClassData.poetType)
                 .addAnnotation(JvmStatic::class)
                 .addCode(defaultInitializerBlock)
                 .build())
 
-        //@JvmStatic
-        //public fun _internal_createWithUuid(): SimpleEntityDto = _internal_create().apply { uuid = Uuid.randomUUID() }
+        //@JvmStatic public fun _internal_createWithUuid(): SimpleEntityDto = _internal_create().apply { uuid = Uuid.randomUUID() }
         if ( modelClassData.isUuidPrimary) {
             buildCodeBlock { add(".apply { %L = %T.%M() }", UUID_PROPNAME, classNameUUID, classNameUUID_randomUUID) }
             companionBuilder
@@ -285,6 +283,38 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                     .build())
         }
 
+        //@JvmStatic public fun createShallowWithNewEmptyModels(): SimpleEntityDto
+        var funSpecBuilder = FunSpec.builder("createShallowWithNewEmptyModels")
+            .returns(modelClassData.poetType)
+            .addAnnotation(JvmStatic::class)
+            .addStatement("val %L = _internal_createWithUuid()", modelClassData.asVarName)
+        for (prop in modelClassData.directProps.values) {
+            if (prop.eitherTypModelOrClass !is EitherTypOrModelOrPoetType.EitherModel) continue
+            when (prop.collectionType) {
+                is COLLECTIONTYP.NONE -> funSpecBuilder.addStatement("%L.%L = %T._internal_createWithUuid()", modelClassData.asVarName, prop.name, prop.poetType)
+                else -> {}
+            }
+        }
+        funSpecBuilder.addStatement("return %L", modelClassData.asVarName)
+        companionBuilder.addFunction(funSpecBuilder.build())
+
+        //@JvmStatic public fun createDeepWithNewEmptyModels(): SimpleEntityDto
+        funSpecBuilder = FunSpec.builder("createDeepWithNewEmptyModels")
+            .returns(modelClassData.poetType)
+            .addAnnotation(JvmStatic::class)
+            .addStatement("val %L = _internal_createWithUuid()", modelClassData.asVarName)
+        for (prop in modelClassData.directProps.values) {
+            if (prop.eitherTypModelOrClass !is EitherTypOrModelOrPoetType.EitherModel) continue
+            when (prop.collectionType) {
+                is COLLECTIONTYP.NONE -> {
+                    funSpecBuilder.addStatement("/* beware of recursive calls, if Type or some submodel of it has a reference to this */")
+                    funSpecBuilder.addStatement("%L.%L = %T.createDeepWithNewEmptyModels()", modelClassData.asVarName, prop.name, prop.poetType)
+                }
+                else -> { }
+            }
+        }
+        funSpecBuilder.addStatement("return %L", modelClassData.asVarName)
+        companionBuilder.addFunction(funSpecBuilder.build())
 
         if ( ! modelClassData.constructorVisibility) {
             companionBuilder

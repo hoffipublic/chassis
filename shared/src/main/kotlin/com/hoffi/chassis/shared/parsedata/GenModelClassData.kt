@@ -39,8 +39,19 @@ abstract class ModelClassData(
 
     var isUuidPrimary = false
 
-    // TODO delegate to concrete sealed class implementation
-//    val modelFunSpecs = mutableMapOf<String, FunSpec.Builder>()
+//    lateinit var byRefAllProps: MutableMap<DslRef.ISubElementLevel, MutableSet<Property>>
+//    lateinit var byRefSuperclassProps: MutableMap<DslRef.ISubElementLevel, MutableSet<Property>>
+//    fun initByRefProps() {
+//        byRefAllProps = mutableMapOf()
+//        for (prop in allProps.values) {
+//            byRefAllProps.getOrPut(prop.containedInSubelementRef) { mutableSetOf() }.add(prop)
+//        }
+//        byRefSuperclassProps = mutableMapOf()
+//        for (prop in superclassProps.values) {
+//            byRefSuperclassProps.getOrPut(prop.containedInSubelementRef) { mutableSetOf() }.add(prop)
+//        }
+//    }
+
 //    val incomingFKs = sortedSetOf<Models.DslFK>() // TODO are these really used? see AKotlinClass
 //    val outgoingFKs = sortedSetOf<Models.DslFK>() // TODO are these really used? see AKotlinClass
 

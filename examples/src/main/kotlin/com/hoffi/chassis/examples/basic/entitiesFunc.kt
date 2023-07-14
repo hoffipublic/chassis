@@ -99,13 +99,16 @@ fun entities() {
                 initializer("prio", APPEND, "/* some table prio comment */")
                 //alterPropertyForDB("name", "uniqueIndex()")
             }
-//            filler {
-//                +GENS.DTO
-//                fill(GENS.DTO, CopyBoundry of COPYTYPE.IGNORE forPropRef SIMPLE__SUBENTITY propRef "someModelObject")
-//                fill(GENS.DTO, CopyBoundry of COPYTYPE.IGNORE forPropRef "$SIMPLE__SUBENTITY:someModelObject")
-//                fill(GENS.DTO mutual GENS.TABLE, CopyBoundry of COPYTYPE.INSTANCE forPropRef SIMPLE__SUBENTITY propRef "someModelObject")
-//                fill(GENS.DTO from GENS.TABLE)
-//                fill(GENS.TABLE from GENS.DTO)
+            filler {
+                +DTO // DTO filled by a DTO
+                (DTO mutual TABLE) //.copyBoundries(IGNORE, DTO, TABLE)
+                (DTO mutual TABLE) //.copyBoundry(IGNORE, DTO, "entityBackreference").copyBoundry(IGNORE, TABLE, "entityBackreference")
+                DTO from TABLE
+                TABLE from DTO
+                DTO from (DTO of ENTITY__SUBENTITY)
+                //(DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) from DTO
+            }
+
         }
 //
 //        // ================================================================================================================================
@@ -139,15 +142,6 @@ fun entities() {
             }
             table {
                 propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
-            }
-            filler {
-                +DTO // DTO filled by a DTO
-                (DTO mutual TABLE) //.copyBoundries(IGNORE, DTO, TABLE)
-                (DTO mutual TABLE) //.copyBoundry(IGNORE, DTO, "entityBackreference").copyBoundry(IGNORE, TABLE, "entityBackreference")
-                DTO from TABLE
-                TABLE from DTO
-                DTO from (DTO of ENTITY__SUBENTITY)
-                (DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) from DTO
             }
         }
 

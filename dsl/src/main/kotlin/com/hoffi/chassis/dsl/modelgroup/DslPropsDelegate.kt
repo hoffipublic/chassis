@@ -46,6 +46,7 @@ class DslModelProp constructor(
         val genProperty = Property(
             name,
             propRef,
+            modelSubelementRef,
             eitherTypModelOrClass.finish(initializerReplaceAppendOrModify[modelSubelementRef] ?: ReplaceAppendOrModify.APPEND, initializerFormatAddendum[modelSubelementRef] ?: "", initializerArgsAddendum[modelSubelementRef] ?: mutableListOf()),
             Mutable(mutable.bool),
             modifiers.toMutableSet(),

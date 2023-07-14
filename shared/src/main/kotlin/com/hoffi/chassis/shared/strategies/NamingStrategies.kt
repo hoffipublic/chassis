@@ -52,7 +52,7 @@ object ClassNameStrategyCamelCasePrefixed : IClassNameStrategy {
         }
     }
     override fun asVarname(className: String, prefix: String, postfix: String): String {
-        return MixedCaseString(joinName(prefix, "XXX"+className, postfix)).toLowerCamelCase()
+        return MixedCaseString(joinName(prefix, className, postfix)).toLowerCamelCase()
     }
 }
 

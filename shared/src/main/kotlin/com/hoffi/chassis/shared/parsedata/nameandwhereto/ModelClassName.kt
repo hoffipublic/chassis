@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory
 interface IModelClassName {
     var modelOrTypeNameString: String
     var poetType: TypeName
+    val poetTypeSimpleName: String
     val tableName: String
     val asVarName: String
 }
@@ -44,6 +45,7 @@ class ModelClassName constructor(
     override var poetType: TypeName
         get() = poetTypeDirect ?: poetTypeDslModel
         set(value) { poetTypeDirect = value }
+    override val poetTypeSimpleName: String by lazy { (poetType as ClassName).simpleName }
     private val poetTypeDslModel: TypeName by lazy { classNameStrategy.poetType(modelClassData, modelOrTypeNameString, "${basePackage.ifNotBlank{"$basePackage."}}$packageName", classPrefix, classPostfix) as ClassName }
     override val asVarName: String by lazy { classNameStrategy.asVarname(modelOrTypeNameString, classPrefix, classPostfix) }
     override val tableName: String by lazy { tableNameStrategy.tableName(modelOrTypeNameString) /*, classPrefix, classPostfix)*/ }

@@ -237,20 +237,22 @@ globalDslCtx = dslCtx // TODO remove workaround
             val simpleName = entry.key
             for (fillerData: FillerData in entry.value) {
                 try {
-                    dslCtx.ctxObj<ADslClass>(fillerData.toDslRef)
+                    dslCtx.ctxObj<ADslClass>(fillerData.targetDslRef)
                 } catch (e: Exception) {
-                    throw DslException("filler toDslRef: '${fillerData.toDslRef}' does not exist in DslCtx")
+                    throw DslException("filler toDslRef: '${fillerData.targetDslRef}' does not exist in DslCtx")
                 }
             }
             for (fillerData: FillerData in entry.value) {
                 try {
-                    dslCtx.ctxObj<ADslClass>(fillerData.fromDslRef)
+                    dslCtx.ctxObj<ADslClass>(fillerData.sourceDslRef)
                 } catch (e: Exception) {
-                    throw DslException("filler toDslRef: '${fillerData.fromDslRef}' does not exist in DslCtx")
+                    throw DslException("filler toDslRef: '${fillerData.sourceDslRef}' does not exist in DslCtx")
                 }
             }
         }
-        dslCtx.genCtx.fillerDatas.putAll(fillerImpl.theFillerDatas)
+        for ((simpleName, setOfFillerDatas) in fillerImpl.theFillerDatas) {
+            dslCtx.genCtx.fillerDatas.getOrPut(simpleName) { mutableMapOf() }[selfDslRef] = setOfFillerDatas
+        }
     }
     fun prepareNameAndWheretos(dslCtx: DslCtx) {
         val gatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(modelRef)

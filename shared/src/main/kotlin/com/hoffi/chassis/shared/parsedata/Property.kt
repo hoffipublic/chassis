@@ -15,9 +15,10 @@ import com.hoffi.chassis.shared.strategies.VarNameStrategy
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeName
 
-class Property constructor(
+class Property(
     val dslPropName: String,
     val propRef: DslRef.prop,
+    val containedInSubelementRef: DslRef.IModelSubelement,
     var eitherTypModelOrClass: EitherTypOrModelOrPoetType,
     val mutable: Mutable = Mutable(false),
     val modifiers: MutableSet<KModifier> = mutableSetOf(),
