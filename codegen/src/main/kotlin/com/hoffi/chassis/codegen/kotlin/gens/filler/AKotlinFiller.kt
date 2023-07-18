@@ -17,16 +17,43 @@ import org.slf4j.LoggerFactory
 
 context(GenCtxWrapper)
 abstract class AKotlinFiller(fillerData: FillerData, val modelrefenum: MODELREFENUM) {
-    private val fillerDataToDslRef = fillerData.targetDslRef
-    override fun toString() = "${this::class.simpleName}(${fillerDataToDslRef})"
+    private val fillerDataTargetDslRef = fillerData.targetDslRef
+    var currentBuildFillerData: FillerData = fillerData
+    override fun toString() = "${this::class.simpleName}(current${currentBuildFillerData})"
     protected val log = LoggerFactory.getLogger(this::class.java)
     val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
-    val toKotlinClass: AKotlinClass = kotlinGenCtx.kotlinGenClass(fillerData.targetDslRef)
-    val toVarNamePostfix = (targetGenModel.poetType as ClassName).simpleName
+    val targetKotlinClass: AKotlinClass = kotlinGenCtx.kotlinGenClass(fillerData.targetDslRef)
+    val targetVarNamePostfix = (targetGenModel.poetType as ClassName).simpleName
     val alreadyCreated: MutableSet<IDslRef> = mutableSetOf()
 
-    val fillerPoetTypeSimpleName = "Filler${targetGenModel.poetTypeSimpleName}"
-    val poetTypeFiller = ClassName("${(targetGenModel.poetType as ClassName).packageName}.filler", fillerPoetTypeSimpleName)
+    val fillerPoetTypeSimpleName = when (modelrefenum) {
+        MODELREFENUM.DTO -> "Filler${targetGenModel.poetTypeSimpleName}"
+        MODELREFENUM.TABLE -> if (targetGenModel !is GenModel.TableModel) {
+            "Filler${genCtx.genModel(fillerData.sourceDslRef).poetTypeSimpleName}"
+        } else {
+            "Filler${targetGenModel.poetTypeSimpleName}"
+        }
+        MODELREFENUM.MODEL -> throw GenException("${this::class.simpleName} for MODEL is not allowed!")
+    }
+    val poetTypeFiller = when (modelrefenum) {
+        MODELREFENUM.DTO -> ClassName("${(targetGenModel.poetType as ClassName).packageName}.filler", fillerPoetTypeSimpleName)
+        MODELREFENUM.TABLE -> if (targetGenModel !is GenModel.TableModel) {
+            ClassName("${(genCtx.genModel(fillerData.sourceDslRef).poetType as ClassName).packageName}.filler", fillerPoetTypeSimpleName)
+        } else {
+            ClassName("${(targetGenModel.poetType as ClassName).packageName}.filler", fillerPoetTypeSimpleName)
+        }
+        MODELREFENUM.MODEL -> throw GenException("${this::class.simpleName} for MODEL is not allowed!")
+    }
+    val fillerPath = when (modelrefenum) {
+        MODELREFENUM.DTO -> targetGenModel.modelClassName.basePath / targetGenModel.modelClassName.path
+        MODELREFENUM.TABLE -> if (targetGenModel !is GenModel.TableModel) {
+            val sourceGenModel = genCtx.genModel(fillerData.sourceDslRef)
+            sourceGenModel.modelClassName.basePath / sourceGenModel.modelClassName.path
+        } else {
+            targetGenModel.modelClassName.basePath / targetGenModel.modelClassName.path
+        }
+        MODELREFENUM.MODEL -> throw GenException("${this::class.simpleName} for MODEL is not allowed!")
+    }
     val builder = TypeSpec.objectBuilder(poetTypeFiller).apply {
         kdocGeneratedFiller(genCtx, fillerData)
         addSuperinterface(RuntimeDefaults.WAS_GENERATED_INTERFACE_ClassName)
@@ -46,7 +73,7 @@ abstract class AKotlinFiller(fillerData: FillerData, val modelrefenum: MODELREFE
             fileSpec.writeTo(out)
         } else {
             try {
-                fileSpec.writeTo((targetGenModel.modelClassName.basePath / targetGenModel.modelClassName.path).toNioPath())
+                fileSpec.writeTo(fillerPath.toNioPath())
             } catch (e: Exception) {
                 throw GenException(e.message ?: "unknown error", e)
             }

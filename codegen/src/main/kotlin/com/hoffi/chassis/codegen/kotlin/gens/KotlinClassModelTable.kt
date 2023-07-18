@@ -14,7 +14,7 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.TypeSpec
 
 context(GenCtxWrapper)
-class KotlinClassModelTable(val tableModel: GenModel.TableModel)
+class KotlinClassModelTable constructor(val tableModel: GenModel.TableModel)
     : AKotlinClass(tableModel)
 {
     fun build(): TypeSpec.Builder {

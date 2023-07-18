@@ -17,7 +17,6 @@ import com.squareup.kotlinpoet.KModifier
 
 context(GenCtxWrapper)
 class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELREFENUM.DTO) {
-    var currentBuildFillerData: FillerData = fillerData
     private var cloneFillersNotCreated = true
 
     override fun build(fillerData: FillerData) {
@@ -26,9 +25,6 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELRE
         else alreadyCreated.add(fillerData.sourceDslRef)
         val sourceGenModel: GenModel = genCtx.genModel(fillerData.sourceDslRef)
         val sourceKotlinClass: AKotlinClass = kotlinGenCtx.kotlinGenClass(fillerData.sourceDslRef)
-        //val varNamesPostfix = (fromGenModel.poetType as ClassName).simpleName
-        //val sourceVarName = "source${varNamesPostfix}"
-        //val targetVarName = "target${varNamesPostfix}"
         val intersectPropsData = IntersectPropertys.intersectPropsOf(targetGenModel, sourceGenModel, sourceKotlinClass, "", "")
 
         if (cloneFillersNotCreated) {

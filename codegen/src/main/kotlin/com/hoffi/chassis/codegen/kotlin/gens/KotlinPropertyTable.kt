@@ -26,7 +26,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.asTypeName
 
 context(GenCtxWrapper)
-class KotlinPropertyTable(property: Property, genModel: ModelClassData) : AKotlinProperty(property, genModel) {
+class KotlinPropertyTable constructor(property: Property, genModel: ModelClassData) : AKotlinProperty(property, genModel) {
     override val builder: PropertySpec.Builder = whenInit()
 
 //    init {

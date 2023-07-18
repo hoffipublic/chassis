@@ -5,6 +5,7 @@ import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.Property
+import com.hoffi.chassis.shared.whens.WhensDslRef
 
 object IntersectPropertys {
     data class CommonPropData(
@@ -18,8 +19,14 @@ object IntersectPropertys {
         val sourceVarNamePostfix: String,
         val targetVarNamePostfix: String,
     ) {
-        val sourceVarName = "source$sourceVarNamePostfix"
-        val targetVarName = "target$targetVarNamePostfix"
+        val sourceVarName = WhensDslRef.whenModelSubelement(sourceGenModel.modelSubElRef,
+            isDtoRef = { "source$sourceVarNamePostfix" },
+            isTableRef = { "resultRow$sourceVarNamePostfix" },
+        )
+        val targetVarName = WhensDslRef.whenModelSubelement(sourceGenModel.modelSubElRef,
+            isDtoRef = { "target$sourceVarNamePostfix" },
+            isTableRef = { "resultRow$sourceVarNamePostfix" },
+        )
     }
 
     fun intersectPropsOf(targetGenModel: GenModel, sourceGenModel: GenModel, sourceKotlinClass: AKotlinClass, sourceVarNamePostfix: String = "", targetVarNamePostfix: String = ""): CommonPropData {

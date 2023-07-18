@@ -7,6 +7,7 @@ import com.hoffi.chassis.codegen.kotlin.gens.filler.AKotlinFiller
 import com.hoffi.chassis.codegen.kotlin.gens.filler.KotlinFillerDto
 import com.hoffi.chassis.codegen.kotlin.gens.filler.KotlinFillerTable
 import com.hoffi.chassis.shared.codegen.GenCtx
+import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
@@ -38,12 +39,17 @@ class KotlinGenCtx private constructor() {
     }
     context(GenCtxWrapper)
     fun kotlinFillerClass(modelrefenum: MODELREFENUM, fillerData: FillerData): Pair<AKotlinFiller, Boolean> {
-        val exists = allKotlinFillerClasses[modelrefenum]!![fillerData.targetDslRef]
+        val theDslRef = if (modelrefenum == MODELREFENUM.TABLE && fillerData.targetDslRef !is DslRef.table) {
+            fillerData.sourceDslRef
+        } else {
+            fillerData.targetDslRef
+        }
+        val exists = allKotlinFillerClasses[modelrefenum]!![theDslRef]
         return if (exists == null) {
             when (modelrefenum) {
                 MODELREFENUM.MODEL -> throw GenCtxException("not allowed")
-                MODELREFENUM.DTO   -> Pair(KotlinFillerDto(fillerData).also {allKotlinFillerClasses[modelrefenum]!![fillerData.targetDslRef] = it}, true)
-                MODELREFENUM.TABLE -> Pair(KotlinFillerTable(fillerData).also {allKotlinFillerClasses[modelrefenum]!![fillerData.targetDslRef] = it}, true)
+                MODELREFENUM.DTO   -> Pair(KotlinFillerDto(fillerData).also {allKotlinFillerClasses[modelrefenum]!![theDslRef] = it}, true)
+                MODELREFENUM.TABLE -> Pair(KotlinFillerTable(fillerData).also {allKotlinFillerClasses[modelrefenum]!![theDslRef] = it}, true)
             }
         } else {
             Pair(exists, false)
