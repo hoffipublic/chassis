@@ -29,54 +29,6 @@ context(GenCtxWrapper)
 class KotlinPropertyTable constructor(property: Property, genModel: ModelClassData) : AKotlinProperty(property, genModel) {
     override val builder: PropertySpec.Builder = whenInit()
 
-//    init {
-//        if (property.initializer.format.count { it == '%' } != property.initializer.args.size) {
-//            throw Exception("$property imbalanced number of initializer format variables and given args: ${property.initializer} in $property")
-//        }
-//        val initializerCodeBlockBuilder = CodeBlock.builder()
-//        when (property.collectionType) {
-//            is COLLECTIONTYP.NONE -> {
-//                translateTypeForDB()
-//                if (property.eitherTypModelOrClass is EitherTypOrModelOrPoetType.EitherModel) {
-//                    builder = PropertySpec.builder(property.name, ColumnClassName.parameterizedBy(RuntimeDefaults.classNameUUID), property.modifiers)
-//                } else {
-//                    builder = PropertySpec.builder(property.name, ColumnClassName.parameterizedBy(property.poetType), property.modifiers)
-//                }
-//                if (property.initializer.hasOriginalInitializer()) {
-//                    initializerCodeBlockBuilder.add(property.initializer.codeBlockFull())
-//                    builder.initializer(initializerCodeBlockBuilder.build())
-//                } else if (Tag.NO_DEFAULT_INITIALIZER !in property.tags) {
-//                    val eitherTypOfProp = property.eitherTypModelOrClass
-//                    val defaultInitializer = when (eitherTypOfProp) {
-//                        is EitherTypOrModelOrPoetType.EitherModel -> Initializer.of("%T.%L", eitherTypOfProp.modelClassName.poetType, "NULL")
-//                        is EitherTypOrModelOrPoetType.EitherPoetType -> Initializer.of("%T.%L", eitherTypOfProp.modelClassName.poetType, "NULL") //Initializer.of("%T()", eitherTypOfProp.modelClassName.poetType)
-//                        is EitherTypOrModelOrPoetType.EitherTyp -> eitherTypOfProp.typ.defaultInitializer
-//                        is EitherTypOrModelOrPoetType.NOTHING -> { throw GenException("should not be NOTHING, something went terribly wrong!") }
-//                    }
-//                    initializerCodeBlockBuilder.add(defaultInitializer.codeBlockFull())
-//                    if (property.initializer.hasInitializerAddendum()) {
-//                        initializerCodeBlockBuilder.add(property.initializer.codeBlockAddendum())
-//                    }
-//                    builder.initializer(initializerCodeBlockBuilder.build())
-//                }
-//            }
-//            is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE, is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET -> {
-//                val collMutable = if (Tag.COLLECTION_IMMUTABLE in property.tags) immutable else mutable
-//                val collCollectionTypWrapper = CollectionTypWrapper.of(property.collectionType, collMutable, property.isNullable, property.poetType)
-//                builder = PropertySpec.builder(property.name, collCollectionTypWrapper.typeName, property.modifiers)
-//                if (Tag.NO_DEFAULT_INITIALIZER !in property.tags) {
-//                    initializerCodeBlockBuilder.add(Initializer.of(collCollectionTypWrapper.initializer.format, collCollectionTypWrapper.initializer.args).codeBlockFull())
-//                    if (property.initializer.hasInitializerAddendum()) {
-//                        initializerCodeBlockBuilder.add(property.initializer.codeBlockAddendum())
-//                    }
-//                    builder.initializer(initializerCodeBlockBuilder.build())
-//                }
-//            }
-//        }
-//        if (property.mutable.bool) builder.mutable() // val or var
-//        //if (Tag.NULLABLE in property.tags) builder = builder.cop decide if either the generic type is nullable or the collection itself
-//    }
-
     fun whenInit(): PropertySpec.Builder {
         lateinit var initBuilder: PropertySpec.Builder
         val initializerCodeBlockBuilder = CodeBlock.builder()
@@ -84,7 +36,7 @@ class KotlinPropertyTable constructor(property: Property, genModel: ModelClassDa
             preFunc = { },
             preNonCollection = {
 
-                translateTypeForDB()
+                translateTypeForDB() // this does alter the property and does NOT create a new one!
 
                 if (property.initializer.hasOriginalInitializer()) {
                     initializerCodeBlockBuilder.add(property.initializer.codeBlockFull())
@@ -185,7 +137,7 @@ class KotlinPropertyTable constructor(property: Property, genModel: ModelClassDa
         return initBuilder
     }
 
-    fun translateTypeForDB() {
+    private fun translateTypeForDB() {
         val eitherTypOrModelOrPoetType: EitherTypOrModelOrPoetType = property.eitherTypModelOrClass
         when (eitherTypOrModelOrPoetType) {
             is EitherTypOrModelOrPoetType.EitherTyp -> {
@@ -212,6 +164,8 @@ class KotlinPropertyTable constructor(property: Property, genModel: ModelClassDa
                 val correspondingTable = genCtx.genModel(DslRef.table(C.DEFAULT, eitherTypOrModelOrPoetType.modelSubElementRef.parentDslRef))
                 eitherTypOrModelOrPoetType.initializer.originalArgs.add(correspondingTable.modelClassName.poetType)
                 eitherTypOrModelOrPoetType.initializer.originalArgs.add(UUID_PROPNAME)
+
+                eitherTypOrModelOrPoetType.modelSubElementRefExpanded = DslRef.table(C.DEFAULT, eitherTypOrModelOrPoetType.modelSubElementRef.parentDslRef)
             }
 
             is EitherTypOrModelOrPoetType.NOTHING -> throw GenException("$this without ${EitherTypOrModelOrPoetType::class.simpleName}")

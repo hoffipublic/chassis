@@ -1,79 +1,89 @@
 package com.hoffi.chassis.codegen.kotlin.gens.filler
 
+import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
-import com.hoffi.chassis.codegen.kotlin.gens.AKotlinClass
+import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGeneratedFiller
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.Tag
+import com.hoffi.chassis.shared.shared.reffing.MODELKIND
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.squareup.kotlinpoet.*
+import okio.Path
 import org.slf4j.LoggerFactory
 
 context(GenCtxWrapper)
-abstract class AKotlinFiller(fillerData: FillerData, val modelrefenum: MODELREFENUM) {
+abstract class AKotlinFiller constructor(fillerData: FillerData, val modelkind: MODELKIND) {
     private val fillerDataTargetDslRef = fillerData.targetDslRef
-    var currentBuildFillerData: FillerData = fillerData
+    var currentBuildFillerData: FillerData = fillerData // changes for every build() call, also helpfull for debugging
     override fun toString() = "${this::class.simpleName}(current${currentBuildFillerData})"
     protected val log = LoggerFactory.getLogger(this::class.java)
-    val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
-    val targetKotlinClass: AKotlinClass = kotlinGenCtx.kotlinGenClass(fillerData.targetDslRef)
-    val targetVarNamePostfix = (targetGenModel.poetType as ClassName).simpleName
+    // might be something different e.g. DTO <-- Table
+    //val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
+    //val targetKotlinClass: AKotlinClass = kotlinGenCtx.kotlinGenClass(fillerData.targetDslRef)
+    //val targetVarNamePostfix = (targetGenModel.poetType as ClassName).simpleName
     val alreadyCreated: MutableSet<IDslRef> = mutableSetOf()
 
-    val fillerPoetTypeSimpleName = when (modelrefenum) {
-        MODELREFENUM.DTO -> "Filler${targetGenModel.poetTypeSimpleName}"
-        MODELREFENUM.TABLE -> if (targetGenModel !is GenModel.TableModel) {
-            "Filler${genCtx.genModel(fillerData.sourceDslRef).poetTypeSimpleName}"
-        } else {
-            "Filler${targetGenModel.poetTypeSimpleName}"
+    lateinit var fillerBasePath: Path
+    lateinit var fillerPath: Path
+    val fillerPoetType = when (modelkind) {
+        MODELKIND.DTOKIND -> {
+            val targetGenModel = genCtx.genModel(fillerData.targetDslRef)
+            fillerBasePath = targetGenModel.modelClassName.basePath
+            fillerPath =     targetGenModel.modelClassName.path
+            targetGenModel.fillerPoetType
         }
-        MODELREFENUM.MODEL -> throw GenException("${this::class.simpleName} for MODEL is not allowed!")
-    }
-    val poetTypeFiller = when (modelrefenum) {
-        MODELREFENUM.DTO -> ClassName("${(targetGenModel.poetType as ClassName).packageName}.filler", fillerPoetTypeSimpleName)
-        MODELREFENUM.TABLE -> if (targetGenModel !is GenModel.TableModel) {
-            ClassName("${(genCtx.genModel(fillerData.sourceDslRef).poetType as ClassName).packageName}.filler", fillerPoetTypeSimpleName)
-        } else {
-            ClassName("${(targetGenModel.poetType as ClassName).packageName}.filler", fillerPoetTypeSimpleName)
+        MODELKIND.TABLEKIND -> {
+            if (fillerData.targetDslRef !is DslRef.table) {
+                val sourceGenModel = genCtx.genModel(fillerData.sourceDslRef)
+                fillerBasePath = sourceGenModel.modelClassName.basePath
+                fillerPath =     sourceGenModel.modelClassName.path
+                sourceGenModel.fillerPoetType
+            } else {
+                val targetGenModel = genCtx.genModel(fillerData.targetDslRef)
+                fillerBasePath = targetGenModel.modelClassName.basePath
+                fillerPath =     targetGenModel.modelClassName.path
+                targetGenModel.fillerPoetType
+            }
         }
-        MODELREFENUM.MODEL -> throw GenException("${this::class.simpleName} for MODEL is not allowed!")
     }
-    val fillerPath = when (modelrefenum) {
-        MODELREFENUM.DTO -> targetGenModel.modelClassName.basePath / targetGenModel.modelClassName.path
-        MODELREFENUM.TABLE -> if (targetGenModel !is GenModel.TableModel) {
-            val sourceGenModel = genCtx.genModel(fillerData.sourceDslRef)
-            sourceGenModel.modelClassName.basePath / sourceGenModel.modelClassName.path
-        } else {
-            targetGenModel.modelClassName.basePath / targetGenModel.modelClassName.path
+    fun propFiller(targetDslRef: IDslRef, modelrefenum: MODELREFENUM): ClassName {
+        val swappedDslRef = when (modelrefenum) {
+            MODELREFENUM.MODEL -> throw GenException("MODELs do not have fillers themselves")
+            MODELREFENUM.DTO -> DslRef.dto(C.DEFAULT, targetDslRef.parentDslRef)
+            MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, targetDslRef.parentDslRef)
         }
-        MODELREFENUM.MODEL -> throw GenException("${this::class.simpleName} for MODEL is not allowed!")
+        val swappedGenModel = genCtx.genModel(swappedDslRef)
+        return ClassName((swappedGenModel.poetType as ClassName).packageName + ".filler", "Filler" + (swappedGenModel.poetType as ClassName).simpleName)
     }
-    val builder = TypeSpec.objectBuilder(poetTypeFiller).apply {
+
+    val builder = TypeSpec.objectBuilder(fillerPoetType).apply {
         kdocGeneratedFiller(genCtx, fillerData)
         addSuperinterface(RuntimeDefaults.WAS_GENERATED_INTERFACE_ClassName)
     }
 
     init {
-        kotlinGenCtx.putKotlinFillerClass(modelrefenum, fillerData, this)
+        kotlinGenCtx.putKotlinFillerClass(modelkind, fillerData, this)
     }
 
-    abstract fun build(fillerData: FillerData)
+    abstract fun build(modelkind: MODELKIND, fillerData: FillerData)
+
 
     fun generate(out: Appendable? = null): TypeSpec {
-        val fileSpecBuilder = FileSpec.builder(poetTypeFiller)
+        val fileSpecBuilder = FileSpec.builder(fillerPoetType)
         val typeSpec = builder.build()
         val fileSpec = fileSpecBuilder.addType(typeSpec).build()
         if (out != null) {
             fileSpec.writeTo(out)
         } else {
             try {
-                fileSpec.writeTo(fillerPath.toNioPath())
+                fileSpec.writeTo((fillerBasePath/fillerPath).toNioPath())
             } catch (e: Exception) {
                 throw GenException(e.message ?: "unknown error", e)
             }
@@ -88,8 +98,8 @@ abstract class AKotlinFiller(fillerData: FillerData, val modelrefenum: MODELREFE
     }
 
     protected fun cloneFillerFunctions(i: IntersectPropertys.CommonPropData) {
-        if (KModifier.ABSTRACT in targetGenModel.classModifiers) return
-        val allPKs = targetGenModel.propsInclSuperclassPropsMap.values.filter { Tag.PRIMARY in it.tags }
+        if (KModifier.ABSTRACT in i.targetGenModel.classModifiers) return
+        val allPKs = i.targetGenModel.propsInclSuperclassPropsMap.values.filter { Tag.PRIMARY in it.tags }
         if (allPKs.isNotEmpty()) {
             val funNamePairs = listOf(
                 "cloneShallowIgnoreModels" to "copyShallowIgnoreModelsInto",
@@ -99,7 +109,7 @@ abstract class AKotlinFiller(fillerData: FillerData, val modelrefenum: MODELREFE
             for (funNamePair in funNamePairs) {
                 val funSpecBuilder = FunSpec.builder(funNamePair.first)
                     .addParameter(ParameterSpec.builder(i.sourceVarName, i.sourceGenModel.poetType).build())
-                    .returns(targetGenModel.poetType)
+                    .returns(i.targetGenModel.poetType)
                 if (allPKs.size == 1 && allPKs[0].name == RuntimeDefaults.UUID_PROPNAME) {
                     funSpecBuilder.addStatement("val %L = %T._internal_create()", i.targetVarName, i.sourceGenModel.poetType)
                 } else {

@@ -10,7 +10,7 @@ import com.hoffi.chassis.shared.codegen.GenCtx
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.shared.FillerData
-import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
+import com.hoffi.chassis.shared.shared.reffing.MODELKIND
 
 class GenCtxWrapper(val genCtx: GenCtx) {
     override fun toString() = "${this::class.simpleName}(genCtx=$genCtx)"
@@ -32,35 +32,34 @@ class KotlinGenCtx private constructor() {
     fun putKotlinGenClass(modelSubelementRef: IDslRef, genModel: AKotlinClass) { if (! allKotlinGenClasses.containsKey(modelSubelementRef)) { allKotlinGenClasses[modelSubelementRef] = genModel } else { throw GenCtxException("${this::class.simpleName} already contains a GenModel for '${modelSubelementRef}'") } }
     fun allKotlinGenClasses() = allKotlinGenClasses.values
 
-    private val allKotlinFillerClasses = mutableMapOf<MODELREFENUM, MutableMap<IDslRef, AKotlinFiller>>().also {
-        for (modelref in MODELREFENUM.entries) {
+    private val allKotlinFillerClasses = mutableMapOf<MODELKIND, MutableMap<IDslRef, AKotlinFiller>>().also {
+        for (modelref in MODELKIND.entries) {
             it[modelref] = mutableMapOf()
         }
     }
     context(GenCtxWrapper)
-    fun kotlinFillerClass(modelrefenum: MODELREFENUM, fillerData: FillerData): Pair<AKotlinFiller, Boolean> {
-        val theDslRef = if (modelrefenum == MODELREFENUM.TABLE && fillerData.targetDslRef !is DslRef.table) {
-            fillerData.sourceDslRef
+    fun kotlinFillerClass(modelkind: MODELKIND, fillerData: FillerData): Pair<AKotlinFiller, Boolean> {
+        val theDslRef = if (modelkind == MODELKIND.TABLEKIND && fillerData.targetDslRef !is DslRef.table) {
+            fillerData.sourceDslRef // special case e.g. DTO <-- TABLE
         } else {
             fillerData.targetDslRef
         }
-        val exists = allKotlinFillerClasses[modelrefenum]!![theDslRef]
+        val exists = allKotlinFillerClasses[modelkind]!![theDslRef]
         return if (exists == null) {
-            when (modelrefenum) {
-                MODELREFENUM.MODEL -> throw GenCtxException("not allowed")
-                MODELREFENUM.DTO   -> Pair(KotlinFillerDto(fillerData).also {allKotlinFillerClasses[modelrefenum]!![theDslRef] = it}, true)
-                MODELREFENUM.TABLE -> Pair(KotlinFillerTable(fillerData).also {allKotlinFillerClasses[modelrefenum]!![theDslRef] = it}, true)
+            when (modelkind) {
+                MODELKIND.DTOKIND   -> Pair(KotlinFillerDto(fillerData).also {allKotlinFillerClasses[modelkind]!![theDslRef] = it}, true)
+                MODELKIND.TABLEKIND -> Pair(KotlinFillerTable(fillerData).also {allKotlinFillerClasses[modelkind]!![theDslRef] = it}, true)
             }
         } else {
             Pair(exists, false)
         }
     }
-    fun putKotlinFillerClass(modelrefenum: MODELREFENUM, fillerData: FillerData, fillerClass: AKotlinFiller) { if (! allKotlinFillerClasses[modelrefenum]!!.containsKey(fillerData.targetDslRef)) { allKotlinFillerClasses[modelrefenum]!![fillerData.targetDslRef] = fillerClass } else { throw GenCtxException("${this::class.simpleName} already contains a filler for '${fillerData}'") } }
-    fun allKotlinFillerClasses(modelrefenum: MODELREFENUM) = allKotlinFillerClasses[modelrefenum]!!.values
+    fun putKotlinFillerClass(modelkind: MODELKIND, fillerData: FillerData, fillerClass: AKotlinFiller) { if (! allKotlinFillerClasses[modelkind]!!.containsKey(fillerData.targetDslRef)) { allKotlinFillerClasses[modelkind]!![fillerData.targetDslRef] = fillerClass } else { throw GenCtxException("${this::class.simpleName} already contains a filler for '${fillerData}'") } }
+    fun allKotlinFillerClasses(modelkind: MODELKIND) = allKotlinFillerClasses[modelkind]!!.values
     context(GenCtxWrapper)
-    fun buildFiller(modelrefenum: MODELREFENUM, fillerData: FillerData) {
-        val (aKotlinClassFiller, _) = kotlinFillerClass(modelrefenum, fillerData)
-        aKotlinClassFiller.build(fillerData)
+    fun buildFiller(modelkind: MODELKIND, fillerData: FillerData) {
+        val (aKotlinClassFiller, _) = kotlinFillerClass(modelkind, fillerData)
+        aKotlinClassFiller.build(modelkind, fillerData)
     }
 
     private val fks: MutableSet<FK> = mutableSetOf()

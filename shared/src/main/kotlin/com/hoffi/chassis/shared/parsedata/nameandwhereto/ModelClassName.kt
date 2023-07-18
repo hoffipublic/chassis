@@ -19,11 +19,12 @@ interface IModelClassName {
     val poetTypeSimpleName: String
     val tableName: String
     val asVarName: String
+    val fillerPoetType: ClassName
 }
 
 class ModelClassName constructor(
     val modelSubElRef: IDslRef,
-    private var poetTypeDirect: TypeName?
+    var poetTypeDirect: TypeName?
 ) : IModelClassName {
     val log = LoggerFactory.getLogger(javaClass)
     override fun toString() = poetType.toString()
@@ -45,10 +46,18 @@ class ModelClassName constructor(
     override var poetType: TypeName
         get() = poetTypeDirect ?: poetTypeDslModel
         set(value) { poetTypeDirect = value }
-    override val poetTypeSimpleName: String by lazy { (poetType as ClassName).simpleName }
+    override val poetTypeSimpleName: String
+        get() = (poetType as ClassName).simpleName
     private val poetTypeDslModel: TypeName by lazy { classNameStrategy.poetType(modelClassData, modelOrTypeNameString, "${basePackage.ifNotBlank{"$basePackage."}}$packageName", classPrefix, classPostfix) as ClassName }
     override val asVarName: String by lazy { classNameStrategy.asVarname(modelOrTypeNameString, classPrefix, classPostfix) }
     override val tableName: String by lazy { tableNameStrategy.tableName(modelOrTypeNameString) /*, classPrefix, classPostfix)*/ }
+    /** only makes sense if the GenModel containing this ModelClassName is a "EitherExtendsModelOrClass.EitherModel" */
+    override val fillerPoetType: ClassName
+        get() = if (poetTypeDirect != null) {
+            ClassName("${(poetTypeDirect as ClassName).packageName}.filler", "Filler${(poetTypeDirect as ClassName).simpleName}")
+        } else {
+            ClassName("${(poetTypeDslModel as ClassName).packageName}.filler", "Filler${(poetTypeDslModel as ClassName).simpleName}")
+        }
 
     fun validate(any: Any) {
         (poetType as? ClassName)?.simpleName?.failIfIdentifierInvalid("$any->$this")

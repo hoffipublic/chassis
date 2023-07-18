@@ -8,16 +8,16 @@ import com.hoffi.chassis.chassismodel.RuntimeDefaults.classNameLocalDateTime
 import com.hoffi.chassis.chassismodel.typ.TYP
 import com.hoffi.chassis.chassismodel.typ.TYPTranslation
 import com.hoffi.chassis.dbwrappers.IDB_Wrapper
-import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.asClassName
+import org.jetbrains.exposed.sql.statements.InsertStatement
 import kotlin.reflect.KClass
 
 object DB_EXPOSED : IDB_Wrapper {
     override val TableClassName = ClassName("org.jetbrains.exposed.sql","Table")
     override val TablePrimaryKeyClassName = ClassName("org.jetbrains.exposed.sql","Table", "PrimaryKey")
     override val ColumnClassName = ClassName("org.jetbrains.exposed.sql", "Column")
+    override val ResultRowClassName = ClassName("org.jetbrains.exposed.sql", "ResultRow")
 
     override fun Column(columnKClass: KClass<*>) : TypeName {
         return Column(columnKClass.asClassName())
@@ -25,6 +25,9 @@ object DB_EXPOSED : IDB_Wrapper {
     override fun Column(columnTypeName: ClassName): TypeName {
         return ColumnClassName.parameterizedBy(columnTypeName)
     }
+
+    override fun InsertStatementTypeName(): TypeName = InsertStatement::class.asTypeName().parameterizedBy(Number::class.asTypeName())
+    override val insertMember = MemberName("org.jetbrains.exposed.sql", "insert")
 
     override fun coreTypeTranslation(typ: TYP): TYPTranslation {
         return when (typ) {
