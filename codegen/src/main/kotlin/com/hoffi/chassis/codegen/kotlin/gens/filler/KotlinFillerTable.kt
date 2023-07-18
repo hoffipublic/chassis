@@ -154,17 +154,6 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
                 isTypIterable = { },
                 postCollection = { },
             )
-            //when (prop.eitherTypModelOrClass) {
-            //    is EitherTypOrModelOrPoetType.EitherModel -> {
-            //        val toProp = Models.get(tModel).getProp(fromProp.nameInDsl)
-            //        super.addCopyModelPropStatement(funName, funSpec, fromProp, fromProp.getModel(), toProp.getModel(), targetVarName, sourceVarName)
-            //    }
-            //    is EitherTypOrModelOrPoetType.EitherTyp -> {
-            //        super.addCopyPropStatement (funSpec, fromProp, fModel.gentype, tModel.gentype, targetVarName, sourceVarName, fModel.className)
-            //    }
-            //    is EitherTypOrModelOrPoetType.EitherPoetType -> TODO()
-            //    is EitherTypOrModelOrPoetType.NOTHING -> throw GenException("cannot fill prop $prop of $this as its type is NOTHING")
-            //}
         }
         funSpec.addStatement("return %L", i.targetVarName)
         builder.addFunction(funSpec.build())

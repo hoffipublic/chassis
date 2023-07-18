@@ -41,19 +41,6 @@ abstract class ModelClassData(
 
     var isUuidPrimary = false
 
-//    lateinit var byRefAllProps: MutableMap<DslRef.ISubElementLevel, MutableSet<Property>>
-//    lateinit var byRefSuperclassProps: MutableMap<DslRef.ISubElementLevel, MutableSet<Property>>
-//    fun initByRefProps() {
-//        byRefAllProps = mutableMapOf()
-//        for (prop in allProps.values) {
-//            byRefAllProps.getOrPut(prop.containedInSubelementRef) { mutableSetOf() }.add(prop)
-//        }
-//        byRefSuperclassProps = mutableMapOf()
-//        for (prop in superclassProps.values) {
-//            byRefSuperclassProps.getOrPut(prop.containedInSubelementRef) { mutableSetOf() }.add(prop)
-//        }
-//    }
-
 //    val incomingFKs = sortedSetOf<Models.DslFK>() // TODO are these really used? see AKotlinClass
 //    val outgoingFKs = sortedSetOf<Models.DslFK>() // TODO are these really used? see AKotlinClass
 
@@ -61,24 +48,6 @@ abstract class ModelClassData(
     fun filterGatheredProps(propFilter: (Property) -> Boolean = { true }): MutableSet<Property> = gatheredProps.values.filter(propFilter).toMutableSet()
     //fun filterInclSuperclassPropsMap(propFilter: (Property) -> Boolean = { true }): MutableSet<Property> = propsInclSuperclassPropsMap.values.filter(propFilter).toMutableSet()
     fun getProp(name: String): Property = allProps[name] ?: throw GenException("$this does not contain a property named $name")
-
-//    data class SuperModelsAndClasses(val models: MutableList<EitherModelNew> = mutableListOf(), var nonModel: EitherExtendsModelOrClass = ExtendsNothing.INSTANCE)
-//    fun superClasses(): SuperModelsAndClasses {
-//        val superModelsAndClasses = SuperModelsAndClasses()
-//        return recurseSuperClasses(eitherExtendsModelOrClass, superModelsAndClasses)
-//    }
-//    private fun recurseSuperClasses(eitherExtendsModelOrClass: EitherExtendsModelOrClass, superModelsAndClasses: SuperModelsAndClasses): SuperModelsAndClasses {
-//        when (eitherExtendsModelOrClass) {
-//            is ExtendsClass -> superModelsAndClasses.nonModel = eitherExtendsModelOrClass
-//            is ExtendsModel -> {
-//                val superModel = Models.get(eitherExtendsModelOrClass.modelGenRef)
-//                superModelsAndClasses.models.add(superModel)
-//                recurseSuperClasses(superModel.eitherExtendsModelOrClass, superModelsAndClasses)
-//            }
-//            is ExtendsNothing -> { }
-//        }
-//        return superModelsAndClasses
-//    }
 
     override fun compareTo(other: ModelClassData): Int = modelSubElRef.refList.last().simpleName.compareTo(other.modelSubElRef.refList.last().simpleName)
     //region equals and hashCode ...

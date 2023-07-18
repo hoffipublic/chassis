@@ -48,8 +48,6 @@ object IntersectPropertys {
         val superModelsTargetIntersectPropSet = targetGenModel.superclassProps.values.intersect(targetPropButNotInSourcePropSet + sourceGenModel.superclassProps.values)
         val additionalDslRefsInSourceSuperclasses: Set<DslRef.IModelSubelement> = superModelsTargetIntersectPropSet.map { it.containedInSubelementRef }.toSet()
 
-        val i = 0 //TODO breakpoint; having the DB Translated props also, so: intersected props may have the same name, but different type (e.g. );
-
         val targetFillerPoetType = targetGenModel.fillerPoetType
         val sourceFillerPoetType = sourceGenModel.fillerPoetType
 

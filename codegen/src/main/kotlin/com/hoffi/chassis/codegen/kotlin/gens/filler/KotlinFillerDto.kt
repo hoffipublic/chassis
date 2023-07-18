@@ -232,10 +232,6 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     is EitherTypOrModelOrPoetType.NOTHING -> TODO()
                 }
             }
-//            if (i.additionalDslRefsInSourceSuperclasses.isNotEmpty()) {
-//                if (i.additionalDslRefsInSourceSuperclasses.size > 1) {
-//                    val x = 42 // TODO breakpoint
-//                }
                 val targetExtendsModelEither = i.targetGenModel.extends[C.DEFAULT]?.typeClassOrDslRef
                 if ( targetExtendsModelEither != null && targetExtendsModelEither is EitherTypOrModelOrPoetType.EitherModel) {
                     val targetExtendsModel = genCtx.genModel(targetExtendsModelEither.modelSubElementRef)
@@ -247,26 +243,6 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
 
                     }
                 }
-//            }
-//            val targetExtendsModel = targetGenModel.extends[C.DEFAULT]?.typeClassOrDslRef
-//            if ( targetExtendsModel != null && targetExtendsModel is EitherTypOrModelOrPoetType.EitherModel) {
-//                val extendsTargetGenModel = genCtx.genModel(targetExtendsModel.modelSubElementRef)
-//                val superClassPropIntersect = targetGenModel.superclassProps.values.intersect(extendsTargetGenModel.superclassProps.values)
-//
-//                ;xxx;
-//                            genCtx . syntheticFillerDatas . add (FillerData(
-//                        targetExtendsModel.modelSubElementRef,
-//                        targetExtendsModel.modelSubElementRef
-//                    ))
-//                    val extendsClassName = targetExtendsModel . modelClassName . poetType as ClassName
-//                val extendsFillerClassName = ClassName("${extendsClassName.packageName}.filler", "Filler${extendsClassName.simpleName}")
-//                funSpec.addStatement("%T.copyDeepInto(%L, %L)",  extendsFillerClassName, i.targetVarName, i.sourceVarName)
-//                genCtx.syntheticFillerDatas.add(FillerData(targetExtendsModel.modelSubElementRef, i.sourceGenModel.modelSubElRef))
-//            }
-//            val sourceExtendsModel = i.sourceGenModel.extends[C.DEFAULT]?.typeClassOrDslRef
-//            if (sourceExtendsModel != null && sourceExtendsModel is EitherTypOrModelOrPoetType.EitherModel) {
-//                genCtx.syntheticFillerDatas.add(FillerData(sourceExtendsModel.modelSubElementRef, sourceExtendsModel.modelSubElementRef))
-//            }
             funSpec.addStatement("return %L", i.targetVarName)
             builder.addFunction(funSpec.build())
         }
