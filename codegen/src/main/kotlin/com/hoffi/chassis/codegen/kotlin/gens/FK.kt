@@ -4,9 +4,11 @@ import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
+import com.hoffi.chassis.codegen.kotlin.GenDslRefHelpers
 import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.Property
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 
@@ -49,6 +51,11 @@ class FK(
         //val correspondingTable = genCtx.genModel(DslRef.table(C.DEFAULT, eitherTypOrModelOrPoetType.modelSubElementRef.parentDslRef))
         //eitherTypOrModelOrPoetType.initializer.originalArgs.add(correspondingTable.modelClassName.poetType)
         //eitherTypOrModelOrPoetType.initializer.originalArgs.add(RuntimeDefaults.UUID_PROPNAME)
+
+        propSpecBuilder.addAnnotation(
+                AnnotationSpec.builder(RuntimeDefaults.ANNOTATION_FKFROM_CLASSNAME)
+                .addMember("%T::class", GenDslRefHelpers.dtoClassName(toTable.modelClassData, genCtx))
+                .build())
 
         fromKotlinClassModelTable.builder.addProperty(propSpecBuilder.build())
     }

@@ -2,6 +2,7 @@ package com.hoffi.chassis.codegen.kotlin.gens.filler
 
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
+import com.hoffi.chassis.codegen.kotlin.GenDslRefHelpers
 import com.hoffi.chassis.codegen.kotlin.whens.WhensGen
 import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
@@ -64,20 +65,20 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
         var funSpec = FunSpec.builder("insertLambda")
             .addParameter(i.sourceVarName, i.sourcePoetType)
             .returns(returnLambdaTypeName)
-        var body = insertBody(i, funSpec, "it")
+        var body = insertBody(i, funSpec, "insertLambda")
         funSpec.addCode(body)
         builder.addFunction(funSpec.build())
 
-        returnLambdaTypeName = LambdaTypeName.get(DB.BatchInsertStatement, dtoClassName(i.sourceGenModel), returnType = UNIT)
+        returnLambdaTypeName = LambdaTypeName.get(DB.BatchInsertStatement, GenDslRefHelpers.dtoClassName(i.sourceGenModel, genCtx), returnType = UNIT)
         funSpec = FunSpec.builder("batchInsertLambda")
             .addParameter(i.sourceVarName, i.sourcePoetType)
             .returns(returnLambdaTypeName)
-        body = insertBody(i, funSpec, "this")
+        body = insertBody(i, funSpec, "batchInsertLambda")
         funSpec.addCode(body)
         builder.addFunction(funSpec.build())
     }
 
-    private fun insertBody(i: IntersectPropertys.CommonPropData, funSpec: FunSpec.Builder, itOrThis: String): CodeBlock {
+    private fun insertBody(i: IntersectPropertys.CommonPropData, funSpec: FunSpec.Builder, insertLambdaName: String): CodeBlock {
         var bodyBuilder = CodeBlock.builder()
             .beginControlFlow("return {") // This will take care of the {} and indentations
         // allProps as a) Table's always gatherProps from superclasses and b) alle table columns have to be filled
@@ -88,41 +89,47 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
                 preNonCollection = { },
                 preCollection = { },
                 isModel = {
-                    bodyBuilder.addStatement(
-                        "%T.%M(%T.%L(%L.%L))",
-                        genCtx.genModel(DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)).poetType,
-                        DB.insertMember,
-                        propFiller(modelSubElementRef, MODELREFENUM.TABLE),
-                        "insertLambda", i.sourceVarName, prop.name
-                    )
+                    // TODO one2One check if dependant model Table Entry already exists!
+                    if (insertLambdaName == "insertLambda") {
+                        // SimpleSubentityTable.insert(SimpleSubentityTableFiller.insertFunction(sourceSimpleEntityDto.someModelObject))
+                        bodyBuilder.addStatement("// TODO one2One check if dependant model Table Entry already exists!")
+                        bodyBuilder.addStatement(
+                            "%T.%M(%T.%L(%L.%L))",
+                            genCtx.genModel(DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)).poetType,
+                            DB.insertMember,
+                            propFiller(modelSubElementRef, MODELREFENUM.TABLE),
+                            "insertLambda", i.sourceVarName, prop.name
+                        )
+                    } else {
+                        //  SimpleSubentityTableFiller.batchInsertFunction(sourceSimpleEntityDto.someModelObject).invoke(this, sourceSimpleEntityDto.someModelObject)
+                        val fillerTableOfReffedModel = genCtx.genModel(DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)).fillerPoetType
+                        bodyBuilder.addStatement("// TODO one2One check if dependant model Table Entry already exists!")
+                        bodyBuilder.addStatement(
+                            "%T.%L(%L.%L).%L(this, %L.%L)",
+                            fillerTableOfReffedModel,
+                            //MemberName(fillerTableOfReffedModel, "batchInsertLambda"),
+                            "batchInsertLambda",
+                            i.sourceVarName, prop.name,
+                            "invoke",
+                            i.sourceVarName, prop.name
+                        )
+                    }
                     bodyBuilder.addStatement(
                         "%L[%T.%L] = %L.%L.%L",
-                        itOrThis,
+                        if (insertLambdaName == "insertLambda") "it" else "this",
                         i.targetPoetType,
                         prop.name,
                         i.sourceVarName, prop.name, "uuid"
                     )
                     val originalRef = this.modelClassName.modelSubElRef
-                    genCtx.syntheticFillerDatas.add(
-                        SynthFillerData(
-                            this.modelSubElementRef,
-                            originalRef,
-                            via = "TableFiller for contained prop $prop"
-                        )
-                    )
-                    genCtx.syntheticFillerDatas.add(
-                        SynthFillerData(
-                            originalRef,
-                            this.modelSubElementRef,
-                            via = "TableFiller for contained prop $prop"
-                        )
-                    )
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
                 },
                 isPoetType = { },
                 isTyp = {
                     bodyBuilder.addStatement(
                         "%L[%T.%L] = %L.%L",
-                        itOrThis,
+                        if (insertLambdaName == "insertLambda") "it" else "this",
                         i.targetPoetType,
                         prop.name,
                         i.sourceVarName,
