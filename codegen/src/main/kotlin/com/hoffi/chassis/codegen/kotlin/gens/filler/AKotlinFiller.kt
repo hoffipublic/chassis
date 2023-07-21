@@ -30,6 +30,17 @@ abstract class AKotlinFiller constructor(fillerData: FillerData, val modelkind: 
     //val targetVarNamePostfix = (targetGenModel.poetType as ClassName).simpleName
     val alreadyCreated: MutableSet<IDslRef> = mutableSetOf()
 
+    fun tableClassName(tableGenModel: GenModel) : TypeName {
+        if (tableGenModel.modelSubElRef.parentDslRef !is DslRef.IElementLevel) throw GenException("no IElementLEvel given")
+        val swappedGenModel = genCtx.genModel(DslRef.table(C.DEFAULT, tableGenModel.modelSubElRef.parentDslRef))
+        return swappedGenModel.poetType
+    }
+    fun dtoClassName(dtoGenModel: GenModel) : TypeName {
+        if (dtoGenModel.modelSubElRef.parentDslRef !is DslRef.IElementLevel) throw GenException("no IElementLEvel given")
+        val swappedGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, dtoGenModel.modelSubElRef.parentDslRef))
+        return swappedGenModel.poetType
+    }
+
     lateinit var fillerBasePath: Path
     lateinit var fillerPath: Path
     val fillerPoetType = when (modelkind) {

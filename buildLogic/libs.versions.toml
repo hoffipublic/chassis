@@ -8,16 +8,16 @@ androidx-appcompat = "1.6.1"
 androidx-core-ktx = "1.10.1"
 antlr = "4.13.0"
 apache-poi = "5.2.3"
-arrow = "1.2.0-RC"
+arrow = "1.2.0"
 benasher44-uuid = "0.7.0"
-clikt = "4.0.0"
+clikt = "4.1.0"
 # global https://github.com/JetBrains/compose-jb/releases
 compose = "1.5.0-dev1060"
 exposed = "0.41.1"
 gradle-versions-catalogUpdate = "0.8.0"
 gradle-versions-filter = "0.1.16"
 gradle-versions-plugin = "0.47.0"
-h2 = "2.1.214"
+h2 = "2.2.220"
 hamcrest = "2.2"
 # global
 jdkVersion = "17"
@@ -46,7 +46,7 @@ logback = "1.4.8"
 micronaut = "3.7.9"
 moshi = "1.15.0"
 okhttp = "4.11.0"
-okio = "3.3.0"
+okio = "3.4.0"
 postgres = "42.6.0"
 rabbitmq-amqp-client = "5.17.0"
 resilience4j = "2.0.2"
@@ -69,8 +69,9 @@ arrow = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 benasher44-uuid = { module = "com.benasher44:uuid", version.ref = "benasher44-uuid" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 compose = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "compose" }
-exposed = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
-exposed-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
+exposedCore = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposedDatetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
+exposedJdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 gradle-versions-catalogUpdate = { module = "nl.littlerobots.vcu:plugin", version.ref = "gradle-versions-catalogUpdate" }
 gradle-versions-filter = { module = "se.ascp.gradle:gradle-versions-filter", version.ref = "gradle-versions-filter" }
 gradle-versions-plugin = { module = "com.github.ben-manes:gradle-versions-plugin", version.ref = "gradle-versions-plugin" }

@@ -18,6 +18,8 @@ object DB_EXPOSED : IDB_Wrapper {
     override val TablePrimaryKeyClassName = ClassName("org.jetbrains.exposed.sql","Table", "PrimaryKey")
     override val ColumnClassName = ClassName("org.jetbrains.exposed.sql", "Column")
     override val ResultRowClassName = ClassName("org.jetbrains.exposed.sql", "ResultRow")
+    override val BatchInsertStatement = ClassName("org.jetbrains.exposed.sql.statements", "BatchInsertStatement")
+
 
     override fun Column(columnKClass: KClass<*>) : TypeName {
         return Column(columnKClass.asClassName())

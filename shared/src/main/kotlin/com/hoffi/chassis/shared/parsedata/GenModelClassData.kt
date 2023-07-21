@@ -13,8 +13,6 @@ sealed class GenModel(modelSubElRef: DslRef.IModelSubelement, modelClassName: Mo
     : ModelClassData(modelSubElRef, modelClassName) {
     class DtoModel(dtoRef: DslRef.dto, modelClassName: ModelClassName) : GenModel(dtoRef, modelClassName) { init { modelClassName.modelClassData = this } }
     class TableModel(tableRef: DslRef.table, modelClassName: ModelClassName) : GenModel(tableRef, modelClassName) { init { modelClassName.modelClassData = this } }
-    //val fillerPoetType: ClassName
-    //    get() = modelClassName.fillerPoetType
 }
 
 /** all props and sub-props are set on chassis DSL PASS_FINISH */

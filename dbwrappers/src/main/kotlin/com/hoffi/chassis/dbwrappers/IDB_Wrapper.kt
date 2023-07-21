@@ -12,6 +12,7 @@ interface IDB_Wrapper {
     val TablePrimaryKeyClassName: ClassName
     val ColumnClassName: ClassName
     val ResultRowClassName: ClassName
+    val BatchInsertStatement: ClassName
 
     fun Column(columnKClass: KClass<*>) : TypeName
     fun Column(columnTypeName: ClassName) : TypeName
