@@ -21,6 +21,12 @@ from a custom Kotlin DSL using <https://square.github.io/kotlinpoet>, generate:
 
 ## TODO <!--- // TODO -->
 
+current:
+
+- Fillers should not(!) call fillers of extends/super/parent classes, but directly use `ModelClassData.propsInclSuperclassPropsMap`  
+
+coming up:
+
 - SQL Functions incl. FKs
   - and adhering to CopyBoundrys
   - further CRUD DB operations with "own function names" for each CopyBoundry

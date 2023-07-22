@@ -27,11 +27,11 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
     // add target and source FillerClassName into intersectPropsData
 
     override fun build(modelkind: MODELKIND, fillerData: FillerData) {
-        currentBuildFillerData = fillerData
-        if (alreadyCreated.contains(fillerData.sourceDslRef))
+        currentFillerData = fillerData
+        if (alreadyCreated.contains(Pair(fillerData.fillerName, fillerData.sourceDslRef)))
             return
-        else
-            alreadyCreated.add(fillerData.sourceDslRef)
+        else alreadyCreated.add(Pair(fillerData.fillerName, fillerData.sourceDslRef))
+
         val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
         val sourceGenModel: GenModel = genCtx.genModel(fillerData.sourceDslRef)
 
@@ -52,7 +52,7 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
             isTableRef = { "resultRow${intersectPropsData.targetVarNamePostfix}" },
         )
 
-        if (currentBuildFillerData.targetDslRef !is DslRef.table) {
+        if (currentFillerData.targetDslRef !is DslRef.table) {
             createFromTable(intersectPropsData)
         } else {
             insertLambdas(intersectPropsData)

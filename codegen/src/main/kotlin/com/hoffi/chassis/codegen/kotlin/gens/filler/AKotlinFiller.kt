@@ -21,14 +21,11 @@ import org.slf4j.LoggerFactory
 context(GenCtxWrapper)
 abstract class AKotlinFiller constructor(fillerData: FillerData, val modelkind: MODELKIND) {
     private val fillerDataTargetDslRef = fillerData.targetDslRef
-    var currentBuildFillerData: FillerData = fillerData // changes for every build() call, also helpfull for debugging
-    override fun toString() = "${this::class.simpleName}(current${currentBuildFillerData})"
+    var currentFillerData: FillerData = fillerData // changes for every build() call, also helpfull for debugging
+    override fun toString() = "${this::class.simpleName}(current${currentFillerData})"
     protected val log = LoggerFactory.getLogger(this::class.java)
-    // might be something different e.g. DTO <-- Table
-    //val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
-    //val targetKotlinClass: AKotlinClass = kotlinGenCtx.kotlinGenClass(fillerData.targetDslRef)
-    //val targetVarNamePostfix = (targetGenModel.poetType as ClassName).simpleName
-    val alreadyCreated: MutableSet<IDslRef> = mutableSetOf()
+    /** fillerName -> source(!) DslRef (as each targetDslRef has its own KotlinFiller Instance */
+    val alreadyCreated: MutableSet<Pair<String, IDslRef>> = mutableSetOf()
 
     lateinit var fillerBasePath: Path
     lateinit var fillerPath: Path
@@ -89,6 +86,13 @@ abstract class AKotlinFiller constructor(fillerData: FillerData, val modelkind: 
             }
         }
         return typeSpec
+    }
+
+    fun funName(funName: String, fillerData: FillerData): String = if (fillerData.fillerName == C.DEFAULT) {
+        funName
+    } else {
+        val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
+        targetGenModel.modelClassName.classNameStrategy.nameLowerFirst(fillerData.fillerName) + targetGenModel.modelClassName.classNameStrategy.nameUpperFirst(funName)
     }
 
     fun nullSentinel(funBuilder: FunSpec.Builder, targetVarName: String, targetModel: GenModel) {

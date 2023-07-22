@@ -38,11 +38,11 @@ object IntersectPropertys {
         targetVarNamePostfix: String = ""
     ): CommonPropData {
 
-        val intersectPropSet = targetGenModel.allProps.values.intersect(sourceGenModel.allProps.values)
+        val intersectPropSet = targetGenModel.allProps.values.intersect(sourceGenModel.allProps.values.toSet())
         /** as translated props have different EitherTypes */
-        val intersectPropSetSource = sourceGenModel.allProps.values.intersect(targetGenModel.allProps.values)
+        val intersectPropSetSource = sourceGenModel.allProps.values.intersect(targetGenModel.allProps.values.toSet())
         /** as translated props have different EitherTypes */
-        val sourcePropByName: Map<String, Property> = intersectPropSetSource.map { it.name to it }.toMap()
+        val sourcePropByName: Map<String, Property> = intersectPropSetSource.associateBy { it.name }
         val sourcePropButNotInTargetPropSet = sourceGenModel.allProps.values.toMutableSet().also { it.removeAll(intersectPropSet) }
         val targetPropButNotInSourcePropSet = targetGenModel.allProps.values.toMutableSet().also { it.removeAll(intersectPropSet) }
         val superModelsTargetIntersectPropSet = targetGenModel.superclassProps.values.intersect(targetPropButNotInSourcePropSet + sourceGenModel.superclassProps.values)

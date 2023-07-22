@@ -15,11 +15,13 @@ import com.squareup.kotlinpoet.KModifier
 context(GenCtxWrapper)
 class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKIND.DTOKIND) {
     private var cloneFillersNotCreated = true
+    private var copyShallowIgnoreModelsIntoNotCreated = true
 
     override fun build(modelkind: MODELKIND, fillerData: FillerData) {
-        currentBuildFillerData = fillerData
-        if (alreadyCreated.contains(fillerData.sourceDslRef)) return
-        else alreadyCreated.add(fillerData.sourceDslRef)
+        currentFillerData = fillerData
+        if (alreadyCreated.contains(Pair(fillerData.fillerName, fillerData.sourceDslRef)))
+            return
+        else alreadyCreated.add(Pair(fillerData.fillerName, fillerData.sourceDslRef))
 
         val intersectPropsData = IntersectPropertys.intersectPropsOf(
             modelkind,
@@ -39,6 +41,8 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
     }
 
     private fun copyShallowIgnoreModelsInto(i: IntersectPropertys.CommonPropData) {
+        if (copyShallowIgnoreModelsIntoNotCreated) copyShallowIgnoreModelsIntoNotCreated = false
+        else return
         val funSpec = FunSpec.builder("copyShallowIgnoreModelsInto")
             .addParameter(i.targetVarName, i.targetGenModel.poetType)
             .addParameter(i.sourceVarName, i.sourceGenModel.poetType)
@@ -56,7 +60,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
     }
 
     private fun copyShallowWithNewModelsInto(i: IntersectPropertys.CommonPropData) {
-        val funSpec = FunSpec.builder("copyShallowWithNewModelsInto")
+        val funSpec = FunSpec.builder(funName("copyShallowWithNewModelsInto", currentFillerData))
             .addParameter(i.targetVarName, i.targetGenModel.poetType)
             .addParameter(i.sourceVarName, i.sourceGenModel.poetType)
             .returns(i.targetGenModel.poetType)
@@ -100,7 +104,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
     }
 
     private fun copyShallowAndTakeSameModelsInto(i: IntersectPropertys.CommonPropData) {
-        val funSpec = FunSpec.builder("copyShallowAndTakeSameModelsInto")
+        val funSpec = FunSpec.builder(funName("copyShallowAndTakeSameModelsInto", currentFillerData))
             .addParameter(i.targetVarName, i.targetGenModel.poetType)
             .addParameter(i.sourceVarName, i.sourceGenModel.poetType)
             .returns(i.targetGenModel.poetType)
@@ -150,7 +154,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                         }
                     }
                 }
-                is EitherTypOrModelOrPoetType.NOTHING -> throw GenException("EitherTypOrModelOrPoetType is still NOTHING")
+                is EitherTypOrModelOrPoetType.NOTHING -> throw GenException("EitherTypOrModelOrPoetType is shouldn't still be NOTHING")
             }
         }
         funSpec.addStatement("return %L", i.targetVarName)
@@ -161,14 +165,14 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
         val funNames = listOf("copyDeepInto", "cloneDeep")
         for (funName in funNames) {
             if (funName == "cloneDeep" && KModifier.ABSTRACT in i.targetGenModel.classModifiers) continue
-            val funSpec = if (funName == "copyDeepInto") {
+            val funSpec = if (funName == funName("copyDeepInto", currentFillerData)) {
                 val theFunSpec = FunSpec.builder("copyDeepInto")
                     .addParameter(i.targetVarName, i.targetGenModel.poetType)
                     .addParameter(i.sourceVarName, i.sourceGenModel.poetType)
                 nullSentinel(theFunSpec, i.targetVarName, i.targetGenModel)
                 theFunSpec
             } else {
-                val theFunSpec = FunSpec.builder("cloneDeep")
+                val theFunSpec = FunSpec.builder(funName("cloneDeep", currentFillerData))
                     .addParameter(i.sourceVarName, i.sourceGenModel.poetType)
                 if (i.targetGenModel.isUuidPrimary) {
                     theFunSpec.addStatement("val %L = %T._internal_createWithUuid()", i.targetVarName, i.targetGenModel.poetType)
@@ -188,7 +192,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                 val propEither = prop.eitherTypModelOrClass
                 when (propEither) {
                     is EitherTypOrModelOrPoetType.EitherModel -> {
-                        genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, propEither.modelSubElementRef, propEither.modelSubElementRef, via = "propTypeEither is Model in deepCopyAndClone of $currentBuildFillerData"))
+                        genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, propEither.modelSubElementRef, propEither.modelSubElementRef, via = "propTypeEither is Model in deepCopyAndClone of $currentFillerData"))
                         val propEitherModelFillerClassName = prop.eitherTypModelOrClass.modelClassName.fillerPoetType
                         when (prop.collectionType) {
                             is COLLECTIONTYP.NONE -> {
@@ -237,7 +241,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     val targetExtendsModel = genCtx.genModel(targetExtendsModelEither.modelSubElementRef)
                     val sourceGenModelExtendsModelEither = i.sourceGenModel.extends[C.DEFAULT]?.typeClassOrDslRef
                     if (sourceGenModelExtendsModelEither != null && sourceGenModelExtendsModelEither is EitherTypOrModelOrPoetType.EitherModel) {
-                        genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, targetExtendsModelEither.modelSubElementRef, sourceGenModelExtendsModelEither.modelSubElementRef, via = "superExtends of target is Model in deepCopyAndClone of $currentBuildFillerData"))
+                        genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, targetExtendsModelEither.modelSubElementRef, sourceGenModelExtendsModelEither.modelSubElementRef, via = "superExtends of target is Model in deepCopyAndClone of $currentFillerData"))
 
                         funSpec.addStatement("%T.copyDeepInto(%L, %L)",  targetExtendsModel.modelClassName.fillerPoetType, i.targetVarName, i.sourceVarName)
 
