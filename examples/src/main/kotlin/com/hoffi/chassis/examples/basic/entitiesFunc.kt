@@ -12,6 +12,7 @@ import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.dsl.modelgroup.IDslApiConstructorVisibility.VISIBILITY.PROTECTED
 import com.hoffi.chassis.dsl.modelgroup.IDslApiConstructorVisibility.VISIBILITY.PUBLIC
 import com.hoffi.chassis.dsl.scratchdslEXAMPLES.COMMON__PERSISTENT_OPTIMISTIC
+import com.hoffi.chassis.shared.shared.FillerData.COPYTYPE.IGNORE
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.*
@@ -105,6 +106,12 @@ fun entities() {
                 (DTO mutual TABLE) //.copyBoundry(IGNORE, DTO, "entityBackreference").copyBoundry(IGNORE, TABLE, "entityBackreference")
                 DTO from TABLE
                 TABLE from DTO
+                //having CopyBoundry first, as we otherwise cannot distinguish from obove's fillers'
+                fillerName("withoutModels", TABLE from DTO, DTO from TABLE) {
+                    copyBoundry(IGNORE, "subentitys", "someModelObject")
+                }
+                //(TABLE from DTO).copyBoundry(named = "withoutModels", IGNORE, "subentitys", "someModelObject")
+                //(TABLE from DTO).copyBoundry(named = "withoutModels", IGNORE, DTO of ENTITY__SUBENTITY)
                 DTO from (DTO of ENTITY__SUBENTITY)
                 //(DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) from DTO
             }

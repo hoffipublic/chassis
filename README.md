@@ -21,7 +21,12 @@ from a custom Kotlin DSL using <https://square.github.io/kotlinpoet>, generate:
 
 ## TODO <!--- // TODO -->
 
-- SQL Functions incl. FKs and adhering to CopyBoundrys
+- SQL Functions incl. FKs
+  - and adhering to CopyBoundrys
+  - further CRUD DB operations with "own function names" for each CopyBoundry
+- Exposed Extendsions
+  - upsert ?
+  - insert/delete if not exists [stackoverflow: how-can-i-do-insert-if-not-exists-in-mysql](https://stackoverflow.com/questions/1361340/how-can-i-do-insert-if-not-exists-in-mysql)
 
 
 - static companion functions (NULL)

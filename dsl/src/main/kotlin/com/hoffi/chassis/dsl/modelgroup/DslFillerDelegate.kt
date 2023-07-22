@@ -4,53 +4,50 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.dsl.internal.ADslClass
 import com.hoffi.chassis.dsl.internal.ADslDelegateClass
+import com.hoffi.chassis.dsl.internal.ChassisDslMarker
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
-import com.hoffi.chassis.shared.helpers.getOrAdd
-import com.hoffi.chassis.shared.shared.CopyBoundry
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.FillerData.COPYTYPE
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import org.slf4j.LoggerFactory
+import java.util.*
 
 
 // ======== API
 interface IDslApiFillerBlock : IDslApiModelReffing {
-    operator fun MODELREFENUM.unaryPlus(): FillerData
-    infix fun MODELREFENUM.mutual(other: MODELREFENUM): FillerData
-    infix fun MODELREFENUM.mutual(other: IDslRef): FillerData
-    infix fun MODELREFENUM.mutual(other: String): FillerData
-    infix fun IDslRef.mutual(other: MODELREFENUM): FillerData
-    infix fun IDslRef.mutual(other: IDslRef): FillerData
-    infix fun IDslRef.mutual(other: String): FillerData
-    infix fun String.mutual(other: MODELREFENUM): FillerData
-    infix fun String.mutual(other: IDslRef): FillerData
-    infix fun String.mutual(other: String): FillerData
-    infix fun MODELREFENUM.from(other: MODELREFENUM): FillerData
-    infix fun MODELREFENUM.from(other: IDslRef): FillerData
-    infix fun MODELREFENUM.from(other: String): FillerData
-    infix fun IDslRef.from(other: MODELREFENUM): FillerData
-    infix fun IDslRef.from(other: IDslRef): FillerData
-    infix fun IDslRef.from(other: String): FillerData
-    infix fun String.from(other: MODELREFENUM): FillerData
-    infix fun String.from(other: IDslRef): FillerData
-    infix fun String.from(other: String): FillerData
+    operator fun MODELREFENUM.unaryPlus(): List<FillerData>
+    infix fun MODELREFENUM.mutual(other: MODELREFENUM): List<FillerData>
+    infix fun MODELREFENUM.mutual(other: IDslRef): List<FillerData>
+    infix fun MODELREFENUM.mutual(other: String): List<FillerData>
+    infix fun IDslRef.mutual(other: MODELREFENUM): List<FillerData>
+    infix fun IDslRef.mutual(other: IDslRef): List<FillerData>
+    infix fun IDslRef.mutual(other: String): List<FillerData>
+    infix fun String.mutual(other: MODELREFENUM): List<FillerData>
+    infix fun String.mutual(other: IDslRef): List<FillerData>
+    infix fun String.mutual(other: String): List<FillerData>
+    infix fun MODELREFENUM.from(other: MODELREFENUM): List<FillerData>
+    infix fun MODELREFENUM.from(other: IDslRef): List<FillerData>
+    infix fun MODELREFENUM.from(other: String): List<FillerData>
+    infix fun IDslRef.from(other: MODELREFENUM): List<FillerData>
+    infix fun IDslRef.from(other: IDslRef): List<FillerData>
+    infix fun IDslRef.from(other: String): List<FillerData>
+    infix fun String.from(other: MODELREFENUM): List<FillerData>
+    infix fun String.from(other: IDslRef): List<FillerData>
+    infix fun String.from(other: String): List<FillerData>
 
-    fun FillerData.copyBoundry(copyType: COPYTYPE, modelref: MODELREFENUM): FillerData
-    fun FillerData.copyBoundry(copyType: COPYTYPE, dslRef: IDslRef): FillerData
-    fun FillerData.copyBoundry(copyType: COPYTYPE, other: String): FillerData
-    fun FillerData.copyBoundry(copyType: COPYTYPE, modelref: MODELREFENUM, propName: String): FillerData
-    fun FillerData.copyBoundry(copyType: COPYTYPE, dslRef: IDslRef, propName: String): FillerData
-    fun FillerData.copyBoundry(copyType: COPYTYPE, other: String, propName: String): FillerData
-    fun FillerData.copyBoundries(copyType: COPYTYPE, vararg modelref: MODELREFENUM): FillerData
-    fun FillerData.copyBoundries(copyType: COPYTYPE, vararg dslRef: IDslRef): FillerData
-    fun FillerData.copyBoundries(copyType: COPYTYPE, vararg other: String): FillerData
-
+    //fun FillerData.copyBoundry(named: String, copyType: COPYTYPE, vararg propRef: DslRef.prop): FillerData
+    //fun FillerData.copyBoundry(named: String, copyType: COPYTYPE, vararg modelRef: DslRef.IModelOrModelSubelement): FillerData
+    //fun FillerData.copyBoundry(named: String, copyType: COPYTYPE, vararg propNames: String): FillerData
+    fun fillerName(fillerName: String, vararg dslFillerData: List<FillerData>, fillerNameBlock: IDslApiFillerName.() -> Unit)
 }
 
 interface IDslApiFillerDelegate {
     fun filler(simpleName: String = C.DEFAULT, block: IDslApiFillerBlock.() -> Unit)
+}
+interface IDslApiFillerName {
+    fun copyBoundry(copyType: COPYTYPE, vararg propName: String)
 }
 
 // ======== Impl
@@ -65,7 +62,24 @@ class DslFillerDelegateImpl(simpleNameOfDelegator: String, delegatorRef: IDslRef
     override val selfDslRef = DslRef.filler(simpleNameOfDelegator, delegatorRef)
 
     var theFillerBlocks: MutableMap<String, DslFillerBlockImpl> = mutableMapOf()
-    val theFillerDatas: MutableMap<String, MutableSet<FillerData>> = mutableMapOf()
+
+    protected val theFillerDatas: MutableMap<String, MutableMap<UUID, FillerData>> = mutableMapOf()
+    fun addFillerData(simpleName: String, dslFillerData: FillerData): FillerData {
+        val fillerDatas = theFillerDatas.getOrPut(simpleName) { mutableMapOf() }
+        fillerDatas[UUID.randomUUID()] = dslFillerData
+        return dslFillerData
+    }
+    fun finishedFillerDatas(): MutableMap<String, MutableSet<FillerData>> {
+        val resultMap: MutableMap<String, MutableSet<FillerData>> = mutableMapOf()
+        for (fillersForSimpleNameEntry in theFillerDatas) {
+            var fillerSet: MutableSet<FillerData> = resultMap.getOrPut(fillersForSimpleNameEntry.key) { mutableSetOf() }
+            for (fillerData in fillersForSimpleNameEntry.value.map { it.value }) {
+                //if ( ! fillerSet.add(fillerData) ) throw DslException("$selfDslRef filler '$fillerData' for ${fillerData.fillerName} there already was a filler from/to ${fillerData}")
+                if ( ! fillerSet.add(fillerData) ) log.error("FIRST FILLER WON -> $selfDslRef filler '$fillerData' for ${fillerData.fillerName} there already was a filler from/to ${fillerData}")
+            }
+        }
+        return resultMap
+    }
 
     override fun filler(simpleName: String, block: IDslApiFillerBlock.() -> Unit) {
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
@@ -82,6 +96,7 @@ class DslFillerDelegateImpl(simpleNameOfDelegator: String, delegatorRef: IDslRef
 }
 
 context(DslCtxWrapper)
+@ChassisDslMarker
 class DslFillerBlockImpl(val simpleName: String, override val selfDslRef: IDslRef)
     : ADslClass(),
         IDslImplFillerBlock,
@@ -92,21 +107,19 @@ class DslFillerBlockImpl(val simpleName: String, override val selfDslRef: IDslRe
 
     val dslFillerDelegateImpl: DslFillerDelegateImpl = dslCtx.ctxObj(selfDslRef)
 
-    private fun fillerData(toDslRef: IDslRef, fromDslRef: IDslRef, theCopyBoundrys: MutableSet<CopyBoundry> = mutableSetOf()): FillerData {
-        var newFillerData = FillerData(toDslRef, fromDslRef, theCopyBoundrys)
-        val theFillerData: FillerData = dslFillerDelegateImpl.theFillerDatas.getOrPut(simpleName) { mutableSetOf() }.getOrAdd(newFillerData)
-        return theFillerData
+    @ChassisDslMarker
+    override fun fillerName(fillerName: String, vararg dslFillerData: List<FillerData>, fillerNameBlock: IDslApiFillerName.() -> Unit) {
+        fillerNameBlock.invoke(DslImplFillerName(simpleName, fillerName, dslFillerData.flatMap { it }))
     }
 
-    override fun MODELREFENUM.unaryPlus(): FillerData {
+    override fun MODELREFENUM.unaryPlus(): List<FillerData> {
         val (selfGroupRef, selfElementRef, selfSubelRef) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslFillerDelegateImpl)
-        val simpleName = selfElementRef.simpleName
         val fillerData =  when (this) {
             MODELREFENUM.MODEL -> throw DslException("filler on '${selfDslRef}' unaryPlus not allowed to a 'MODEL'")
-            MODELREFENUM.DTO ->   fillerData(DslRef.dto(C.DEFAULT, selfElementRef), DslRef.dto(C.DEFAULT, selfElementRef))
-            MODELREFENUM.TABLE -> fillerData(DslRef.table(C.DEFAULT, selfElementRef), DslRef.table(C.DEFAULT, selfElementRef))
+            MODELREFENUM.DTO ->   dslFillerDelegateImpl.addFillerData(simpleName, FillerData(C.DEFAULT, DslRef.dto(C.DEFAULT, selfElementRef), DslRef.dto(C.DEFAULT, selfElementRef)))
+            MODELREFENUM.TABLE -> dslFillerDelegateImpl.addFillerData(simpleName, FillerData(C.DEFAULT, DslRef.table(C.DEFAULT, selfElementRef), DslRef.table(C.DEFAULT, selfElementRef)))
         }
-        return fillerData
+        return listOf(fillerData)
     }
 
     //override fun IDslRef.unaryPlus(): FillerData {
@@ -122,57 +135,57 @@ class DslFillerBlockImpl(val simpleName: String, override val selfDslRef: IDslRe
     //    return fillerData
     //}
 
-    override fun MODELREFENUM.mutual(other: MODELREFENUM): FillerData {
-        val fillerData = this from other
-        val mutualFillerData = fillerData(fillerData.sourceDslRef, fillerData.targetDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
-        return fillerData
+    override fun MODELREFENUM.mutual(other: MODELREFENUM): List<FillerData> {
+        val fillerData = (this from other).first()
+        val mutualFillerData = dslFillerDelegateImpl.addFillerData(simpleName, FillerData(C.DEFAULT, fillerData.sourceDslRef, fillerData.targetDslRef))
+        return listOf(fillerData, mutualFillerData)
     }
 
-    override fun MODELREFENUM.mutual(other: IDslRef): FillerData {
-        val fillerData = this from other
-        val mutualFillerData = fillerData(fillerData.sourceDslRef, fillerData.targetDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
-        return fillerData
+    override fun MODELREFENUM.mutual(other: IDslRef): List<FillerData> {
+        val fillerData = (this from other).first()
+        val mutualFillerData = dslFillerDelegateImpl.addFillerData(simpleName, FillerData(C.DEFAULT, fillerData.sourceDslRef, fillerData.targetDslRef))
+        return listOf(fillerData, mutualFillerData)
     }
 
-    override fun MODELREFENUM.mutual(other: String): FillerData {
-        val fillerData = this from other
-        val mutualFillerData = fillerData(fillerData.sourceDslRef, fillerData.targetDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
-        return fillerData
+    override fun MODELREFENUM.mutual(other: String): List<FillerData> {
+        val fillerData = (this from other).first()
+        val mutualFillerData = dslFillerDelegateImpl.addFillerData(simpleName, FillerData(C.DEFAULT, fillerData.sourceDslRef, fillerData.targetDslRef))
+        return listOf(fillerData, mutualFillerData)
     }
 
-    override fun IDslRef.mutual(other: MODELREFENUM): FillerData {
-        val fillerData = this from other
-        val mutualFillerData = fillerData(fillerData.sourceDslRef, fillerData.targetDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
-        return fillerData
+    override fun IDslRef.mutual(other: MODELREFENUM): List<FillerData> {
+        val fillerData = (this from other).first()
+        val mutualFillerData = dslFillerDelegateImpl.addFillerData(simpleName, FillerData(C.DEFAULT, fillerData.sourceDslRef, fillerData.targetDslRef))
+        return listOf(fillerData, mutualFillerData)
     }
 
-    override fun IDslRef.mutual(other: IDslRef): FillerData {
-        val fillerData = this from other
-        val mutualFillerData = fillerData(fillerData.sourceDslRef, fillerData.targetDslRef, fillerData.theCopyBoundrys) // just giving them the same set of CopyBoundrys
-        return fillerData
+    override fun IDslRef.mutual(other: IDslRef): List<FillerData> {
+        val fillerData = (this from other).first()
+        val mutualFillerData = dslFillerDelegateImpl.addFillerData(simpleName, FillerData(C.DEFAULT, fillerData.sourceDslRef, fillerData.targetDslRef))
+        return listOf(fillerData, mutualFillerData)
     }
 
-    override fun IDslRef.mutual(other: String): FillerData {
+    override fun IDslRef.mutual(other: String): List<FillerData> {
         // other String must be a complete DslRefString (as we here refer to a modelSubelement definitely outside of this modelgroup
         TODO("Not yet implemented")
     }
 
-    override fun String.mutual(other: MODELREFENUM): FillerData {
+    override fun String.mutual(other: MODELREFENUM): List<FillerData> {
         // this String must be a complete DslRefString (as we here refer to a modelSubelement definitely outside of this modelgroup
         TODO("Not yet implemented")
     }
 
-    override fun String.mutual(other: IDslRef): FillerData {
+    override fun String.mutual(other: IDslRef): List<FillerData> {
         // this String must be a complete DslRefString (as we here refer to a modelSubelement definitely outside of this modelgroup
         TODO("Not yet implemented")
     }
 
-    override fun String.mutual(other: String): FillerData {
+    override fun String.mutual(other: String): List<FillerData> {
         // this String and other String must be a complete DslRefString (as we here refer to a modelSubelement definitely outside of this modelgroup
         TODO("Not yet implemented")
     }
 
-    override fun MODELREFENUM.from(other: MODELREFENUM): FillerData {
+    override fun MODELREFENUM.from(other: MODELREFENUM): List<FillerData> {
         val (_, selfElementRef, _) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslFillerDelegateImpl)
 
         val toRef =  when (this) {
@@ -186,10 +199,10 @@ class DslFillerBlockImpl(val simpleName: String, override val selfDslRef: IDslRe
             MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, selfElementRef)
         }
 
-        return fillerData(toRef, fromRef)
+        return listOf(dslFillerDelegateImpl.addFillerData(simpleName, FillerData(C.DEFAULT, toRef, fromRef)))
     }
 
-    override fun MODELREFENUM.from(other: IDslRef): FillerData {
+    override fun MODELREFENUM.from(other: IDslRef): List<FillerData> {
         if (other !is DslRef.ISubElementLevel) { throw DslException("$this: filling a MODEL is not allowed") }
         val (_, selfElementRef, _) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslFillerDelegateImpl)
 
@@ -199,10 +212,10 @@ class DslFillerBlockImpl(val simpleName: String, override val selfDslRef: IDslRe
             MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, selfElementRef)
         }
 
-        return fillerData(toRef, other)
+        return listOf(dslFillerDelegateImpl.addFillerData(simpleName, FillerData(C.DEFAULT, toRef, other)))
     }
 
-    override fun MODELREFENUM.from(other: String): FillerData {
+    override fun MODELREFENUM.from(other: String): List<FillerData> {
         if (this == MODELREFENUM.MODEL) { throw DslException("$this: filling a MODEL is not allowed") }
         val (_, _, selfSubelRef) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslFillerDelegateImpl)
         if (selfSubelRef == null) throw DslException("$this filler not directly on a model/api element")
@@ -210,10 +223,10 @@ class DslFillerBlockImpl(val simpleName: String, override val selfDslRef: IDslRe
         val thisRef = this of selfSubelRef
         val otherRef = DslImplModelReffing.defaultSubElementWithName(other, dslFillerDelegateImpl)
 
-        return fillerData(thisRef, otherRef)
+        return listOf(dslFillerDelegateImpl.addFillerData(simpleName, FillerData(C.DEFAULT, thisRef, otherRef)))
     }
 
-    override fun IDslRef.from(other: MODELREFENUM): FillerData {
+    override fun IDslRef.from(other: MODELREFENUM): List<FillerData> {
         if (this !is DslRef.ISubElementLevel) throw DslException("$this not sub(!)element")
         val (_, elementRef, _) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslFillerDelegateImpl)
 
@@ -223,71 +236,50 @@ class DslFillerBlockImpl(val simpleName: String, override val selfDslRef: IDslRe
             MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, elementRef)
         }
 
-        return fillerData(this, fromRef)
+        return listOf(dslFillerDelegateImpl.addFillerData(simpleName, FillerData(C.DEFAULT, this, fromRef)))
     }
 
-    override fun IDslRef.from(other: IDslRef): FillerData {
+    override fun IDslRef.from(other: IDslRef): List<FillerData> {
         if (this !is DslRef.ISubElementLevel || other !is DslRef.ISubElementLevel) throw DslException("$this or $other not sub(!)element")
 
-        return fillerData(this, other)
+        return listOf(dslFillerDelegateImpl.addFillerData(simpleName, FillerData(C.DEFAULT, this, other)))
     }
 
-    override fun IDslRef.from(other: String): FillerData {
+    override fun IDslRef.from(other: String): List<FillerData> {
         // other String must be a complete DslRefString (as we here refer to a modelSubelement definitely outside of this modelgroup
         TODO("Not yet implemented")
     }
 
-    override fun String.from(other: MODELREFENUM): FillerData {
+    override fun String.from(other: MODELREFENUM): List<FillerData> {
         // this String must be a complete DslRefString (as we here refer to a modelSubelement definitely outside of this modelgroup
         TODO("Not yet implemented")
     }
 
-    override fun String.from(other: IDslRef): FillerData {
+    override fun String.from(other: IDslRef): List<FillerData> {
         // this String must be a complete DslRefString (as we here refer to a modelSubelement definitely outside of this modelgroup
         TODO("Not yet implemented")
     }
 
-    override fun String.from(other: String): FillerData {
+    override fun String.from(other: String): List<FillerData> {
         // this String must be a complete DslRefString (as we here refer to a modelSubelement definitely outside of this modelgroup
         TODO("Not yet implemented")
     }
 
-    override fun FillerData.copyBoundry(copyType: COPYTYPE, modelref: MODELREFENUM): FillerData
-    {
-        TODO("Not yet implemented")
-    }
 
-    override fun FillerData.copyBoundry(copyType: COPYTYPE, dslRef: IDslRef): FillerData {
-        TODO("Not yet implemented")
-    }
-
-    override fun FillerData.copyBoundry(copyType: COPYTYPE, other: String): FillerData {
-        TODO("Not yet implemented")
-    }
-
-    override fun FillerData.copyBoundry(copyType: COPYTYPE, modelref: MODELREFENUM, propName: String): FillerData {
-        TODO("Not yet implemented")
-    }
-
-    override fun FillerData.copyBoundry(copyType: COPYTYPE, dslRef: IDslRef, propName: String): FillerData {
-        TODO("Not yet implemented")
-    }
-
-    override fun FillerData.copyBoundry(copyType: COPYTYPE, other: String, propName: String): FillerData {
-        TODO("Not yet implemented")
-    }
-
-    override fun FillerData.copyBoundries(copyType: COPYTYPE, vararg modelref: MODELREFENUM): FillerData {
-        TODO("Not yet implemented")
-    }
-
-    override fun FillerData.copyBoundries(copyType: COPYTYPE, vararg dslRef: IDslRef): FillerData {
-        TODO("Not yet implemented")
-    }
-
-    override fun FillerData.copyBoundries(copyType: COPYTYPE, vararg other: String): FillerData {
-        TODO("Not yet implemented")
-    }
+//    override fun FillerData.copyBoundry(named: String, copyType: COPYTYPE, vararg propRef: DslRef.prop): FillerData {
+//        this.theCopyBoundrys.add(CopyBoundry(named, copyType, *propRef))
+//        return this
+//    }
+//
+//    override fun FillerData.copyBoundry(named: String, copyType: COPYTYPE, vararg modelRef: DslRef.IModelOrModelSubelement): FillerData {
+//        this.theCopyBoundrys.add(CopyBoundry(named, copyType, *modelRef))
+//        return this
+//    }
+//
+//    override fun FillerData.copyBoundry(named: String, copyType: COPYTYPE, vararg propNames: String): FillerData {
+//        this.theCopyBoundrys.add(CopyBoundry(named, copyType, *propNames))
+//        return this
+//    }
 
     // ====================
     // === ModelReffing ===
@@ -309,6 +301,17 @@ class DslFillerBlockImpl(val simpleName: String, override val selfDslRef: IDslRe
 
     override fun OtherModelgroupSubelementWithSimpleNameDefault.withModelName(modelName: String): IDslRef {
         return modelReffing.fakeWithModelName(this, modelName)
+    }
+
+}
+
+class DslImplFillerName(val simpleName: String, val fillerName: String, val theDslFillerDatas: List<FillerData>) : IDslApiFillerName {
+    override fun copyBoundry(copyType: COPYTYPE, vararg propName: String) {
+        for (fillerData in theDslFillerDatas) {
+            fillerData.fillerName = fillerName
+            val copyBoundry = fillerData.theCopyBoundrys[copyType]!!
+            copyBoundry.eitherPropNames.propNames.addAll(propName)
+        }
     }
 
 }

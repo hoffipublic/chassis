@@ -188,7 +188,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                 val propEither = prop.eitherTypModelOrClass
                 when (propEither) {
                     is EitherTypOrModelOrPoetType.EitherModel -> {
-                        genCtx.syntheticFillerDatas.add(SynthFillerData(propEither.modelSubElementRef, propEither.modelSubElementRef, via = "propTypeEither is Model in deepCopyAndClone of $currentBuildFillerData"))
+                        genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, propEither.modelSubElementRef, propEither.modelSubElementRef, via = "propTypeEither is Model in deepCopyAndClone of $currentBuildFillerData"))
                         val propEitherModelFillerClassName = prop.eitherTypModelOrClass.modelClassName.fillerPoetType
                         when (prop.collectionType) {
                             is COLLECTIONTYP.NONE -> {
@@ -237,7 +237,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     val targetExtendsModel = genCtx.genModel(targetExtendsModelEither.modelSubElementRef)
                     val sourceGenModelExtendsModelEither = i.sourceGenModel.extends[C.DEFAULT]?.typeClassOrDslRef
                     if (sourceGenModelExtendsModelEither != null && sourceGenModelExtendsModelEither is EitherTypOrModelOrPoetType.EitherModel) {
-                        genCtx.syntheticFillerDatas.add(SynthFillerData(targetExtendsModelEither.modelSubElementRef, sourceGenModelExtendsModelEither.modelSubElementRef, via = "superExtends of target is Model in deepCopyAndClone of $currentBuildFillerData"))
+                        genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, targetExtendsModelEither.modelSubElementRef, sourceGenModelExtendsModelEither.modelSubElementRef, via = "superExtends of target is Model in deepCopyAndClone of $currentBuildFillerData"))
 
                         funSpec.addStatement("%T.copyDeepInto(%L, %L)",  targetExtendsModel.modelClassName.fillerPoetType, i.targetVarName, i.sourceVarName)
 

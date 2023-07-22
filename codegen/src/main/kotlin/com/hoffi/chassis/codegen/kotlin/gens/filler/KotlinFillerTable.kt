@@ -122,8 +122,8 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
                         i.sourceVarName, prop.name, "uuid"
                     )
                     val originalRef = this.modelClassName.modelSubElRef
-                    genCtx.syntheticFillerDatas.add(SynthFillerData(this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
-                    genCtx.syntheticFillerDatas.add(SynthFillerData(originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
                 },
                 isPoetType = { },
                 isTyp = {
@@ -143,19 +143,8 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
 
                     val originalRef = this.modelClassName.modelSubElRef
                     genCtx.syntheticFillerDatas.add(
-                        SynthFillerData(
-                            this.modelSubElementRef,
-                            originalRef,
-                            via = "TableFiller for contained prop $prop"
-                        )
-                    )
-                    genCtx.syntheticFillerDatas.add(
-                        SynthFillerData(
-                            originalRef,
-                            this.modelSubElementRef,
-                            via = "TableFiller for contained prop $prop"
-                        )
-                    )
+                        SynthFillerData(C.DEFAULT, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
                 },
                 isModelIterable = { },
                 isPoetTypeList = { },
@@ -188,8 +177,8 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
                     funSpec.addStatement("%L.%L = %T.%L(%L)", i.targetVarName, prop.name, propFiller(modelSubElementRef, MODELREFENUM.TABLE), prop.eitherTypModelOrClass.modelClassName.asVarName, i.sourceVarName)
 
                     val originalRef = this.modelClassName.modelSubElRef
-                    genCtx.syntheticFillerDatas.add(SynthFillerData(this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
-                    genCtx.syntheticFillerDatas.add(SynthFillerData(originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
                 },
                 isPoetType = { },
                 isTyp = { funSpec.addStatement("%L.%L = %L[%T.%L]", i.targetVarName, prop.name, i.sourceVarName, i.sourcePoetType, prop.name) },

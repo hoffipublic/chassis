@@ -233,7 +233,8 @@ globalDslCtx = dslCtx // TODO remove workaround
 
     fun finish(dslCtx: DslCtx) {
         // consistency check if filler referenced models really exist and do not point into "nirvana"
-        for (entry in fillerImpl.theFillerDatas) {
+        val finishedFillerDatas: MutableMap<String, MutableSet<FillerData>> = fillerImpl.finishedFillerDatas()
+        for (entry in finishedFillerDatas) {
             val simpleName = entry.key
             for (fillerData: FillerData in entry.value) {
                 try {
@@ -250,7 +251,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                 }
             }
         }
-        for ((simpleName, setOfFillerDatas) in fillerImpl.theFillerDatas) {
+        for ((simpleName, setOfFillerDatas) in finishedFillerDatas) {
             dslCtx.genCtx.fillerDatas.getOrPut(simpleName) { mutableMapOf() }[selfDslRef] = setOfFillerDatas
         }
     }

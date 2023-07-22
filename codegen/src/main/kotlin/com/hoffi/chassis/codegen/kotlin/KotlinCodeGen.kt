@@ -88,7 +88,7 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
             if (syntheticFillerData.sourceDslRef is DslRef.table || syntheticFillerData.targetDslRef is DslRef.table) {
                 kotlinGenCtx.buildFiller(MODELKIND.TABLEKIND, syntheticFillerData)
             } else {
-                println("current: ${syntheticFillerData}\n  to build: ${genCtx.syntheticFillerDatas.joinToString(separator = "\n  to build: ")}")
+                //println("current: ${syntheticFillerData}\n  to build: ${genCtx.syntheticFillerDatas.joinToString(separator = "\n  to build: ")}")
                 kotlinGenCtx.buildFiller(MODELKIND.DTOKIND, syntheticFillerData)
             }
         }
