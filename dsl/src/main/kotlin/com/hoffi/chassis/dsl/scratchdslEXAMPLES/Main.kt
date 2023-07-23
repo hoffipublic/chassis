@@ -20,7 +20,7 @@ fun main() {
     // or maybe with different naming conventions there
     aDslRun.configure {
         nameAndWhereto {
-            baseDirAbsolute("./generated/src/main/kotlin")
+            baseDirAbsolute("../generated/some/src/main/kotlin")
             basePackage("com.hoffi.generated")
             dtoNameAndWhereto {
                 classPostfix("DtoDevRun")
@@ -45,7 +45,7 @@ fun main() {
     val devDslRun = DslRun("devRun")
     devDslRun.configure {
         nameAndWhereto {
-            baseDirAbsolute("./devRunBaseDir/generated")
+            baseDirAbsolute("../devRunBaseDir/generated")
             packageNameAbsolute("com.hoffi.generated.devrun")
             dtoNameAndWhereto {
                 classPostfix("DevRunDtoType")

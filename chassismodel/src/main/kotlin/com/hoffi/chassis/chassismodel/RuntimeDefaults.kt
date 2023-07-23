@@ -8,7 +8,7 @@ import com.squareup.kotlinpoet.buildCodeBlock
 import okio.Path.Companion.toPath
 
 object RuntimeDefaults {
-    val UNIVERSE__BASEDIR = "generated/examples/src/main/kotlin/".toPath()
+    val UNIVERSE__BASEDIR = "../generated/examples/src/main/kotlin/".toPath()
     const val UNIVERSE___PACKAGE = "com.hoffi.generated.universe"
     const val UNIVERSE___MODELGROUP = "Universe"
     const val UNIVERSE___DEFAULTS = "Defaults"

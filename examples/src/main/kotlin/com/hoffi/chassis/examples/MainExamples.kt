@@ -17,7 +17,7 @@ object MainExamples {
 
         examplesDslRun.configure {
             nameAndWhereto {
-                baseDirAbsolute("./generated/examples/src/main/kotlin")
+                baseDirAbsolute("../generated/examples/src/main/kotlin")
                 basePackageAbsolute("com.hoffi.generated.examples")
                 dtoNameAndWhereto {
                     classPostfix("RunDto")
