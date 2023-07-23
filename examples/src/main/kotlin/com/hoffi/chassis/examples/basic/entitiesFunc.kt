@@ -32,8 +32,15 @@ fun entities() {
     modelgroup(ENTITYGROUP) {
         nameAndWhereto {
             classPrefix("Simple")
-            classPostfix("Dto")
             packageName("entity")
+            dtoNameAndWhereto {
+                classPostfix("Dto")
+                packageName("dto")
+            }
+            tableNameAndWhereto {
+                classPostfix("Table")
+                packageName("table")
+            }
         }
 
         constructorVisibility = PROTECTED
@@ -131,7 +138,7 @@ fun entities() {
             dto {
                 constructorVisibility = PUBLIC
                 extends {
-                    + ( (MODEL inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) ) // withName COMMON__PERSISTENT) //
+                    + ( (MODEL inModelgroup PERSISTENTGROUP withModelName PERSISTENT__BASE) ) // withName COMMON__PERSISTENT) //
                 }
                 property("subEntityDtoSpecificProp", TYP.STRING, mutable = mutable, Tag.CONSTRUCTOR)
                 property("entityBackreference", DTO of ENTITY__ENTITY, mutable, Tag.TRANSIENT)

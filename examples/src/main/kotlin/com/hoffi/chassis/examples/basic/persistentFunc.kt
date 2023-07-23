@@ -10,9 +10,9 @@ import com.hoffi.chassis.shared.shared.Tag
 import com.squareup.kotlinpoet.KModifier
 
 const val PERSISTENTGROUP = "Persistentgroup"
-const val PERSISTENT__INTFCPERSISTENT       = "IPersistent"
+const val PERSISTENT__INTFCPERSISTENT       = "fc"
+const val PERSISTENT__Abstract              = "Abstract"
 const val PERSISTENT__BASE                  = "Base"
-const val PERSISTENT__PERSISTENT            = "Persistent"
 const val PERSISTENT__TRANSIENT_STATE       = "TransientState"
 const val PERSISTENT__PERSISTENT_OPTIMISTIC = "PersistentOptimistic"
 
@@ -21,13 +21,14 @@ fun baseModelsPersistent() {
     dslCtx.topLevelDslFunctionName = object{}.javaClass.enclosingMethod.name
     modelgroup(PERSISTENTGROUP) {
         nameAndWhereto {
+            classPrefix("Persistent")
             packageName("persistent")
             dtoNameAndWhereto {
-                classPostfix("PersistentDto")
+                classPostfix("Dto")
                 packageName("dto")
             }
             tableNameAndWhereto {
-                classPostfix("PersistentTable")
+                classPostfix("Table")
                 packageName("table")
             }
         }
@@ -41,14 +42,14 @@ fun baseModelsPersistent() {
             table {
             }
         }
-        model(PERSISTENT__BASE) {
+        model(PERSISTENT__Abstract) {
             classModifiers(KModifier.ABSTRACT)
             dto {
                 + KModifier.ABSTRACT
                 extends { -PERSISTENT__INTFCPERSISTENT }
             }
         }
-        model(PERSISTENT__PERSISTENT) {
+        model(PERSISTENT__BASE) {
             classModifiers(KModifier.ABSTRACT)
             property("uuid", TYP.UUID, mutable, Tag.PRIMARY, Tag.TO_STRING_MEMBER)
             property("createdAt", TYP.LOCALDATETIME, mutable)
@@ -62,7 +63,7 @@ fun baseModelsPersistent() {
 //                "updateUser" with Initializer.of("%S", DEFAULT_USER)
 //            }
             dto {
-                extends { +PERSISTENT__BASE } // TODO this@model
+                extends { +PERSISTENT__Abstract } // TODO this@model
                 classMods { }
                 nameAndWhereto {
                     classPostfix("Base")
@@ -76,7 +77,7 @@ fun baseModelsPersistent() {
             property("deleted", TYP.BOOL, mutable, Tag.TRANSIENT)
 
             dto {
-                extends { +PERSISTENT__PERSISTENT }
+                extends { +PERSISTENT__BASE }
             }
         }
         model(PERSISTENT__PERSISTENT_OPTIMISTIC) {

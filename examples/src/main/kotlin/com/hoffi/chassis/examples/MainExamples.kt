@@ -19,22 +19,22 @@ object MainExamples {
             nameAndWhereto {
                 baseDirAbsolute("../generated/examples/src/main/kotlin")
                 basePackageAbsolute("com.hoffi.generated.examples")
-                dtoNameAndWhereto {
-                    classPostfix("RunDto")
-                    packageName("dto")
-                }
-                dtoNameAndWhereto("SPECIAL") {
-                    classPostfix("ExamplesDtoDevRun")
-                    packageName("examplesDevRun")
-                }
-                tableNameAndWhereto {
-                    classPostfix("RunTable")
-                    packageName("table")
-                }
-                //            fillerNameAndWhereto {
-                //                classPostfix = "Filler"
-                //                packageName("filler")
-                //            }
+                //dtoNameAndWhereto {
+                //    classPostfix("RunDto")
+                //    packageName("dto")
+                //}
+                //dtoNameAndWhereto("SPECIAL") {
+                //    classPostfix("ExamplesDtoDevRun")
+                //    packageName("examplesDevRun")
+                //}
+                //tableNameAndWhereto {
+                //    classPostfix("RunTable")
+                //    packageName("table")
+                //}
+                ////            fillerNameAndWhereto {
+                ////                classPostfix = "Filler"
+                ////                packageName("filler")
+                ////            }
             }
         }
 
