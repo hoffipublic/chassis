@@ -88,11 +88,31 @@ abstract class AKotlinFiller constructor(fillerData: FillerData, val modelkind: 
         return typeSpec
     }
 
-    fun funName(funName: String, fillerData: FillerData): String = if (fillerData.fillerName == C.DEFAULT) {
-        funName
-    } else {
-        val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
-        targetGenModel.modelClassName.classNameStrategy.nameLowerFirst(fillerData.fillerName) + targetGenModel.modelClassName.classNameStrategy.nameUpperFirst(funName)
+    data class FunName(val funName: String, val originalFunName:String, val prefix: String = "", val postfix: String = "") {
+        fun of(otherFunName: String): String = if (prefix.isNotBlank()) {
+            prefix + otherFunName.replaceFirstChar { if (it.isLowerCase()) it.titlecase(C.LOCALE) else it.toString() } + postfix
+        } else {
+            otherFunName + postfix
+        }
+    }
+    fun funName(origFunName: String, fillerData: FillerData): FunName {
+        val funName = if (fillerData.fillerName == C.DEFAULT) {
+            if (fillerData.sourceDslRef == fillerData.targetDslRef) {
+                FunName(origFunName, origFunName, "", "")
+            } else {
+                val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
+                val sourceGenModel: GenModel = genCtx.genModel(fillerData.sourceDslRef)
+                val prefix = targetGenModel.modelClassName.classNameStrategy.nameLowerFirst(sourceGenModel.poetTypeSimpleName)
+                FunName(prefix + targetGenModel.modelClassName.classNameStrategy.nameUpperFirst(origFunName),
+                    origFunName, prefix, "")
+            }
+        } else {
+            val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
+            val prefix = targetGenModel.modelClassName.classNameStrategy.nameLowerFirst(fillerData.fillerName)
+            FunName(prefix + targetGenModel.modelClassName.classNameStrategy.nameUpperFirst(origFunName),
+                origFunName, prefix, "")
+        }
+        return funName
     }
 
     fun nullSentinel(funBuilder: FunSpec.Builder, targetVarName: String, targetModel: GenModel) {

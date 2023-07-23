@@ -107,7 +107,7 @@ fun entities() {
                 DTO from TABLE
                 TABLE from DTO
                 //having CopyBoundry first, as we otherwise cannot distinguish from obove's fillers'
-                fillerName("withoutModels", TABLE from DTO, DTO from TABLE) {
+                fillerName("withoutModels", DTO) {
                     copyBoundry(IGNORE, "subentitys", "someModelObject")
                 }
                 //(TABLE from DTO).copyBoundry(named = "withoutModels", IGNORE, "subentitys", "someModelObject")

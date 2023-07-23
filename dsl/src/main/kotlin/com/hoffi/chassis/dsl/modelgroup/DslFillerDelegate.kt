@@ -41,6 +41,9 @@ interface IDslApiFillerBlock : IDslApiModelReffing {
     //fun FillerData.copyBoundry(named: String, copyType: COPYTYPE, vararg modelRef: DslRef.IModelOrModelSubelement): FillerData
     //fun FillerData.copyBoundry(named: String, copyType: COPYTYPE, vararg propNames: String): FillerData
     fun fillerName(fillerName: String, vararg dslFillerData: List<FillerData>, fillerNameBlock: IDslApiFillerName.() -> Unit)
+    fun fillerName(fillerName: String, vararg modelrefenum: MODELREFENUM, fillerNameBlock: IDslApiFillerName.() -> Unit)
+
+    //abstract fun fillerName(fillerName: String, dslFillerData: Array<List<FillerData>>, fillerNameBlock: IDslApiFillerName.() -> Unit)
 }
 
 interface IDslApiFillerDelegate {
@@ -110,6 +113,10 @@ class DslFillerBlockImpl(val simpleName: String, override val selfDslRef: IDslRe
     @ChassisDslMarker
     override fun fillerName(fillerName: String, vararg dslFillerData: List<FillerData>, fillerNameBlock: IDslApiFillerName.() -> Unit) {
         fillerNameBlock.invoke(DslImplFillerName(simpleName, fillerName, dslFillerData.flatMap { it }))
+    }
+    @ChassisDslMarker
+    override fun fillerName(fillerName: String, vararg modelrefenum: MODELREFENUM, fillerNameBlock: IDslApiFillerName.() -> Unit) {
+        fillerNameBlock.invoke(DslImplFillerName(simpleName, fillerName, modelrefenum.flatMap { +it }.toList()))
     }
 
     override fun MODELREFENUM.unaryPlus(): List<FillerData> {

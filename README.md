@@ -23,7 +23,8 @@ from a custom Kotlin DSL using <https://square.github.io/kotlinpoet>, generate:
 
 current:
 
-- Fillers should not(!) call fillers of extends/super/parent classes, but directly use `ModelClassData.propsInclSuperclassPropsMap`  
+- Fillers should not(!) call fillers of extends/super/parent classes, but directly use `ModelClassData.propsInclSuperclassPropsMap`
+- synthetic fillers for abstract classes not neede anymore then
 
 coming up:
 

@@ -1,7 +1,5 @@
 package com.hoffi.chassis.codegen.kotlin.gens.filler
 
-import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
@@ -13,12 +11,10 @@ object IntersectPropertys {
         val targetFillerPoetType: ClassName,
         val sourceGenModel: GenModel,
         val sourceFillerPoetType: ClassName,
-        val intersectPropSet: Set<Property>,
-        val sourcePropByName: Map<String, Property>,
-        val fromPropButNotToPropSet: Set<Property>,
-        val targetPropButNotFromPropSet: Set<Property>,
-        val superModelsTargetIntersectPropSet: Set<Property>,
-        val additionalDslRefsInSourceSuperclasses: Set<IDslRef>,
+        val allIntersectPropSet: Set<Property>,
+        val allIntersectPropSetSource: Set<Property>,
+        val targetPropButNotInSourcePropSet: Set<Property>,
+        val sourcePropButNotInTargetPropSet: Set<Property>,
         val sourceVarNamePostfix: String,
         val targetVarNamePostfix: String,
     ) {
@@ -37,16 +33,21 @@ object IntersectPropertys {
         sourceVarNamePostfix: String = "",
         targetVarNamePostfix: String = ""
     ): CommonPropData {
+        val allIntersectPropSet = targetGenModel.propsInclSuperclassPropsMap.values.intersect(sourceGenModel.propsInclSuperclassPropsMap.values.toSet())
+        /** as translated props have different EitherTypes */
+        val allIntersectPropSetSource = sourceGenModel.propsInclSuperclassPropsMap.values.intersect((targetGenModel.propsInclSuperclassPropsMap.values).toSet())
+        val targetPropButNotInSourcePropSet = targetGenModel.propsInclSuperclassPropsMap.values.toMutableSet().also { it.removeAll(allIntersectPropSet) }
+        val sourcePropButNotInTargetPropSet = sourceGenModel.propsInclSuperclassPropsMap.values.toMutableSet().also { it.removeAll(allIntersectPropSetSource) }
 
-        val intersectPropSet = targetGenModel.allProps.values.intersect(sourceGenModel.allProps.values.toSet())
-        /** as translated props have different EitherTypes */
-        val intersectPropSetSource = sourceGenModel.allProps.values.intersect(targetGenModel.allProps.values.toSet())
-        /** as translated props have different EitherTypes */
-        val sourcePropByName: Map<String, Property> = intersectPropSetSource.associateBy { it.name }
-        val sourcePropButNotInTargetPropSet = sourceGenModel.allProps.values.toMutableSet().also { it.removeAll(intersectPropSet) }
-        val targetPropButNotInSourcePropSet = targetGenModel.allProps.values.toMutableSet().also { it.removeAll(intersectPropSet) }
-        val superModelsTargetIntersectPropSet = targetGenModel.superclassProps.values.intersect(targetPropButNotInSourcePropSet + sourceGenModel.superclassProps.values)
-        val additionalDslRefsInSourceSuperclasses: Set<DslRef.IModelSubelement> = superModelsTargetIntersectPropSet.map { it.containedInSubelementRef }.toSet()
+        //val directIntersectPropSet = targetGenModel.allProps.values.intersect(sourceGenModel.allProps.values.toSet())
+        ///** as translated props have different EitherTypes */
+        //val directIntersectPropSetSource = sourceGenModel.allProps.values.intersect(targetGenModel.allProps.values.toSet())
+        ///** as translated props have different EitherTypes */
+        //val directSourcePropByName: Map<String, Property> = directIntersectPropSet.associateBy { it.name }
+        //val directSourcePropButNotInTargetPropSet = sourceGenModel.allProps.values.toMutableSet().also { it.removeAll(directIntersectPropSet) }
+        //val targetPropButNotInSourcePropSet = targetGenModel.allProps.values.toMutableSet().also { it.removeAll(directIntersectPropSet) }
+        //val superModelsTargetIntersectPropSet = targetGenModel.superclassProps.values.intersect(targetPropButNotInSourcePropSet + sourceGenModel.superclassProps.values)
+        ////val additionalDslRefsInSourceSuperclasses: Set<DslRef.IModelSubelement> = superModelsTargetIntersectPropSet.map { it.containedInSubelementRef }.toSet()
 
         val targetFillerPoetType = targetGenModel.fillerPoetType
         val sourceFillerPoetType = sourceGenModel.fillerPoetType
@@ -56,12 +57,10 @@ object IntersectPropertys {
             targetFillerPoetType,
             sourceGenModel,
             sourceFillerPoetType,
-            intersectPropSet,
-            sourcePropByName,
-            sourcePropButNotInTargetPropSet,
+            allIntersectPropSet,
+            allIntersectPropSetSource,
             targetPropButNotInSourcePropSet,
-            superModelsTargetIntersectPropSet,
-            additionalDslRefsInSourceSuperclasses,
+            sourcePropButNotInTargetPropSet,
             sourceVarNamePostfix,
             targetVarNamePostfix
         )

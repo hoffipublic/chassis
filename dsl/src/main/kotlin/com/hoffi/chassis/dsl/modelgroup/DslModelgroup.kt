@@ -334,9 +334,9 @@ globalDslCtx = dslCtx // TODO remove workaround
     }
 
     fun gatherSuperclassPropertys(dslCtx: DslCtx) {
-        val superclassesProps: MutableMap<String, Property> = mutableMapOf()
         for (dslModel in dslModels) {
             for (modelSubelement: AModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
+                val superclassesProps: MutableMap<String, Property> = mutableMapOf()
                 val genModel: ModelClassData = dslCtx.genCtx.genModel(modelSubelement.selfDslRef)
                 var extendsEither: EitherTypOrModelOrPoetType? = genModel.extends[C.DEFAULT]?.typeClassOrDslRef
                 var extendsModel: EitherTypOrModelOrPoetType.EitherModel? = null
