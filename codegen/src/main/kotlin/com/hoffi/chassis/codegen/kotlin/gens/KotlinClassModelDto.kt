@@ -173,7 +173,9 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
 
     private fun buildToStringFunction() {
         if (KModifier.ABSTRACT in modelClassData.classModifiers || modelClassData.kind in listOf(TypeSpec.Kind.OBJECT, TypeSpec.Kind.INTERFACE)) return
-        val toStringMembers = modelClassData.propsInclSuperclassPropsMap.values.filter { prop -> prop.tags.tags.any{ it == Tag.TO_STRING_MEMBER || it == Tag.PRIMARY}   }
+        val toStringMembers = modelClassData.propsInclSuperclassPropsMap.values.filter { prop -> Tag.PRIMARY in prop.tags }.toMutableSet() // primaries first
+        toStringMembers.addAll(modelClassData.propsInclSuperclassPropsMap.values.filter { prop -> Tag.TO_STRING_MEMBER in prop.tags || prop.name in modelClassData.additionalToStringMemberProps }.toMutableSet())
+        toStringMembers.removeIf { prop -> prop.name in modelClassData.removeToStringMemberProps }
         if (toStringMembers.isNotEmpty()) {
             val funSpecBuilder =
                 FunSpec.builder("toString").returns(String::class.asTypeName()).addModifiers(KModifier.OVERRIDE)

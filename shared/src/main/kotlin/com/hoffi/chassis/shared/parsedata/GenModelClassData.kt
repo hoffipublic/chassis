@@ -37,6 +37,9 @@ abstract class ModelClassData(
     val superclassProps: MutableMap<String, Property> = mutableMapOf()
     val propsInclSuperclassPropsMap: MutableMap<String, Property> by lazy { (allProps + superclassProps).toMutableMap() }
 
+    val additionalToStringMemberProps: MutableSet<String> = mutableSetOf()
+    val removeToStringMemberProps: MutableSet<String> = mutableSetOf()
+
     var isUuidPrimary = false
 
 //    val incomingFKs = sortedSetOf<Models.DslFK>() // TODO are these really used? see AKotlinClass

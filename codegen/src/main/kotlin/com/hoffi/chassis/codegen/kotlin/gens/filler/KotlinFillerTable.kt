@@ -57,7 +57,6 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
         } else {
             insertLambdas(intersectPropsData)
         }
-
     }
 
     private fun insertLambdas(i: IntersectPropertys.CommonPropData) {

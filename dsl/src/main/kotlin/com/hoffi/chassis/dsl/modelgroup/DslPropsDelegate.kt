@@ -70,6 +70,15 @@ class DslPropsDelegate(
     fun getPropOrNull(name: String) = theProps[name]
     fun addProp(name: String, prop: DslModelProp): DslModelProp = if (!theProps.containsKey(name)) prop.also { theProps[name] = prop } else { throw DslException("$delegatorRef already has a property $name") }
 
+    val additionalToStringMemberProps: MutableSet<String> = mutableSetOf()
+    override fun addToStringMembers(vararg propName: String) {
+        additionalToStringMemberProps.addAll(propName)
+    }
+    val removeToStringMemberProps: MutableSet<String> = mutableSetOf()
+    override fun removeToStringMembers(vararg propName: String) {
+        removeToStringMemberProps.addAll(propName)
+    }
+
     // ===================================================================================================================================
     // ====================   "primitive" TYP properties   ===============================================================================
     // ===================================================================================================================================

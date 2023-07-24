@@ -79,7 +79,7 @@ fun entities() {
 //                // not implemented yet, and not sure if an own clause or via property(...)
 //            }
 //
-//            //addToStringMembers(toStringMembersList = COMMON_MODEL___toStringMembers)
+            addToStringMembers("aLocalDateTime", "updatedAt")
 
             dto {
                 extends {
@@ -94,7 +94,8 @@ fun entities() {
                 initializer("dtoSpecificProp", APPEND, "/* some dto specific comment */")
                 initializer("prio", APPEND, "/* some dto prio comment */")
 
-//                addToStringMembers("dtoSpecificProp")
+                addToStringMembers("dtoSpecificProp", "createdAt")
+                removeToStringMembers("prio")
             }
             table {
                 kind = DslClassObjectOrInterface.OBJECT

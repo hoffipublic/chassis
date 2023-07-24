@@ -23,6 +23,8 @@ interface IDslApiInitializer {
 
 @ChassisDslMarker
 interface IDslApiPropFuns {
+    fun addToStringMembers(vararg propName: String)
+    fun removeToStringMembers(vararg propName: String)
     // ===================================================================================================================================
     // ====================   "primitive" TYP properties   ===============================================================================
     // ===================================================================================================================================

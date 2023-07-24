@@ -433,6 +433,9 @@ class DslDto(
             else
                 constructorVisibility == IDslApiConstructorVisibility.VISIBILITY.PUBLIC
 
+        dtoModel.additionalToStringMemberProps.addAll(propsImpl.additionalToStringMemberProps)
+        dtoModel.removeToStringMemberProps.addAll(propsImpl.removeToStringMemberProps)
+
         finishModelClassData(dslModel, dtoModel, classModifiersImpl, extendsImpl, gatherPropertiesImpl, propsImpl)
     }
 

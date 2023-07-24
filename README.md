@@ -23,26 +23,25 @@ from a custom Kotlin DSL using <https://square.github.io/kotlinpoet>, generate:
 
 current:
 
-- Fillers should not(!) call fillers of extends/super/parent classes, but directly use `ModelClassData.propsInclSuperclassPropsMap`
-- synthetic fillers for abstract classes not neede anymore then
+- (additional|remove)ToString members on `DslModelgroup`
+- Primary Keys and FK Constraints on Database Tables (if not UuidTable)
+- Cascading delete
 
 coming up:
 
-- SQL Functions incl. FKs
+- DB access: SQL Functions incl. FKs
+  - select DTOs from Table's with copy Boundries (eager/lazy loading via different generated functions)
   - and adhering to CopyBoundrys
   - further CRUD DB operations with "own function names" for each CopyBoundry
-- Exposed Extendsions
+- Exposed Extensions
   - upsert ?
   - insert/delete if not exists [stackoverflow: how-can-i-do-insert-if-not-exists-in-mysql](https://stackoverflow.com/questions/1361340/how-can-i-do-insert-if-not-exists-in-mysql)
 
 
 - static companion functions (NULL)
-- fillers from dto <--> table
-- Table to UuidTable and having primary key constraint
-- DB access
 
 
-- many to many relations
+- **many to many relations**
 - Properties with generic types
 - collections with generic generic types
 - properties with generic types that are models
