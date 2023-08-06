@@ -10,6 +10,7 @@ import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGeneratedFiller
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.Property
+import com.hoffi.chassis.shared.shared.AHasCopyBoundrysData
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
@@ -25,10 +26,11 @@ abstract class AKotlinFiller constructor(fillerData: FillerData, val modelkind: 
     override fun toString() = "${this::class.simpleName}(current${currentFillerData})"
     protected val log = LoggerFactory.getLogger(this::class.java)
     /** fillerName -> source(!) DslRef (as each targetDslRef has its own KotlinFiller Instance */
-    val alreadyCreated: MutableSet<Pair<String, IDslRef>> = mutableSetOf()
+    val alreadyCreated: MutableSet<AHasCopyBoundrysData> = mutableSetOf()
+    fun alreadyCreated(fillerData: FillerData) = ! alreadyCreated.add(fillerData)
 
-    lateinit var fillerBasePath: Path
-    lateinit var fillerPath: Path
+    var fillerBasePath: Path
+    var fillerPath: Path
     val fillerPoetType = when (modelkind) {
         MODELKIND.DTOKIND -> {
             val targetGenModel = genCtx.genModel(fillerData.targetDslRef)
@@ -88,29 +90,40 @@ abstract class AKotlinFiller constructor(fillerData: FillerData, val modelkind: 
         return typeSpec
     }
 
-    data class FunName(val funName: String, val originalFunName:String, val prefix: String = "", val postfix: String = "") {
-        fun of(otherFunName: String): String = if (prefix.isNotBlank()) {
+    data class FunName(val funName: String, val originalFunName:String) {
+        enum class FUNNAMEMODE { DEFAULT, JUSTPREPOSTFIX}
+        var prefix: String = ""
+        var postfix: String = ""
+        fun swapOutOriginalFunNameWith(otherFunName: String): String = if (prefix.isNotBlank()) {
             prefix + otherFunName.replaceFirstChar { if (it.isLowerCase()) it.titlecase(C.LOCALE) else it.toString() } + postfix
         } else {
             otherFunName + postfix
         }
     }
-    fun funName(origFunName: String, fillerData: FillerData): FunName {
-        val funName = if (fillerData.fillerName == C.DEFAULT) {
-            if (fillerData.sourceDslRef == fillerData.targetDslRef) {
-                FunName(origFunName, origFunName, "", "")
+    fun funNameFiller(origFunName: String, fillerData: FillerData, funNameMode: FunName.FUNNAMEMODE = FunName.FUNNAMEMODE.DEFAULT): FunName {
+        val funName = if (fillerData.businessName == C.DEFAULT) {
+            if (fillerData.sourceDslRef == fillerData.targetDslRef || fillerData.targetDslRef is DslRef.table || fillerData.sourceDslRef is DslRef.table || funNameMode == FunName.FUNNAMEMODE.JUSTPREPOSTFIX) {
+                FunName(origFunName, origFunName).also { it.prefix = "" ; it.postfix = "" }
             } else {
                 val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
                 val sourceGenModel: GenModel = genCtx.genModel(fillerData.sourceDslRef)
-                val prefix = targetGenModel.modelClassName.classNameStrategy.nameLowerFirst(sourceGenModel.poetTypeSimpleName)
-                FunName(prefix + targetGenModel.modelClassName.classNameStrategy.nameUpperFirst(origFunName),
-                    origFunName, prefix, "")
+                val prefix = targetGenModel.nameLowerFirstOf(sourceGenModel.poetTypeSimpleName)
+                FunName(prefix + targetGenModel.nameUpperFirstOf(origFunName), origFunName)
+                    . also { it.prefix = prefix ; it.postfix = "" }
             }
         } else {
             val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
-            val prefix = targetGenModel.modelClassName.classNameStrategy.nameLowerFirst(fillerData.fillerName)
-            FunName(prefix + targetGenModel.modelClassName.classNameStrategy.nameUpperFirst(origFunName),
-                origFunName, prefix, "")
+            if (fillerData.sourceDslRef == fillerData.targetDslRef || fillerData.targetDslRef is DslRef.table || fillerData.sourceDslRef is DslRef.table || funNameMode == FunName.FUNNAMEMODE.JUSTPREPOSTFIX) {
+                val prefix = targetGenModel.nameLowerFirstOf(fillerData.businessName)
+                FunName(prefix + targetGenModel.nameUpperFirstOf(origFunName), origFunName)
+                    .also { it.prefix = prefix ; it.postfix = "" }
+            } else {
+                val sourceGenModel: GenModel = genCtx.genModel(fillerData.sourceDslRef)
+                val businessNamePrefix = targetGenModel.nameLowerFirstOf(fillerData.businessName)
+                val prefix = targetGenModel.nameUpperFirstOf(sourceGenModel.poetTypeSimpleName)
+                FunName(businessNamePrefix + prefix + targetGenModel.nameUpperFirstOf(origFunName), origFunName)
+                    .also { it.prefix = businessNamePrefix + prefix ; it.postfix = "" }
+            }
         }
         return funName
     }

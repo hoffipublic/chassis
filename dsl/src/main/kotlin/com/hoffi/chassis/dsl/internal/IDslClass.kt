@@ -46,6 +46,6 @@ abstract class ADslClass() : IDslClass {
 context(DslCtxWrapper)
 abstract class ADslDelegateClass(
     val simpleNameOfDelegator: String,
-    val delegatorRef: IDslRef,
+    val delegateRef: IDslRef,
 ) : ADslClass() {
 }

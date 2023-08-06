@@ -68,7 +68,7 @@ class DslPropsDelegate(
 
     val theProps = mutableMapOf<String, DslModelProp>()
     fun getPropOrNull(name: String) = theProps[name]
-    fun addProp(name: String, prop: DslModelProp): DslModelProp = if (!theProps.containsKey(name)) prop.also { theProps[name] = prop } else { throw DslException("$delegatorRef already has a property $name") }
+    fun addProp(name: String, prop: DslModelProp): DslModelProp = if (!theProps.containsKey(name)) prop.also { theProps[name] = prop } else { throw DslException("$delegateRef already has a property $name") }
 
     val additionalToStringMemberProps: MutableSet<String> = mutableSetOf()
     override fun addToStringMembers(vararg propName: String) {
@@ -98,7 +98,7 @@ class DslPropsDelegate(
 
         //if (Tag.NULLABLE in tags) throw DslException("Tag.NULLABLE not allowed for primitive TYP properties in property $name of $parentRef")
         val typProp = EitherTypOrModelOrPoetType.EitherTyp(typ, initializer)
-        val prop = DslModelProp(name, DslRef.prop(name, delegatorRef), typProp, mutable, modifiers, tags, length, collectionType)
+        val prop = DslModelProp(name, DslRef.prop(name, delegateRef), typProp, mutable, modifiers, tags, length, collectionType)
         addProp(name, prop)
     }
 
@@ -109,7 +109,7 @@ class DslPropsDelegate(
         log.info("fun {}(\"{}, poetType\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name.replace("-.*$".toRegex(), ""), name, dslCtx.currentPASS)
         if (dslCtx.currentPASS != dslCtx.PASS_1_BASEMODELS) return // do something only in PASS.ONE_BASEMODELS
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
-        val prop = DslModelProp(name, DslRef.prop(name, delegatorRef), EitherTypOrModelOrPoetType.EitherPoetType(poetType as ClassName, isInterface, initializer), mutable, modifiers, tags, length, collectionType)
+        val prop = DslModelProp(name, DslRef.prop(name, delegateRef), EitherTypOrModelOrPoetType.EitherPoetType(poetType as ClassName, isInterface, initializer), mutable, modifiers, tags, length, collectionType)
         addProp(name, prop)
     }
 
@@ -119,7 +119,7 @@ class DslPropsDelegate(
         //if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
         val modelOrModelSubElementRef = DslRefString.REFmodelOrModelSubelement(modelRefString)
         if (modelOrModelSubElementRef !is DslRef.model) {
-            throw DslException("prop $name of ref: $delegatorRef does not reference a model  (model() { ... }")
+            throw DslException("prop $name of ref: $delegateRef does not reference a model  (model() { ... }")
         }
         when (modelSubelement) {
             MODELREFENUM.MODEL -> throw DslException("should have been catched above")
@@ -139,7 +139,7 @@ class DslPropsDelegate(
         ////if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
         val modelOrModelSubElementRef = DslRefString.REFmodelOrModelSubelement(modelSubElementRefString)
         if (modelOrModelSubElementRef !is DslRef.IModelSubelement) {
-            throw DslException("prop $name of ref: $delegatorRef does not reference a modelSubElement (dto/table/...)")
+            throw DslException("prop $name of ref: $delegateRef does not reference a modelSubElement (dto/table/...)")
         }
         property(name, modelOrModelSubElementRef, mutable, collectionType, initializer, modifiers, length, tags)
     }
@@ -155,12 +155,12 @@ class DslPropsDelegate(
 
         // sentinel
         WhensDslRef.whenModelSubelement(modelSubElementRef, {}, {}) {
-            DslException("must be a modelsubelement (dto, table, ...): property '${name}' of $delegatorRef")
+            DslException("must be a modelsubelement (dto, table, ...): property '${name}' of $delegateRef")
         }
 
-        if (Tag.NULLABLE in tags) log.warn("Tag.NULLABLE for Class property $name of $delegatorRef")
+        if (Tag.NULLABLE in tags) log.warn("Tag.NULLABLE for Class property $name of $delegateRef")
         // isInterface of GenModel will be set to correct value in setModelClassNameOfReffedModelProperties()
-        val prop = DslModelProp(name, DslRef.prop(name, delegatorRef), EitherTypOrModelOrPoetType.EitherModel(modelSubElementRef as DslRef.IModelSubelement, initializer), mutable, modifiers, tags, length, collectionType)
+        val prop = DslModelProp(name, DslRef.prop(name, delegateRef), EitherTypOrModelOrPoetType.EitherModel(modelSubElementRef as DslRef.IModelSubelement, initializer), mutable, modifiers, tags, length, collectionType)
         addProp(name, prop)
     }
 
@@ -170,24 +170,24 @@ class DslPropsDelegate(
         val modelClass: DslModel = dslCtx.ctxObj(subelementClass.parentDslRef)
         val directDslProps: MutableMap<String, DslModelProp> = subelementClass.directDslPropertiesOf(subelementClass.propsImpl, modelClass.propsImpl)
         val dslProp: DslModelProp = directDslProps[name] ?: throw DslException("$parentDslRef neither its parent contain a property named '$name' to attach initializer '${Initializer.of(format, *args)}'")
-        dslProp.initializerReplaceAppendOrModify[delegatorRef as DslRef.IModelSubelement] = replaceAppendOrModify
+        dslProp.initializerReplaceAppendOrModify[delegateRef as DslRef.IModelSubelement] = replaceAppendOrModify
         when (replaceAppendOrModify) {
             ReplaceAppendOrModify.REPLACE -> {
-                dslProp.initializerFormatAddendum[delegatorRef] = format
-                dslProp.initializerArgsAddendum[delegatorRef] = mutableListOf(*args)
+                dslProp.initializerFormatAddendum[delegateRef] = format
+                dslProp.initializerArgsAddendum[delegateRef] = mutableListOf(*args)
             }
             ReplaceAppendOrModify.APPEND -> {
-                dslProp.initializerFormatAddendum[delegatorRef] = format
-                val argsAddList = dslProp.initializerArgsAddendum.getOrPut(delegatorRef) { mutableListOf() }
+                dslProp.initializerFormatAddendum[delegateRef] = format
+                val argsAddList = dslProp.initializerArgsAddendum.getOrPut(delegateRef) { mutableListOf() }
                 argsAddList.addAll(mutableListOf(*args))
             }
             ReplaceAppendOrModify.MODIFY -> {
                 val initializerCopy: Initializer = dslProp.initializer.copy()
                 initializerCopy.modifyInitializerBlock()
                 // dslProp.initializer.originalFormat // CANNOT do this, because if it is a model property (not on dto/table/...) it would be altered FOR ALL subelements
-                dslProp.initializerReplaceAppendOrModify[delegatorRef] = initializerCopy.replaceAppendOrModify
-                dslProp.initializerFormatAddendum[delegatorRef] = initializerCopy.formatAddendum
-                dslProp.initializerArgsAddendum[delegatorRef] = initializerCopy.argsAddendum
+                dslProp.initializerReplaceAppendOrModify[delegateRef] = initializerCopy.replaceAppendOrModify
+                dslProp.initializerFormatAddendum[delegateRef] = initializerCopy.formatAddendum
+                dslProp.initializerArgsAddendum[delegateRef] = initializerCopy.argsAddendum
             }
         }
     }

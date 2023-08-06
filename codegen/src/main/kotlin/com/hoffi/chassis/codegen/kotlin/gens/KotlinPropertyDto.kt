@@ -7,7 +7,6 @@ import com.hoffi.chassis.chassismodel.typ.immutable
 import com.hoffi.chassis.chassismodel.typ.mutable
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.codegen.kotlin.whens.WhensGen
-import com.hoffi.chassis.shared.parsedata.ModelClassData
 import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.Tag
 import com.squareup.kotlinpoet.CodeBlock
@@ -15,7 +14,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 
 context(GenCtxWrapper)
-class KotlinPropertyDto(property: Property, genModel: ModelClassData) : AKotlinProperty(property, genModel) {
+class KotlinPropertyDto(property: Property, val genModel: KotlinClassModelDto) : AKotlinProperty(property, genModel.modelClassData) {
     override val builder: PropertySpec.Builder = whenInit()
 
     fun whenInit(): PropertySpec.Builder {
@@ -77,7 +76,7 @@ class KotlinPropertyDto(property: Property, genModel: ModelClassData) : AKotlinP
             initializerCodeBlockBuilder.add(property.initializer.codeBlockAddendum())
         }
         initBuilder.initializer(initializerCodeBlockBuilder.build())
-        if (genModel.isUuidPrimary && property.name == UUID_PROPNAME) { initBuilder.addModifiers(KModifier.OVERRIDE) }
+        if (modelClassData.isUuidPrimary && property.name == UUID_PROPNAME) { initBuilder.addModifiers(KModifier.OVERRIDE) }
         return initBuilder
     }
 }

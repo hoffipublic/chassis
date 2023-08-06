@@ -17,7 +17,6 @@ import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
-import com.hoffi.chassis.shared.parsedata.ModelClassData
 import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.Tag
 import com.squareup.kotlinpoet.CodeBlock
@@ -26,10 +25,10 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.asTypeName
 
 context(GenCtxWrapper)
-class KotlinPropertyTable constructor(property: Property, genModel: ModelClassData) : AKotlinProperty(property, genModel) {
+class KotlinPropertyTable(property: Property, val genModel: KotlinClassModelTable) : AKotlinProperty(property, genModel.modelClassData) {
     override val builder: PropertySpec.Builder = whenInit()
 
-    fun whenInit(): PropertySpec.Builder {
+    private fun whenInit(): PropertySpec.Builder {
         lateinit var initBuilder: PropertySpec.Builder
         val initializerCodeBlockBuilder = CodeBlock.builder()
         WhensGen.whenTypeAndCollectionType(property.eitherTypModelOrClass, property.collectionType,
@@ -70,13 +69,13 @@ class KotlinPropertyTable constructor(property: Property, genModel: ModelClassDa
                 //val reffedTable_DTO_GenModel: GenModel = genCtx.genModel(this.modelSubElementRef)
                 val reffedTableDslRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)
                 val reffedTable: GenModel = genCtx.genModel(reffedTableDslRef)
-                val fk = FK(
+                val fk = genModel.addFK(
                     fromTableRef = reffedTableDslRef,
-                    toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.genModel.modelSubElRef.parentDslRef)),
+                    //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.modelClassData.modelSubElRef.parentDslRef)),
+                    toTable = this@KotlinPropertyTable.genModel,
                     this@KotlinPropertyTable.property,
                     COLLECTIONTYP.LIST // <-- differs
                 )
-                kotlinGenCtx.addFK(fk)
                 initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable())
                 initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, fk.varName) // placeholder property TODO let's see if exposed explodes on this
             },
@@ -84,13 +83,13 @@ class KotlinPropertyTable constructor(property: Property, genModel: ModelClassDa
                 //val reffedTable_DTO_GenModel: GenModel = genCtx.genModel(this.modelSubElementRef)
                 val reffedTableDslRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)
                 val reffedTable: GenModel = genCtx.genModel(reffedTableDslRef)
-                val fk = FK(
+                val fk = genModel.addFK(
                     fromTableRef = reffedTableDslRef,
-                    toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.genModel.modelSubElRef.parentDslRef)),
+                    //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.modelClassData.modelSubElRef.parentDslRef)),
+                    toTable = this@KotlinPropertyTable.genModel,
                     this@KotlinPropertyTable.property,
                     COLLECTIONTYP.SET // <-- differs
                 )
-                kotlinGenCtx.addFK(fk)
                 initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable())
                 initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, fk.varName) // placeholder property TODO let's see if exposed explodes on this
             },

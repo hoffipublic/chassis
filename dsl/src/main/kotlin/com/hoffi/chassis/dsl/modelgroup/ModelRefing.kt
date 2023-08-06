@@ -70,6 +70,19 @@ class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelRef
     }
 
     companion object {
+        fun groupElementAndSubelementLevelDslRef(dslRef: IDslRef): Triple<IDslRef, IDslRef, IDslRef?> {
+            var subelementLevelRef = if (dslRef is DslRef.ISubElementLevel) dslRef else null
+            var elementLevelDslRef = dslRef.parentDslRef
+            if (elementLevelDslRef is DslRef.ISubElementLevel) elementLevelDslRef
+            while (elementLevelDslRef !is DslRef.IElementLevel) {
+                if (elementLevelDslRef.level == 1) throw DslException("no elementLevel dslRef in parents of $dslRef")
+                elementLevelDslRef = elementLevelDslRef.parentDslRef
+                if (elementLevelDslRef is DslRef.ISubElementLevel) elementLevelDslRef
+            }
+
+            val groupRef = elementLevelDslRef.parentDslRef
+            return Triple(groupRef, elementLevelDslRef, subelementLevelRef)
+        }
         fun groupElementAndSubelementLevelDslRef(dslClass: ADslClass): Triple<IDslRef, IDslRef, IDslRef?> {
             var subelementLevelRef = if (dslClass.selfDslRef is DslRef.ISubElementLevel) dslClass.selfDslRef else null
             var elementLevelDslRef = dslClass.parentDslRef

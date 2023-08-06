@@ -13,13 +13,20 @@ val projectPackage: String by extra { "${rootPackage}.${project.name.lowercase()
 
 dependencies {
     implementation(project(":chassismodel"))
-    implementation(project(":dbwrappers"))
+    implementation(project(":dbwrappers:dbwrappers"))
     implementation(project(":dbwrappers:exposed"))
     implementation("io.arrow-kt:arrow-core:${libs.versions.arrow.get()}")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.get()}")
     implementation("com.squareup.okio:okio:${libs.versions.okio.get()}")
     implementation("org.reflections:reflections:0.10.2")
     implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.get()}")
+
+    testImplementation("io.kotest:kotest-framework-engine:${libs.versions.kotest.asProvider().get()}")
+    testImplementation("io.kotest:kotest-framework-datatest:${libs.versions.kotest.asProvider().get()}")
+    testImplementation("io.kotest:kotest-assertions-core:${libs.versions.kotest.asProvider().get()}")
+    testImplementation(kotlin("test-common"))
+    testImplementation(kotlin("test-annotations-common"))
+    testRuntimeOnly("io.kotest:kotest-runner-junit5:${libs.versions.kotest.asProvider().get()}")
 }
 
 tasks {

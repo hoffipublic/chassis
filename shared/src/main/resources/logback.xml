@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="false">
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <append>true</append>
+        <encoder>
+       <!-- <pattern>%cyan(%d{HH:mm:ss.SSS}) %gray([%thread]) %highlight(%-5level) %magenta(%logger{36}) - %msg%n</pattern>-->
+            <pattern>%cyan(%d{HH:mm:ss.SSS}) %highlight(%-5level) %magenta(%logger{36}) - %msg%n</pattern>
+        </encoder>
+    </appender>
+<!--    <appender name="LOGFILE" class="ch.qos.logback.core.FileAppender">-->
+<!--        <file>log.log</file>-->
+<!--        <encoder>-->
+<!--            <pattern>%date{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+<!--        </encoder>-->
+<!--    </appender>-->
+<!--    <appender name="LOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
+<!--        <file>log.log</file>-->
+<!--        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
+<!--            &lt;!&ndash; Make sure the path matches the one in the file element &ndash;&gt;-->
+<!--            <fileNamePattern>log_%d{yyyy-MM-dd}.%i.log</fileNamePattern>-->
+<!--            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">-->
+<!--                <maxFileSize>50MB</maxFileSize>-->
+<!--            </timeBasedFileNamingAndTriggeringPolicy>-->
+<!--            <maxHistory>30</maxHistory>&lt;!&ndash; keep 30 days' worth of history &ndash;&gt;-->
+<!--        </rollingPolicy>-->
+<!--        <encoder>-->
+<!--            <pattern>%date{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+<!--        </encoder>-->
+<!--    </appender>-->
+    <logger name="org.jetbrains.exposed" level="INFO"/>
+    <logger name="org.jetbrains.exposed.sql" level="INFO"/>
+    <logger name="com.hoffi.chassis" level="TRACE" />
+
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+        <!--<appender-ref ref="LOGFILE" />-->
+    </root>
+</configuration>

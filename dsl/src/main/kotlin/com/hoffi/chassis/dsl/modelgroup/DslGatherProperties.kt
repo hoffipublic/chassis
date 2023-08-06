@@ -62,7 +62,7 @@ class DslGatherPropertiesDelegateImpl(
 
     override fun propertiesOfSuperclasses() {
         if (dslCtx.currentPASS != dslCtx.PASS_5_REFERENCING) return
-        theGatherPropertys.add(GatherPropertys(delegatorRef.parentDslRef as DslRef.IModelOrModelSubelement, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES))
+        theGatherPropertys.add(GatherPropertys(delegateRef.parentDslRef as DslRef.IModelOrModelSubelement, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES))
     }
 
     override fun propertiesOf(dslModelOrElementRefString: String, gatherPropertiesEnum: GatherPropertiesEnum) {
@@ -88,7 +88,7 @@ class DslGatherPropertiesDelegateImpl(
     ) {
         if (dslCtx.currentPASS != dslCtx.PASS_5_REFERENCING) return
         // definitely a modelSubElement, as this function should only be callable in context of a DslRef.IModelSubelement
-        val modelRef = delegatorRef.parentDslRef as DslRef.model
+        val modelRef = delegateRef.parentDslRef as DslRef.model
         when (modelElement) {
             MODELREFENUM.MODEL -> theGatherPropertys.add(GatherPropertys(modelRef, gatherPropertiesEnum))
             MODELREFENUM.DTO -> theGatherPropertys.add(GatherPropertys(DslRef.dto(simpleName, modelRef), gatherPropertiesEnum))

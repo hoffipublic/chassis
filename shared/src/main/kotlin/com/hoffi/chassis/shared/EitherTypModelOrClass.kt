@@ -57,9 +57,9 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is EitherModel) return false
-            return modelSubElementRef == other.modelSubElementRef
+            return modelSubElementRefOriginal == other.modelSubElementRefOriginal
         }
-        override fun hashCode() = modelSubElementRef.hashCode()
+        override fun hashCode() = modelSubElementRefOriginal.hashCode()
     }
     class EitherPoetType constructor(val poetType: ClassName, override var isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName!!.removePrefix("Either")}($poetType)"

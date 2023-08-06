@@ -12,7 +12,9 @@ import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.dsl.modelgroup.IDslApiConstructorVisibility.VISIBILITY.PROTECTED
 import com.hoffi.chassis.dsl.modelgroup.IDslApiConstructorVisibility.VISIBILITY.PUBLIC
 import com.hoffi.chassis.dsl.scratchdslEXAMPLES.COMMON__PERSISTENT_OPTIMISTIC
-import com.hoffi.chassis.shared.shared.FillerData.COPYTYPE.IGNORE
+import com.hoffi.chassis.shared.shared.COPYTYPE.IGNORE
+import com.hoffi.chassis.shared.shared.COPYTYPE.NEW
+import com.hoffi.chassis.shared.shared.CrudData.CRUD.READ
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.*
@@ -22,6 +24,7 @@ const val ENTITYGROUP = "Entitygroup"
 const val ENTITY__BASE      = ""
 const val ENTITY__ENTITY    = "Entity"
 const val ENTITY__SUBENTITY = "Subentity"
+
 
 context(DslCtxWrapper)
 fun entities() {
@@ -78,7 +81,7 @@ fun entities() {
 //            manyToMany(SIMPLE__SUBENTITY) {
 //                // not implemented yet, and not sure if an own clause or via property(...)
 //            }
-//
+
             addToStringMembers("aLocalDateTime", "updatedAt")
 
             dto {
@@ -97,33 +100,82 @@ fun entities() {
                 addToStringMembers("dtoSpecificProp", "createdAt")
                 removeToStringMembers("prio")
             }
+
             table {
                 kind = DslClassObjectOrInterface.OBJECT
-                extends {
-                    replaceSuperclass = true
-                }
+                extends { replaceSuperclass = true } // just informational ... KotlinClassModelTable generates an exposedDB object : Table anyways
 
                 propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
                 initializer("name", APPEND, ".uniqueIndex()")
                 initializer("prio", APPEND, "/* some table prio comment */")
-                //alterPropertyForDB("name", "uniqueIndex()")
-            }
-            filler {
-                +DTO // DTO filled by a DTO
-                (DTO mutual TABLE) //.copyBoundries(IGNORE, DTO, TABLE)
-                (DTO mutual TABLE) //.copyBoundry(IGNORE, DTO, "entityBackreference").copyBoundry(IGNORE, TABLE, "entityBackreference")
-                DTO from TABLE
-                TABLE from DTO
-                //having CopyBoundry first, as we otherwise cannot distinguish from obove's fillers'
-                fillerName("withoutModels", DTO) {
-                    copyBoundry(IGNORE, "subentitys", "someModelObject")
+
+                crud {
+                    STANDARD FOR DTO
+                    +DTO
+                    CRUD FOR DTO
+                    prefixed("somePrefix") {
+                        (READ FOR DTO) deepRestrictions  {
+                            IGNORE propName "subentitys"
+                            IGNORE("subentitys", "someModelObject")
+                        }
+                    }
+                    READ FOR (DTO of ENTITY__SUBENTITY)
+                    prefixed("subentity") {
+                        READ FOR (DTO of ENTITY__SUBENTITY) deepRestrictions {
+                            IGNORE propName "subentitys"
+                            IGNORE("subentitys", "someModelObject")
+                            IGNORE model (DTO of ENTITY__SUBENTITY) onlyIf COLLECTIONTYP.COLLECTION
+                        }
+                    }
+                    prefixed("withoutModels") {
+                        +DTO deepRestrictions  {
+                            IGNORE propName "subentitys"
+                            IGNORE("subentitys", "someModelObject")
+                        }
+                    }
+                    prefixed("woModels") {
+                        CRUD FOR (DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__BASE) deepRestrictions  {
+                            NEW model (DTO of ENTITY__SUBENTITY)
+                        }
+                    }
                 }
-                //(TABLE from DTO).copyBoundry(named = "withoutModels", IGNORE, "subentitys", "someModelObject")
-                //(TABLE from DTO).copyBoundry(named = "withoutModels", IGNORE, DTO of ENTITY__SUBENTITY)
-                DTO from (DTO of ENTITY__SUBENTITY)
-                //(DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) from DTO
             }
 
+            filler {
+                +DTO // DTO filled by a DTO
+                DTO mutual TABLE
+                DTO mutual TABLE
+                DTO from TABLE
+                TABLE from DTO
+                DTO from (DTO of ENTITY__SUBENTITY) // TODO check if this corresponding virtual Filler is also created because of (next line)
+                (DTO of ENTITY__SUBENTITY) from TABLE
+                //(DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) from DTO
+                prefixed("withoutModels") {
+                    (DTO mutual TABLE) shallowRestrictions {
+                        copyBoundry(IGNORE, "subentitys", "someModelObject")
+                        IGNORE propName "subentitys"
+                        IGNORE model (DTO of ENTITY__SUBENTITY) onlyIf COLLECTIONTYP.COLLECTION
+                        IGNORE("subentitys", "someModelObject")
+                    }
+                    (DTO mutual TABLE) deepRestrictions {
+                        copyBoundry(IGNORE, "subentitys", "someModelObject")
+                        IGNORE propName "subentitys"
+                        IGNORE model (DTO of ENTITY__SUBENTITY) onlyIf COLLECTIONTYP.COLLECTION
+                        IGNORE("subentitys", "someModelObject")
+                    }
+                    FOR((TABLE from DTO), (DTO from TABLE)) deepRestrictions {
+                        IGNORE propName "subentitys"
+                        IGNORE("subentitys", "someModelObject")
+                    }
+                    +DTO deepRestrictions {
+                    //FOR DTO {
+                        copyBoundry(IGNORE, "subentitys", "someModelObject")
+                    }
+                    FOR(+DTO, +DTO) deepRestrictions {
+                        copyBoundry(IGNORE, "subentitys", "someModelObject")
+                    }
+                }
+            }
         }
 //
 //        // ================================================================================================================================
@@ -155,6 +207,7 @@ fun entities() {
 //                }
 //                addToStringMembers("dtoSpecificProp")
             }
+
             table {
                 propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
             }

@@ -10,12 +10,13 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 
 interface INamingStrategy {
-    fun name(string: String): String
-    fun name(string: String, prefix: String = "", postfix: String = ""): String
-    fun nameUpperFirst(string: String): String
-    fun nameUpperFirst(string: String, prefix: String = "", postfix: String = ""): String
-    fun nameLowerFirst(string: String): String
-    fun nameLowerFirst(string: String, prefix: String = "", postfix: String = ""): String
+    // TODO add vararg'y like list of prefixes and postfixes
+    fun nameOf(string: String): String
+    fun nameOf(string: String, prefix: String = "", postfix: String = ""): String
+    fun nameUpperFirstOf(string: String): String
+    fun nameUpperFirstOf(string: String, prefix: String = "", postfix: String = ""): String
+    fun nameLowerFirstOf(string: String): String
+    fun nameLowerFirstOf(string: String, prefix: String = "", postfix: String = ""): String
 }
 
 
@@ -34,12 +35,12 @@ interface IClassNameStrategy : INamingStrategy {
 }
 
 object ClassNameStrategyCamelCasePrefixed : IClassNameStrategy {
-    override fun name(string: String) = ClassNameStrategyCamelCase.name(string)
-    override fun name(string: String, prefix: String, postfix: String) = ClassNameStrategyCamelCase.name(string, prefix, postfix)
-    override fun nameUpperFirst(string: String) = ClassNameStrategyCamelCase.nameUpperFirst(string)
-    override fun nameUpperFirst(string: String, prefix: String, postfix: String) = ClassNameStrategyCamelCase.nameUpperFirst(string, prefix, postfix)
-    override fun nameLowerFirst(string: String) = ClassNameStrategyCamelCase.nameLowerFirst(string)
-    override fun nameLowerFirst(string: String, prefix: String, postfix: String) = ClassNameStrategyCamelCase.nameLowerFirst(string, prefix, postfix)
+    override fun nameOf(string: String) = ClassNameStrategyCamelCase.nameOf(string)
+    override fun nameOf(string: String, prefix: String, postfix: String) = ClassNameStrategyCamelCase.nameOf(string, prefix, postfix)
+    override fun nameUpperFirstOf(string: String) = ClassNameStrategyCamelCase.nameUpperFirstOf(string)
+    override fun nameUpperFirstOf(string: String, prefix: String, postfix: String) = ClassNameStrategyCamelCase.nameUpperFirstOf(string, prefix, postfix)
+    override fun nameLowerFirstOf(string: String) = ClassNameStrategyCamelCase.nameLowerFirstOf(string)
+    override fun nameLowerFirstOf(string: String, prefix: String, postfix: String) = ClassNameStrategyCamelCase.nameLowerFirstOf(string, prefix, postfix)
     override fun poetType(modelClassData: ModelClassData, className: String, packageName: String, prefix: String, postfix: String): TypeName {
         return when (modelClassData.kind) {
             TypeSpec.Kind.CLASS ->  if (KModifier.ABSTRACT in modelClassData.classModifiers) {
@@ -57,12 +58,12 @@ object ClassNameStrategyCamelCasePrefixed : IClassNameStrategy {
 }
 
 object ClassNameStrategyCamelCase : IClassNameStrategy {
-    override fun name(string: String) = MixedCaseString(string).toCamelCase()
-    override fun name(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string).toCamelCase()
-    override fun nameUpperFirst(string: String) = MixedCaseString(string).toUpperCamelCase()
-    override fun nameUpperFirst(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string).toUpperCamelCase()
-    override fun nameLowerFirst(string: String) = MixedCaseString(string).toLowerCamelCase()
-    override fun nameLowerFirst(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string).toLowerCamelCase()
+    override fun nameOf(string: String) = MixedCaseString(string).toCamelCase()
+    override fun nameOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string, prefix, postfix).toCamelCase()
+    override fun nameUpperFirstOf(string: String) = MixedCaseString(string).toUpperCamelCase()
+    override fun nameUpperFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string, prefix, postfix).toUpperCamelCase()
+    override fun nameLowerFirstOf(string: String) = MixedCaseString(string).toLowerCamelCase()
+    override fun nameLowerFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string, prefix, postfix).toLowerCamelCase()
     override fun poetType(modelClassData: ModelClassData, className: String, packageName: String, prefix: String, postfix: String): TypeName {
         return ClassName(packageName, MixedCaseString(joinName(prefix, className, postfix)).toUpperCamelCase())
     }
@@ -84,12 +85,12 @@ interface IVarNameStrategy : INamingStrategy {
 }
 
 object VarNameStrategyLowerCamelCase : IVarNameStrategy {
-    override fun name(string: String) = MixedCaseString(string).toLowerCamelCase()
-    override fun name(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string).toLowerCamelCase()
-    override fun nameUpperFirst(string: String) = MixedCaseString(string).toUpperCamelCase()
-    override fun nameUpperFirst(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string).toUpperCamelCase()
-    override fun nameLowerFirst(string: String) = MixedCaseString(string).toLowerCamelCase()
-    override fun nameLowerFirst(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string).toLowerCamelCase()
+    override fun nameOf(string: String) = MixedCaseString(string).toLowerCamelCase()
+    override fun nameOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string).toLowerCamelCase()
+    override fun nameUpperFirstOf(string: String) = MixedCaseString(string).toUpperCamelCase()
+    override fun nameUpperFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string).toUpperCamelCase()
+    override fun nameLowerFirstOf(string: String) = MixedCaseString(string).toLowerCamelCase()
+    override fun nameLowerFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string).toLowerCamelCase()
 }
 
 object TableNameStrategy {
@@ -104,12 +105,12 @@ interface ITableNameStrategy : INamingStrategy {
 }
 
 object TableNameStrategyLowerSnakeCase : ITableNameStrategy {
-    override fun name(string: String) = MixedCaseString(string).toLowerSnakeCase()
-    override fun name(string: String, prefix: String, postfix: String) = MixedCaseString("${prefix.ifNotBlank { "${prefix}_" }}$string${postfix.ifNotBlank { "_$postfix" }}").toLowerSnakeCase()
-    override fun nameUpperFirst(string: String) = MixedCaseString(string).toLowerSnakeCase().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-    override fun nameUpperFirst(string: String, prefix: String, postfix: String) = MixedCaseString("${prefix.ifNotBlank { "${prefix}_" }}$string${postfix.ifNotBlank { "_$postfix" }}").toLowerSnakeCase().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-    override fun nameLowerFirst(string: String) = MixedCaseString(string).toLowerSnakeCase().replaceFirstChar { it.lowercase() }
-    override fun nameLowerFirst(string: String, prefix: String, postfix: String) = MixedCaseString("${prefix.ifNotBlank { "${prefix}_" }}$string${postfix.ifNotBlank { "_$postfix" }}").toLowerSnakeCase().replaceFirstChar { it.lowercase() }
+    override fun nameOf(string: String) = MixedCaseString(string).toLowerSnakeCase()
+    override fun nameOf(string: String, prefix: String, postfix: String) = MixedCaseString("${prefix.ifNotBlank { "${prefix}_" }}$string${postfix.ifNotBlank { "_$postfix" }}").toLowerSnakeCase()
+    override fun nameUpperFirstOf(string: String) = MixedCaseString(string).toLowerSnakeCase().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+    override fun nameUpperFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString("${prefix.ifNotBlank { "${prefix}_" }}$string${postfix.ifNotBlank { "_$postfix" }}").toLowerSnakeCase().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+    override fun nameLowerFirstOf(string: String) = MixedCaseString(string).toLowerSnakeCase().replaceFirstChar { it.lowercase() }
+    override fun nameLowerFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString("${prefix.ifNotBlank { "${prefix}_" }}$string${postfix.ifNotBlank { "_$postfix" }}").toLowerSnakeCase().replaceFirstChar { it.lowercase() }
     override fun tableName(modelName: String, prefix: String, postfix: String): String {
         return MixedCaseString(joinName(prefix, modelName, postfix)).toLowerSnakeCase()
     }

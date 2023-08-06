@@ -134,6 +134,20 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
                 , IModelSubelement {
                     companion object { val funcname: String = table::class.simpleName!! ; val TABLEPROTO = table("PROTO", NULL) }
                     init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
+    class         crud(simpleName: String, parentDslRef: IDslRef)     : DslRef(4, simpleName, parentDslRef) {
+                    companion object { val funcname: String = crud::class.simpleName!! }
+                    init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
+    class             crudBlock(simpleName: String, parentDslRef: IDslRef)     : DslRef(5, simpleName, parentDslRef) {
+                        companion object { val funcname: String = crudBlock::class.simpleName!! }
+                        init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
+    class                 crudSubBlock(simpleName: String, parentDslRef: IDslRef)     : DslRef(6, simpleName, parentDslRef) {
+                            companion object { val funcname: String = crudSubBlock::class.simpleName!! }
+                            init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
+
+    class copyBoundry(simpleName: String, parentDslRef: IDslRef) : DslRef(-1, simpleName, parentDslRef)
+            , ICrosscutting {
+                companion object { val funcname: String = copyBoundry::class.simpleName!! }
+                init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
 
     interface IApigroupElement : IElementLevel
     interface Iapi: IApigroupElement
@@ -385,6 +399,10 @@ object DslRefString {
             is DslRef.propertiesOf -> {}
             is DslRef.showcase -> {}
             is DslRef.table -> {}
+            is DslRef.crud -> {}
+            is DslRef.crudBlock -> {}
+            is DslRef.crudSubBlock -> {}
+            is DslRef.copyBoundry -> {}
         }
         var currentDslRef: DslRef = DslRef.modelgroup("DUMMY", DslDiscriminator(C.NULLSTRING)) // dummy
         for ((i, refAtom) in refAtomsListFull.withIndex()) {

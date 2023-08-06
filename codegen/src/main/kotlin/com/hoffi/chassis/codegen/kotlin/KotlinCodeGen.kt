@@ -41,7 +41,7 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
     context(GenCtxWrapper)
     private fun codeGenDto() {
         for(model in genCtx.allGenModels().filterIsInstance<GenModel.DtoModel>()) {
-            println("${this::class.simpleName}.${object{}.javaClass.enclosingMethod.name}() for $model ${model.extends.values.firstOrNull{it.simpleName == "default"} ?: "extends NOTHING"} ") //-> ${model.modelSubElRef}")
+            log.info("{}() for {} {}", object{}.javaClass.enclosingMethod.name, model, model.extends.values.firstOrNull{it.simpleName == "default"} ?: "extends NOTHING")
             val kcmDto = KotlinClassModelDto(model)
             kcmDto.build()
             kcmDto.generate()
@@ -51,7 +51,7 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
     context(GenCtxWrapper)
     private fun codeGenTable() {
         for(model in genCtx.allGenModels().filterIsInstance<GenModel.TableModel>()) {
-            println("${this::class.simpleName}.${object{}.javaClass.enclosingMethod.name}() for $model ${model.extends.values.firstOrNull{it.simpleName == "default"} ?: "extends NOTHING"} ") //-> ${model.modelSubElRef}")
+            log.info("{}() for {} {} ", object{}.javaClass.enclosingMethod.name, model, model.extends.values.firstOrNull{it.simpleName == "default"} ?: "extends NOTHING")
             val kcmTable = KotlinClassModelTable(model)
             kcmTable.build()
         }
@@ -66,7 +66,7 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
         println("===  write Table classes     =====")
         println("==================================")
         for(aKotlinClass in kotlinGenCtx.allKotlinGenClasses().filterIsInstance<KotlinClassModelTable>()) {
-            println("${this::class.simpleName}.${object{}.javaClass.enclosingMethod.name}() write Table class for ${aKotlinClass} ") //-> ${model.modelSubElRef}")
+            log.info("{}() write Table class for {}", object{}.javaClass.enclosingMethod.name, aKotlinClass)
             aKotlinClass.generate()
         }
     }
@@ -76,6 +76,15 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
         println("==================================")
         println("===  generate Fillers     ========")
         println("==================================")
+println("all Fillers (${genCtx.fillerDatas[C.DEFAULT]?.flatMap { it.value }?.size ?: 0}):")
+println("\"normal\" fillers (${genCtx.fillerDatas[C.DEFAULT]?.flatMap { it.value }?.filter { it.targetDslRef !is DslRef.table && it.sourceDslRef !is DslRef.table }?.size ?: 0}):")
+for (fillerData in genCtx.fillerDatas[C.DEFAULT]?.flatMap { it.value }?.filter { it.targetDslRef !is DslRef.table && it.sourceDslRef !is DslRef.table } ?: mutableSetOf()) {
+    println("   $fillerData")
+}
+println("TABLE fillers (${genCtx.fillerDatas[C.DEFAULT]?.flatMap { it.value }?.filter { it.targetDslRef is DslRef.table || it.sourceDslRef is DslRef.table }?.size ?: 0}):")
+for (fillerData in genCtx.fillerDatas[C.DEFAULT]?.flatMap { it.value }?.filter { it.targetDslRef is DslRef.table || it.sourceDslRef is DslRef.table } ?: mutableSetOf()) {
+    println("   $fillerData")
+}
         for (fillerData: FillerData in genCtx.fillerDatas[C.DEFAULT]?.flatMap { it.value } ?: mutableSetOf()) {
             if (fillerData.sourceDslRef is DslRef.table || fillerData.targetDslRef is DslRef.table) {
                 kotlinGenCtx.buildFiller(MODELKIND.TABLEKIND, fillerData)
@@ -97,11 +106,11 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
         println("===  write Fillers           =====")
         println("==================================")
         for(aKotlinFiller in kotlinGenCtx.allKotlinFillerClasses(MODELKIND.DTOKIND)) {
-            println("${this::class.simpleName}.${object{}.javaClass.enclosingMethod.name}() write Filler for $aKotlinFiller ") //-> ${model.modelSubElRef}")
+            log.info("{}() write Filler for {}", object{}.javaClass.enclosingMethod.name, aKotlinFiller)
             aKotlinFiller.generate()
         }
         for(aKotlinFiller in kotlinGenCtx.allKotlinFillerClasses(MODELKIND.TABLEKIND)) {
-            println("${this::class.simpleName}.${object{}.javaClass.enclosingMethod.name}() write Filler for $aKotlinFiller ") //-> ${model.modelSubElRef}")
+            log.info("{}() write Filler for {}", object{}.javaClass.enclosingMethod.name, aKotlinFiller) //-> ${model.modelSubElRef}")
             aKotlinFiller.generate()
         }
     }

@@ -28,9 +28,8 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
 
     override fun build(modelkind: MODELKIND, fillerData: FillerData) {
         currentFillerData = fillerData
-        if (alreadyCreated.contains(Pair(fillerData.fillerName, fillerData.sourceDslRef)))
-            return
-        else alreadyCreated.add(Pair(fillerData.fillerName, fillerData.sourceDslRef))
+        if (alreadyCreated(fillerData)) return
+        log.trace("build({}, {})", modelkind, currentFillerData)
 
         val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
         val sourceGenModel: GenModel = genCtx.genModel(fillerData.sourceDslRef)
@@ -61,27 +60,29 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
 
     private fun insertLambdas(i: IntersectPropertys.CommonPropData) {
         var returnLambdaTypeName = LambdaTypeName.get(i.targetPoetType, DB.InsertStatementTypeName(), returnType = UNIT)
-        var funSpec = FunSpec.builder("insertLambda")
+        var funName = funNameFiller("insertLambda", currentFillerData)
+        var funSpec = FunSpec.builder(funName.funName)
             .addParameter(i.sourceVarName, i.sourcePoetType)
             .returns(returnLambdaTypeName)
-        var body = insertBody(i, funSpec, "insertLambda")
+        var body = insertBody(i, funSpec, funName)
         funSpec.addCode(body)
         builder.addFunction(funSpec.build())
 
         returnLambdaTypeName = LambdaTypeName.get(DB.BatchInsertStatement, GenDslRefHelpers.dtoClassName(i.sourceGenModel, genCtx), returnType = UNIT)
-        funSpec = FunSpec.builder("batchInsertLambda")
+        funName = funNameFiller("batchInsertLambda", currentFillerData)
+        funSpec = FunSpec.builder(funName.funName)
             .addParameter(i.sourceVarName, i.sourcePoetType)
             .returns(returnLambdaTypeName)
-        body = insertBody(i, funSpec, "batchInsertLambda")
+        body = insertBody(i, funSpec, funName)
         funSpec.addCode(body)
         builder.addFunction(funSpec.build())
     }
 
-    private fun insertBody(i: IntersectPropertys.CommonPropData, funSpec: FunSpec.Builder, insertLambdaName: String): CodeBlock {
+    private fun insertBody(i: IntersectPropertys.CommonPropData, funSpec: FunSpec.Builder, funName: FunName): CodeBlock {
         var bodyBuilder = CodeBlock.builder()
             .beginControlFlow("return {") // This will take care of the {} and indentations
         // allProps as a) Table's always gatherProps from superclasses and b) alle table columns have to be filled
-        for (prop in i.targetGenModel.allProps.values.filter { Tag.TRANSIENT !in it.tags }) {
+        for (prop in i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }) {
             WhensGen.whenTypeAndCollectionType(
                 prop.eitherTypModelOrClass, prop.collectionType,
                 preFunc = { },
@@ -89,7 +90,7 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
                 preCollection = { },
                 isModel = {
                     // TODO one2One check if dependant model Table Entry already exists!
-                    if (insertLambdaName == "insertLambda") {
+                    if (funName.originalFunName == "insertLambda") {
                         // SimpleSubentityTable.insert(SimpleSubentityTableFiller.insertFunction(sourceSimpleEntityDto.someModelObject))
                         bodyBuilder.addStatement("// TODO one2One check if dependant model Table Entry already exists!")
                         bodyBuilder.addStatement(
@@ -115,20 +116,20 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
                     }
                     bodyBuilder.addStatement(
                         "%L[%T.%L] = %L.%L.%L",
-                        if (insertLambdaName == "insertLambda") "it" else "this",
+                        if (funName.originalFunName == "insertLambda") "it" else "this",
                         i.targetPoetType,
                         prop.name,
                         i.sourceVarName, prop.name, "uuid"
                     )
                     val originalRef = this.modelClassName.modelSubElRef
-                    genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
-                    genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
                 },
                 isPoetType = { },
                 isTyp = {
                     bodyBuilder.addStatement(
                         "%L[%T.%L] = %L.%L",
-                        if (insertLambdaName == "insertLambda") "it" else "this",
+                        if (funName.originalFunName == "insertLambda") "it" else "this",
                         i.targetPoetType,
                         prop.name,
                         i.sourceVarName,
@@ -141,9 +142,8 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
                 isModelCollection = {
 
                     val originalRef = this.modelClassName.modelSubElRef
-                    genCtx.syntheticFillerDatas.add(
-                        SynthFillerData(C.DEFAULT, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
-                    genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
                 },
                 isModelIterable = { },
                 isPoetTypeList = { },
@@ -162,12 +162,14 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
     }
 
     private fun createFromTable(i: IntersectPropertys.CommonPropData) {
-        val funSpec = FunSpec.builder(i.targetGenModel.asVarName)
+        val funName = funNameFiller(i.targetGenModel.asVarName, currentFillerData)
+        log.trace("currentFillerData: -> {}\n{}", funName, currentFillerData)
+        val funSpec = FunSpec.builder(funName.funName)
             .addParameter(i.sourceVarName, DB.ResultRowClassName)
             .returns(i.targetPoetType)
         //val targetSimpleEntityDto = SimpleEntityDto._internal_create()
         funSpec.addStatement("val %L = %T._internal_create()", i.targetVarName, i.targetPoetType)
-        for (prop in i.targetGenModel.allProps.values.filter { Tag.TRANSIENT !in it.tags }) {
+        for (prop in i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }) {
             WhensGen.whenTypeAndCollectionType(prop.eitherTypModelOrClass, prop.collectionType,
                 preFunc = { },
                 preNonCollection = { },
@@ -176,8 +178,8 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
                     funSpec.addStatement("%L.%L = %T.%L(%L)", i.targetVarName, prop.name, propFiller(modelSubElementRef, MODELREFENUM.TABLE), prop.eitherTypModelOrClass.modelClassName.asVarName, i.sourceVarName)
 
                     val originalRef = this.modelClassName.modelSubElRef
-                    genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
-                    genCtx.syntheticFillerDatas.add(SynthFillerData(C.DEFAULT, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
                 },
                 isPoetType = { },
                 isTyp = { funSpec.addStatement("%L.%L = %L[%T.%L]", i.targetVarName, prop.name, i.sourceVarName, i.sourcePoetType, prop.name) },

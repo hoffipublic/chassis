@@ -120,7 +120,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
             if (extends.typeClassOrDslRef is EitherTypOrModelOrPoetType.NOTHING) {
                 extends.typeClassOrDslRef = this.createPoetType()
             } else {
-                throw DslException("${dslExtendsDelegateImpl.delegatorRef} already extends ${extends.typeClassOrDslRef}")
+                throw DslException("${dslExtendsDelegateImpl.delegateRef} already extends ${extends.typeClassOrDslRef}")
             }
         }
     }
@@ -143,7 +143,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
             if (extends.typeClassOrDslRef is EitherTypOrModelOrPoetType.NOTHING) {
                 extends.typeClassOrDslRef = EitherTypOrModelOrPoetType.EitherModel(refTarget, Initializer.REFFED)
             } else {
-                throw DslException("${dslExtendsDelegateImpl.delegatorRef} already extends ${extends.typeClassOrDslRef}")
+                throw DslException("${dslExtendsDelegateImpl.delegateRef} already extends ${extends.typeClassOrDslRef}")
             }
         }
     }

@@ -15,7 +15,7 @@ import com.hoffi.chassis.shared.strategies.VarNameStrategy
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeName
 
-class Property constructor(
+class Property(
     val dslPropName: String,
     val propRef: DslRef.prop,
     val containedInSubelementRef: DslRef.IModelSubelement,
@@ -30,9 +30,9 @@ class Property constructor(
     var varNameStrategy = VarNameStrategy.get(IVarNameStrategy.STRATEGY.DEFAULT)
     var columnNameStrategy = VarNameStrategy.get(IVarNameStrategy.STRATEGY.LOWERSNAKECASE)
 
-    val name: String = varNameStrategy.nameLowerFirst(dslPropName)
-    fun name(prefix: String = "", postfix: String = "") = varNameStrategy.nameLowerFirst(name, prefix, postfix)
-    val columnName = columnNameStrategy.nameLowerFirst(dslPropName)
+    val name: String = varNameStrategy.nameLowerFirstOf(dslPropName)
+    fun name(prefix: String = "", postfix: String = "") = varNameStrategy.nameLowerFirstOf(name, prefix, postfix)
+    val columnName = columnNameStrategy.nameLowerFirstOf(dslPropName)
 
     // convenience methods
 
@@ -61,10 +61,17 @@ class Property constructor(
         eitherTypModelOrClass.validate("$any->$this")
     }
 
+    /** used e.g. to determine props to copy over in Fillers */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Property) return false
-        return propRef == other.propRef
+        if (dslPropName != other.dslPropName) return false
+        if (eitherTypModelOrClass != other.eitherTypModelOrClass) return false
+        return true
     }
-    override fun hashCode() = propRef.hashCode()
+    override fun hashCode(): Int {
+        var result = dslPropName.hashCode()
+        result = 31 * result + eitherTypModelOrClass.hashCode()
+        return result
+    }
 }

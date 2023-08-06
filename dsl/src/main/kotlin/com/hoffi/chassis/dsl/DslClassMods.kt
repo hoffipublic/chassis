@@ -73,7 +73,7 @@ class DslClassModsDelegateImpl(
     /** DslBlock funcs always operate on IDslApi interfaces */
     override fun classMods(simpleName: String, block: IDslApiClassModsBlock.() -> Unit) {
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
-        val simpleNameClassMods = theClassModProps.getOrPut(simpleName) { DslClassModsBlockImpl(simpleName, DslRef.classMods(simpleName, delegatorRef)) }
+        val simpleNameClassMods = theClassModProps.getOrPut(simpleName) { DslClassModsBlockImpl(simpleName, DslRef.classMods(simpleName, delegateRef)) }
         simpleNameClassMods.apply(block)
     }
 }

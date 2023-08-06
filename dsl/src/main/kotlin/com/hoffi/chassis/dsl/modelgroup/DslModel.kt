@@ -4,6 +4,8 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.dsl.*
 import com.hoffi.chassis.dsl.internal.*
+import com.hoffi.chassis.dsl.modelgroup.crud.DslCrudDelegateImpl
+import com.hoffi.chassis.dsl.modelgroup.crud.IDslApiCrudDelegate
 import com.hoffi.chassis.dsl.whereto.*
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
@@ -240,14 +242,14 @@ globalDslCtx = dslCtx // TODO remove workaround
                 try {
                     dslCtx.ctxObj<ADslClass>(fillerData.targetDslRef)
                 } catch (e: Exception) {
-                    throw DslException("filler toDslRef: '${fillerData.targetDslRef}' does not exist in DslCtx")
+                    throw DslException("filler targetDslRef: '${fillerData.targetDslRef}' does not exist in DslCtx")
                 }
             }
             for (fillerData: FillerData in entry.value) {
                 try {
                     dslCtx.ctxObj<ADslClass>(fillerData.sourceDslRef)
                 } catch (e: Exception) {
-                    throw DslException("filler toDslRef: '${fillerData.sourceDslRef}' does not exist in DslCtx")
+                    throw DslException("filler sourceDslRef: '${fillerData.sourceDslRef}' does not exist in DslCtx")
                 }
             }
         }
@@ -346,7 +348,8 @@ interface IDslApiDto
 @ChassisDslMarker
 interface IDslApiTable
     :   IDslApiModelAndModelSubelementsCommon,
-        IDslApiSubelementsOnlyCommon
+        IDslApiSubelementsOnlyCommon,
+        IDslApiCrudDelegate
 
 // === Impl Interfaces (extend IDslApi's plus methods and props that should not be visible from the DSL ===
 
@@ -468,6 +471,7 @@ class DslTable(
     gatherPropertiesImpl: DslGatherPropertiesDelegateImpl = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.propertiesOf(simpleName, tableRef)) },
     classModsImpl: DslClassModsDelegateImpl               = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.classMods(simpleName, tableRef)) },
     extendsImpl: DslExtendsDelegateImpl                   = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.extends(simpleName, tableRef)) },
+    crudImpl: DslCrudDelegateImpl                         = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.crud(simpleName, tableRef)) },
     showcaseImpl: DslShowcaseDelegateImpl                 = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.showcase(simpleName, tableRef)) },
 //    val propsImpl: DslPropsDelegate                           = dslCtx.ctxObjOrCreate(DslRef.properties(simpleNameOfParentDslBlock, tableRef)),
 //    val nameAndWheretoWithoutModelSubelementsImpl: DslNameAndWheretoOnlyDelegateImpl = dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto(simpleNameOfParentDslBlock, tableRef)),
@@ -487,6 +491,8 @@ class DslTable(
     IDslApiInitializer by propsImpl,
     IDslImplClassModsDelegate by classModsImpl,
     IDslImplExtendsDelegate by extendsImpl,
+    IDslApiCrudDelegate by crudImpl,
+
     IDslImplShowcaseDelegate by showcaseImpl,
 
     IDslApiNameAndWheretoOnly by nameAndWheretoWithoutModelSubelementsImpl,
@@ -535,7 +541,8 @@ class DslTable(
                 DslGatherPropertiesDelegateImpl(C.NULLSTRING, IDslRef.NULL),
                 DslClassModsDelegateImpl(C.NULLSTRING, IDslRef.NULL),
                 DslExtendsDelegateImpl(C.NULLSTRING, IDslRef.NULL),
-                DslShowcaseDelegateImpl(C.NULLSTRING, IDslRef.NULL)
+                DslCrudDelegateImpl(C.NULLSTRING, IDslRef.NULL),
+                DslShowcaseDelegateImpl(C.NULLSTRING, IDslRef.NULL),
             )
         }
     }

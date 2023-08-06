@@ -99,7 +99,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                     constructorBuilder.addParameter(paramBuilder.build())
                     constrLikeParams.add(paramBuilder.build())
                 } else {
-                    val kotlinProp = KotlinPropertyDto(theProp, this.modelClassData)
+                    val kotlinProp = KotlinPropertyDto(theProp, this)
                     kotlinProp.mergePropertyIntoConstructor()
                     builder.addProperty(kotlinProp.build())
                     val paramBuilder = constrParamBuilder(theProp)
@@ -107,7 +107,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                     constrLikeParams.add(paramBuilder.build())
                 }
             } else {
-                val kotlinProp = KotlinPropertyDto(theProp, this.modelClassData)
+                val kotlinProp = KotlinPropertyDto(theProp, this)
                 builder.addProperty(kotlinProp.build())
             }
         }

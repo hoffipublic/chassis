@@ -4,25 +4,24 @@ import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.helpers.Validate.failIfIdentifierInvalid
 import com.hoffi.chassis.shared.helpers.ifNotBlank
 import com.hoffi.chassis.shared.parsedata.ModelClassData
-import com.hoffi.chassis.shared.strategies.ClassNameStrategy
-import com.hoffi.chassis.shared.strategies.IClassNameStrategy
-import com.hoffi.chassis.shared.strategies.ITableNameStrategy
-import com.hoffi.chassis.shared.strategies.TableNameStrategy
+import com.hoffi.chassis.shared.strategies.*
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.TypeName
 import okio.Path
 import org.slf4j.LoggerFactory
 
-interface IModelClassName {
+interface IModelClassName : INamingStrategy {
     var modelOrTypeNameString: String
     var poetType: TypeName
     val poetTypeSimpleName: String
     val tableName: String
     val asVarName: String
     val fillerPoetType: ClassName
+
+
 }
 
-class ModelClassName constructor(
+class ModelClassName(
     val modelSubElRef: IDslRef,
     var poetTypeDirect: TypeName?
 ) : IModelClassName {
@@ -58,6 +57,13 @@ class ModelClassName constructor(
         } else {
             ClassName("${(poetTypeDslModel as ClassName).packageName}.filler", "Filler${(poetTypeDslModel as ClassName).simpleName}")
         }
+
+    override fun nameOf(string: String) = classNameStrategy.nameOf(string)
+    override fun nameOf(string: String, prefix: String, postfix: String) = classNameStrategy.nameOf(string, prefix)
+    override fun nameUpperFirstOf(string: String) = classNameStrategy.nameUpperFirstOf(string)
+    override fun nameUpperFirstOf(string: String, prefix: String, postfix: String) = classNameStrategy.nameUpperFirstOf(string, prefix, postfix)
+    override fun nameLowerFirstOf(string: String) = classNameStrategy.nameLowerFirstOf(string)
+    override fun nameLowerFirstOf(string: String, prefix: String, postfix: String) = classNameStrategy.nameLowerFirstOf(string, prefix, postfix)
 
     fun validate(any: Any) {
         (poetType as? ClassName)?.simpleName?.failIfIdentifierInvalid("$any->$this")

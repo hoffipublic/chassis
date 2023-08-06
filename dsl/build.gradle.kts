@@ -26,6 +26,8 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:${libs.versions.clikt.get()}")
     implementation("com.squareup.okio:okio:${libs.versions.okio.get()}")
     implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.get()}")
+    implementation("org.slf4j:slf4j-api:${libs.versions.slf4j.get()}")
+    implementation("ch.qos.logback:logback-classic:${libs.versions.logback.get()}")
 }
 
 tasks {

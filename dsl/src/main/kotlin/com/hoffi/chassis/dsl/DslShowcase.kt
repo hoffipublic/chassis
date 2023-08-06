@@ -116,6 +116,7 @@ class DslShowcaseDelegateImpl(
 ) : ADslDelegateClass(simpleNameOfDelegator, delegatorRef), IDslImplShowcaseDelegate {
     override fun toString() = "${this::class.simpleName}(${theShowcaseBlocks.size})"
     val log = LoggerFactory.getLogger(javaClass)
+    // TODO !!! delegatorRef already IS showcase DslRef !?!?!?
     override val selfDslRef = DslRef.showcase(simpleNameOfDelegator, delegatorRef)
 
     /** different gathered dsl data holder for different simpleName's inside the BlockImpl's */

@@ -37,7 +37,7 @@ class FK(
     override fun compareTo(other: FK): Int = toProp.dslPropName.compareTo(other.toProp.dslPropName)
 
     /** build after ALL normal KotlinClassModelTable and their "normal" props are build</br>
-     * because the "dependant" KotlinClassModelTable might not yet have been generated and doesn't yet exist */
+     * because the "dependant" KotlinClassModelTable might not yet have been generated and may not yet exist */
     fun buildFK() {
         //public var someModelObject: Column<UUID> = uuid("SimpleSubentity_uuid").uniqueIndex().references(SimpleSubentityTable.uuid)
         //val (nullQM, nullFunc) = if (Tag.NULLABLE in toProp.tags) Pair("?", ".nullable()") else Pair("", "")
@@ -53,10 +53,10 @@ class FK(
         //eitherTypOrModelOrPoetType.initializer.originalArgs.add(RuntimeDefaults.UUID_PROPNAME)
 
         propSpecBuilder.addAnnotation(
-                AnnotationSpec.builder(RuntimeDefaults.ANNOTATION_FKFROM_CLASSNAME)
-                .addMember("%T::class", GenDslRefHelpers.dtoClassName(toTable.modelClassData, genCtx))
-                .build())
-
+            AnnotationSpec.builder(RuntimeDefaults.ANNOTATION_FKFROM_CLASSNAME)
+            .addMember("%T::class", GenDslRefHelpers.dtoClassName(toTable.modelClassData, genCtx))
+            .build()
+        )
         fromKotlinClassModelTable.builder.addProperty(propSpecBuilder.build())
     }
 }

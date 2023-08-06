@@ -17,6 +17,7 @@ import com.hoffi.chassis.shared.whens.WhensDslRef
 import org.slf4j.LoggerFactory
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.isSubtypeOf
+import kotlin.reflect.full.primaryConstructor
 
 lateinit var globalDslCtx: DslCtx // TODO remove workaround
 val dslCtxWrapperFake: DslCtxWrapper // TODO remove workaround
@@ -105,12 +106,18 @@ class DslCtx private constructor(){
         if (dslRef == IDslRef.NULL) { throw DslCtxException("trying to create DslCtx Object for IDslRef.NULL") }
         // create an instance via reflection (every ADslClass has to have a constructor(simpleName, parentDslRef)
         // TODO construct via 2 param constructor (or give all ADslClass'es some CREATE (static) method??)
-        val constr = T::class.constructors.find {
-            it.parameters.size == 2 &&
-                    it.parameters[0].type.classifier == String::class  && ! it.parameters[0].type.isMarkedNullable
-                    it.parameters[1].type.isSubtypeOf(IDslRef::class.createType()) && ! it.parameters[0].type.isMarkedNullable
-        } ?: throw DslCtxException("${T::class.simpleName} does not have a constructor(String, IDslRef")
+        val constr = T::class.primaryConstructor!!
+        if (constr.parameters.size < 2 ||
+            constr.parameters[0].type.classifier != String::class  || constr.parameters[0].type.isMarkedNullable ||
+            ! constr.parameters[1].type.isSubtypeOf(IDslRef::class.createType()) || constr.parameters[1].type.isMarkedNullable
+        ) throw DslCtxException("${T::class.simpleName} does not have a constructor(String, IDslRef")
         log.debug("{}.constr({}) in DslCtx.ctxObjCreate(dslRef = '{}')", T::class.simpleName, dslRef::class.simpleName, dslRef)
+        // TODO use callBy to enable further constructor Parameters with default values (but doesn't work with context'ual constr yet
+        //val constrParamMap: MutableMap<KParameter, Any?> = mutableMapOf(
+        //    constr.parameters[0] to "dynamicString"
+        //)
+        //val theObj: T = constr.callBy(constrParamMap)
+        // for ADslDelegateClass'es call ctxObjCreate() with the delegate DslRef
         val theObj: T = constr.call(this@DslCtxWrapper, dslRef.simpleName, dslRef.parentDslRef)
         log.debug("ok.")
         //theObj = T::class.getDeclaredConstructor().newInstance()

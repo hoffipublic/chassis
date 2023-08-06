@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.support.serviceOf
+
 rootProject.name = "chassis"
 
 pluginManagement {
@@ -35,6 +37,30 @@ include(":codegen")
 include(":dsl")
 include(":examples")
 include(":shared")
-include(":dbwrappers")
+include(":dbwrappers:dbwrappers")
 include(":dbwrappers:exposed")
 
+class DoSomethingAfterBuild : FlowAction<FlowParameters.None> {
+    override fun execute(parameters: FlowParameters.None) {
+        println("final message from: 'settings.gradle.kts':")
+    }
+}
+gradle.serviceOf<FlowScope>().always(DoSomethingAfterBuild::class.java) { }
+
+//class DoSomethingWithResult : FlowAction<DoSomethingWithResult.Parameters> {
+//    interface Parameters : FlowParameters {
+//        @get:Input
+//        val failure: Property<Throwable?>
+//    }
+//    override fun execute(parameters: Parameters) {
+//        if (!parameters.failure.isPresent) {
+//            println("redundant output from: 'settings.gradle.kts': Build successful")
+//        } else {
+//            println("redundant output from: 'settings.gradle.kts': Build failed: ${parameters.failure.get()}")
+//        }
+//    }
+//}
+//gradle.serviceOf<FlowScope>().always(DoSomethingWithResult::class.java) {
+//    val buildResult = gradle.serviceOf<FlowProviders>().buildWorkResult
+//    parameters.failure.set(buildResult.map { it.failure.orElse(null) })
+//}

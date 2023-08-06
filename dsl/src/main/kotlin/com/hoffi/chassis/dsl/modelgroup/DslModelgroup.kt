@@ -285,7 +285,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                     DslException("neither known ModelSubelement")
                 }
             },
-            isModelSubelementRef = { dslCtx.genCtx.genModel(genPropEitherModel.modelSubElementRef as DslRef.IModelSubelement) }
+            isModelSubelementRef = { dslCtx.genCtx.genModel(genPropEitherModel.modelSubElementRef) }
         ) { DslException("neither Model or Model Subelement") }
         return reffedGenModel
     }
@@ -344,9 +344,9 @@ globalDslCtx = dslCtx // TODO remove workaround
                     extendsModel = extendsEither
                 }
                 while (extendsModel != null) {
-                    val genModel: GenModel = dslCtx.genCtx.genModel(extendsModel.modelSubElementRef)
-                    superclassesProps.putAll(genModel.allProps)
-                    extendsEither = genModel.extends[C.DEFAULT]?.typeClassOrDslRef
+                    val theGenModel: GenModel = dslCtx.genCtx.genModel(extendsModel.modelSubElementRef)
+                    superclassesProps.putAll(theGenModel.allProps)
+                    extendsEither = theGenModel.extends[C.DEFAULT]?.typeClassOrDslRef
                     extendsModel = if (extendsEither != null && extendsEither is EitherTypOrModelOrPoetType.EitherModel) extendsEither else null
                 }
                 genModel.superclassProps.putAll(superclassesProps)
