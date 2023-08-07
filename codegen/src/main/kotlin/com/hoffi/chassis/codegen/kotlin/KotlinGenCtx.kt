@@ -3,12 +3,15 @@ package com.hoffi.chassis.codegen.kotlin
 import com.hoffi.chassis.chassismodel.dsl.GenCtxException
 import com.hoffi.chassis.codegen.kotlin.gens.AKotlinClass
 import com.hoffi.chassis.codegen.kotlin.gens.FK
+import com.hoffi.chassis.codegen.kotlin.gens.crud.AKotlinCrud
+import com.hoffi.chassis.codegen.kotlin.gens.crud.KotlinCrudExposed
 import com.hoffi.chassis.codegen.kotlin.gens.filler.AKotlinFiller
 import com.hoffi.chassis.codegen.kotlin.gens.filler.KotlinFillerDto
 import com.hoffi.chassis.codegen.kotlin.gens.filler.KotlinFillerTable
 import com.hoffi.chassis.shared.codegen.GenCtx
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
+import com.hoffi.chassis.shared.shared.CrudData
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
 
@@ -38,7 +41,7 @@ class KotlinGenCtx private constructor() {
         }
     }
     context(GenCtxWrapper)
-    fun kotlinFillerClass(modelkind: MODELKIND, fillerData: FillerData): Pair<AKotlinFiller, Boolean> {
+    fun getOrCreateKotlinFillerClass(modelkind: MODELKIND, fillerData: FillerData): Pair<AKotlinFiller, Boolean> {
         val theDslRef = if (modelkind == MODELKIND.TABLEKIND && fillerData.targetDslRef !is DslRef.table) {
             fillerData.sourceDslRef // special case e.g. DTO <-- TABLE
         } else {
@@ -56,11 +59,25 @@ class KotlinGenCtx private constructor() {
     }
     fun putKotlinFillerClass(modelkind: MODELKIND, fillerData: FillerData, fillerClass: AKotlinFiller) { if (! allKotlinFillerClasses[modelkind]!!.containsKey(fillerData.targetDslRef)) { allKotlinFillerClasses[modelkind]!![fillerData.targetDslRef] = fillerClass } else { throw GenCtxException("${this::class.simpleName} already contains a filler for '${fillerData}'") } }
     fun allKotlinFillerClasses(modelkind: MODELKIND) = allKotlinFillerClasses[modelkind]!!.values
+
+    private val allKotlinCrudClasses: MutableMap<Pair<CrudData.CRUD, IDslRef>, AKotlinCrud> = mutableMapOf()
     context(GenCtxWrapper)
-    fun buildFiller(modelkind: MODELKIND, fillerData: FillerData) {
-        val (aKotlinClassFiller, _) = kotlinFillerClass(modelkind, fillerData)
-        aKotlinClassFiller.build(modelkind, fillerData)
+    fun getOrCreateKotlinCrudExposedClass(crudData: CrudData): Pair<AKotlinCrud, Boolean> {
+        //val theDslRef = if (modelkind == MODELKIND.TABLEKIND && crudData.targetDslRef !is DslRef.table) {
+        //    crudData.sourceDslRef // special case e.g. DTO <-- TABLE
+        //} else {
+        //    crudData.targetDslRef
+        //}
+        val toGetOrCreate = Pair(crudData.crud, crudData.targetDslRef)
+        val exists = allKotlinCrudClasses[toGetOrCreate]
+        return if (exists == null) {
+            Pair(KotlinCrudExposed(crudData).also {allKotlinCrudClasses[toGetOrCreate] = it}, true)
+        } else {
+            Pair(exists, false)
+        }
     }
+    fun putKotlinCrudClass(crudData: CrudData, crudClass: AKotlinCrud) { if (! allKotlinCrudClasses.containsKey(Pair(crudData.crud, crudData.targetDslRef))) { allKotlinCrudClasses[Pair(crudData.crud, crudData.targetDslRef)] = crudClass } else { throw GenCtxException("${this::class.simpleName} already contains a crudClass for '${crudData}'") } }
+    fun allKotlinCrudClasses() = allKotlinCrudClasses.values
 
     private val fks: MutableSet<FK> = mutableSetOf()
     fun allFKs() = fks

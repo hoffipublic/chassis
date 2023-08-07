@@ -7,6 +7,7 @@ import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.chassismodel.typ.TYP
 import com.hoffi.chassis.chassismodel.typ.mutable
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface
+import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.INTERFACE
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.dsl.modelgroup.IDslApiConstructorVisibility.VISIBILITY.PROTECTED
@@ -51,7 +52,7 @@ fun entities() {
         // ================================================================================================================================
 
         model(ENTITY__BASE) {
-            kind = DslClassObjectOrInterface.INTERFACE
+            kind = INTERFACE
             dto {}
             table {}
         }

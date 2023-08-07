@@ -20,7 +20,6 @@ import com.hoffi.chassis.shared.shared.CrudData
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.hoffi.chassis.shared.whens.WhensDslRef
 import org.slf4j.LoggerFactory
-import java.util.*
 
 // ======== API
 
@@ -74,7 +73,7 @@ class DslCrudDelegateImpl(simpleNameOfDelegator: String, delegateRef: IDslRef)
     var theCrudBlocks: MutableMap<String, DslImplOuterCrudBlock> = mutableMapOf()
 
     private val theCrudDatas: MutableMap<String, MutableMap<String, MutableSet<CrudData>>> = mutableMapOf()
-    fun getOrCreateCrudData(simpleName: String, tmpUuid: UUID, businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef, crud: CrudData.CRUD): CrudData {
+    fun getOrCreateCrudData(simpleName: String, businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef, crud: CrudData.CRUD): CrudData {
         val crudData = CrudData(businessName, targetDslRef, sourceDslRef, crud)
         val allForSimpleName = theCrudDatas.getOrPut(simpleName) { mutableMapOf() }
         val allForBusinessName = allForSimpleName.getOrPut(businessName) { mutableSetOf() }
@@ -216,12 +215,11 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
             MODELREFENUM.DTO -> {
                 val tableRef = DslRef.table(C.DEFAULT, elementRef)
                 val dtoRef = DslRef.dto(C.DEFAULT, elementRef)
-                val tmpUuid = UUID.randomUUID()
                 listOf(
-                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, tmpUuid, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.CREATE),
-                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, tmpUuid, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.READ),
-                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, tmpUuid, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.UPDATE),
-                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, tmpUuid, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.DELETE),
+                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.CREATE),
+                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.READ),
+                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.UPDATE),
+                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.DELETE),
                 )
             }
             MODELREFENUM.TABLE -> throw DslException("crudData on '${selfDslRef}' unaryPlus not allowed to a 'TABLE'")
@@ -233,12 +231,11 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
         val (_, elementRef, _) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslCrudDelegateImpl)
         val tableRef = DslRef.table(C.DEFAULT, elementRef)
         val dtoRef = dslRef as DslRef.IModelOrModelSubelement
-        val tmpUuid = UUID.randomUUID()
         return listOf(
-            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, tmpUuid, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.CREATE),
-            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, tmpUuid, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.READ),
-            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, tmpUuid, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.UPDATE),
-            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, tmpUuid, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.DELETE),
+            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.CREATE),
+            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.READ),
+            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.UPDATE),
+            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.DELETE),
         )
     }
 
@@ -259,15 +256,15 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
         val (selfGroupRef, selfElementRef, selfSubelRef) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslCrudDelegateImpl)
         val crudData =  when (modelrefenum) {
             MODELREFENUM.MODEL -> throw DslException("crud on '${selfDslRef}' unaryPlus not allowed to a 'MODEL'")
-            MODELREFENUM.DTO ->   dslCrudDelegateImpl.getOrCreateCrudData(simpleName, UUID.randomUUID(), businessName, DslRef.dto(C.DEFAULT, selfElementRef), DslRef.dto(C.DEFAULT, selfElementRef), this)
-            MODELREFENUM.TABLE -> dslCrudDelegateImpl.getOrCreateCrudData(simpleName, UUID.randomUUID(), businessName, DslRef.table(C.DEFAULT, selfElementRef), DslRef.table(C.DEFAULT, selfElementRef), this)
+            MODELREFENUM.DTO ->   dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, DslRef.table(C.DEFAULT, selfElementRef), DslRef.dto(C.DEFAULT, selfElementRef), this)
+            MODELREFENUM.TABLE -> dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, DslRef.table(C.DEFAULT, selfElementRef), DslRef.dto(C.DEFAULT, selfElementRef), this)
         }
         return listOf(crudData)
     }
 
     override fun CrudData.CRUD.FOR(dslRef: IDslRef): List<CrudData> {
         val crudData = WhensDslRef.whenModelSubelement(dslRef,
-            isDtoRef = { dslCrudDelegateImpl.getOrCreateCrudData(simpleName, UUID.randomUUID(), businessName, dslRef, dslRef, this) },
+            isDtoRef = { dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, DslRef.table(simpleName, dslRef.parentDslRef), dslRef, this) },
             isTableRef = { throw DslException("on ${dslCrudDelegateImpl.selfDslRef} $this FOR $dslRef not allowed for table { }") }
         ) {
             DslException("unknonwn error for ${dslCrudDelegateImpl.selfDslRef} $this FOR $dslRef not allowed for table { }")

@@ -4,6 +4,7 @@ import com.hoffi.chassis.chassismodel.dsl.GenCtxException
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
+import com.hoffi.chassis.shared.shared.CrudData
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.SynthFillerData
 
@@ -16,6 +17,7 @@ class GenCtx private constructor() {
 
     val fillerDatas: MutableMap<String, MutableMap<DslRef.model, MutableSet<FillerData>>> = mutableMapOf()
     val syntheticFillerDatas: MutableList<SynthFillerData> = mutableListOf()
+    val crudDatas: MutableMap<String, MutableMap<DslRef.table, MutableSet<CrudData>>> = mutableMapOf()
 
     companion object {
         val NULL = GenCtx()

@@ -6,7 +6,7 @@ import com.hoffi.chassis.shared.dsl.IDslRef
 class CrudData(businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef, val crud: CRUD)
     : AHasCopyBoundrysData(businessName, targetDslRef, sourceDslRef)
 {
-    override fun toString() = "${this::class.simpleName}('$businessName', target: '${targetDslRef.refList.takeLast(2).joinToString(
+    override fun toString() = "${this::class.simpleName}('$businessName', ${String.format("%-6s", crud)}, target: '${targetDslRef.refList.takeLast(2).joinToString(
         DslRef.ATOMSEP)}', source: '${sourceDslRef.refList.takeLast(2).joinToString(DslRef.ATOMSEP)}', " +
             theCopyBoundrys.values.joinToString("") { it.toString() }.ifBlank { "NONE" } + ")"
 

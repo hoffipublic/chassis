@@ -19,7 +19,7 @@ import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.UNIT
 
 context(GenCtxWrapper)
-class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fillerData, MODELKIND.TABLEKIND) {
+class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODELKIND.TABLEKIND) {
 
     // TODO constructor fillerData has to construct the "right" "Filler" (might be Table filler even with target being a DTO
     // also important for build() alreadyCreated
@@ -35,7 +35,6 @@ class KotlinFillerTable constructor(fillerData: FillerData): AKotlinFiller(fille
         val sourceGenModel: GenModel = genCtx.genModel(fillerData.sourceDslRef)
 
         val intersectPropsData = IntersectPropertys.intersectPropsOf(
-            modelkind,
             targetGenModel,
             sourceGenModel,
             //kotlinGenCtx.kotlinGenClass(fillerData.sourceDslRef),

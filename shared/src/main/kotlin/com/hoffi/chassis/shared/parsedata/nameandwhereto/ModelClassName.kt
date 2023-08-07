@@ -17,8 +17,7 @@ interface IModelClassName : INamingStrategy {
     val tableName: String
     val asVarName: String
     val fillerPoetType: ClassName
-
-
+    val crudPoetType: ClassName
 }
 
 class ModelClassName(
@@ -56,6 +55,12 @@ class ModelClassName(
             ClassName("${(poetTypeDirect as ClassName).packageName}.filler", "Filler${(poetTypeDirect as ClassName).simpleName}")
         } else {
             ClassName("${(poetTypeDslModel as ClassName).packageName}.filler", "Filler${(poetTypeDslModel as ClassName).simpleName}")
+        }
+    override val crudPoetType: ClassName
+        get() =  if (poetTypeDirect != null) {
+            ClassName("${(poetTypeDirect as ClassName).packageName}.sql", "Crud${(poetTypeDirect as ClassName).simpleName}")
+        } else {
+            ClassName("${(poetTypeDslModel as ClassName).packageName}.sql", "Crud${(poetTypeDslModel as ClassName).simpleName}")
         }
 
     override fun nameOf(string: String) = classNameStrategy.nameOf(string)

@@ -7,6 +7,7 @@ import com.hoffi.chassis.shared.codegen.GenRun
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
+import com.hoffi.chassis.shared.shared.CrudData
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
 import com.hoffi.chassis.shared.whens.WhensDslRef
@@ -20,6 +21,7 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
         codeGenSpecificOrAll(dslRefProto)
         with(genCtxWrapper) {
             codeGenFillers()
+            codeGenCruds()
         }
     }
     fun codeGenSpecificOrAll(dslRefProto: IDslRef) {
@@ -85,20 +87,25 @@ println("TABLE fillers (${genCtx.fillerDatas[C.DEFAULT]?.flatMap { it.value }?.f
 for (fillerData in genCtx.fillerDatas[C.DEFAULT]?.flatMap { it.value }?.filter { it.targetDslRef is DslRef.table || it.sourceDslRef is DslRef.table } ?: mutableSetOf()) {
     println("   $fillerData")
 }
+        val buildFillerFun: (MODELKIND, FillerData) -> Unit = { modelkind: MODELKIND, fillerData: FillerData ->
+            val (aKotlinClassFiller, _) = kotlinGenCtx.getOrCreateKotlinFillerClass(modelkind, fillerData)
+            aKotlinClassFiller.build(modelkind, fillerData)
+        }
+
         for (fillerData: FillerData in genCtx.fillerDatas[C.DEFAULT]?.flatMap { it.value } ?: mutableSetOf()) {
             if (fillerData.sourceDslRef is DslRef.table || fillerData.targetDslRef is DslRef.table) {
-                kotlinGenCtx.buildFiller(MODELKIND.TABLEKIND, fillerData)
+                buildFillerFun(MODELKIND.TABLEKIND, fillerData)
             } else {
-                kotlinGenCtx.buildFiller(MODELKIND.DTOKIND, fillerData)
+                buildFillerFun(MODELKIND.DTOKIND, fillerData)
             }
         }
         while (genCtx.syntheticFillerDatas.isNotEmpty()) {
             val syntheticFillerData = genCtx.syntheticFillerDatas.removeFirst()
             if (syntheticFillerData.sourceDslRef is DslRef.table || syntheticFillerData.targetDslRef is DslRef.table) {
-                kotlinGenCtx.buildFiller(MODELKIND.TABLEKIND, syntheticFillerData)
+                buildFillerFun(MODELKIND.TABLEKIND, syntheticFillerData)
             } else {
                 //println("current: ${syntheticFillerData}\n  to build: ${genCtx.syntheticFillerDatas.joinToString(separator = "\n  to build: ")}")
-                kotlinGenCtx.buildFiller(MODELKIND.DTOKIND, syntheticFillerData)
+                buildFillerFun(MODELKIND.DTOKIND, syntheticFillerData)
             }
         }
 
@@ -112,6 +119,34 @@ for (fillerData in genCtx.fillerDatas[C.DEFAULT]?.flatMap { it.value }?.filter {
         for(aKotlinFiller in kotlinGenCtx.allKotlinFillerClasses(MODELKIND.TABLEKIND)) {
             log.info("{}() write Filler for {}", object{}.javaClass.enclosingMethod.name, aKotlinFiller) //-> ${model.modelSubElRef}")
             aKotlinFiller.generate()
+        }
+    }
+
+    context(GenCtxWrapper)
+    private fun codeGenCruds() {
+        println("==================================")
+        println("===  generate CRUDs       ========")
+        println("==================================")
+println("all CRUDs (${genCtx.crudDatas[C.DEFAULT]?.flatMap { it.value }?.size ?: 0}):")
+println("\"normal\" CRUDs (${genCtx.crudDatas[C.DEFAULT]?.flatMap { it.value }?.size ?: 0}):")
+for (crudData in genCtx.crudDatas[C.DEFAULT]?.flatMap { it.value } ?: mutableSetOf()) {
+    println("   $crudData")
+}
+        val buildCrudExposedFun: (CrudData) -> Unit = { crudData: CrudData ->
+            val (aKotlinCrudExposed, _) = kotlinGenCtx.getOrCreateKotlinCrudExposedClass(crudData)
+            aKotlinCrudExposed.build(crudData)
+        }
+
+        for (crudData in genCtx.crudDatas[C.DEFAULT]?.flatMap { it.value } ?: mutableSetOf()) {
+            buildCrudExposedFun(crudData)
+        }
+
+        println("==================================")
+        println("===  write CRUDs           =====")
+        println("==================================")
+        for(aKotlinCrudExposed in kotlinGenCtx.allKotlinCrudClasses()) {
+            log.info("{}() write CRUD for {}", object{}.javaClass.enclosingMethod.name, aKotlinCrudExposed)
+            aKotlinCrudExposed.generate()
         }
     }
 }

@@ -20,7 +20,7 @@ import okio.Path
 import org.slf4j.LoggerFactory
 
 context(GenCtxWrapper)
-abstract class AKotlinFiller constructor(fillerData: FillerData, val modelkind: MODELKIND) {
+abstract class AKotlinFiller(fillerData: FillerData, val modelkind: MODELKIND) {
     private val fillerDataTargetDslRef = fillerData.targetDslRef
     var currentFillerData: FillerData = fillerData // changes for every build() call, also helpfull for debugging
     override fun toString() = "${this::class.simpleName}(current${currentFillerData})"

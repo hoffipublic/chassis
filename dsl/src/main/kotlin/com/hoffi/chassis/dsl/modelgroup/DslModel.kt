@@ -13,6 +13,7 @@ import com.hoffi.chassis.shared.parsedata.*
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedNameAndWhereto
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.StrategyNameAndWhereto
+import com.hoffi.chassis.shared.shared.CrudData
 import com.hoffi.chassis.shared.shared.Extends
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.GatherPropertys
@@ -471,7 +472,7 @@ class DslTable(
     gatherPropertiesImpl: DslGatherPropertiesDelegateImpl = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.propertiesOf(simpleName, tableRef)) },
     classModsImpl: DslClassModsDelegateImpl               = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.classMods(simpleName, tableRef)) },
     extendsImpl: DslExtendsDelegateImpl                   = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.extends(simpleName, tableRef)) },
-    crudImpl: DslCrudDelegateImpl                         = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.crud(simpleName, tableRef)) },
+    val crudImpl: DslCrudDelegateImpl                     = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.crud(simpleName, tableRef)) },
     showcaseImpl: DslShowcaseDelegateImpl                 = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.showcase(simpleName, tableRef)) },
 //    val propsImpl: DslPropsDelegate                           = dslCtx.ctxObjOrCreate(DslRef.properties(simpleNameOfParentDslBlock, tableRef)),
 //    val nameAndWheretoWithoutModelSubelementsImpl: DslNameAndWheretoOnlyDelegateImpl = dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto(simpleNameOfParentDslBlock, tableRef)),
@@ -528,6 +529,33 @@ class DslTable(
         tableModel.constructorVisibility = true
 
         finishModelClassData(dslModel, tableModel, classModifiersImpl, extendsImpl, gatherPropertiesImpl, propsImpl)
+
+        finishCrudDatas()
+    }
+
+    private fun finishCrudDatas() {
+        // consistency check if filler referenced models really exist and do not point into "nirvana"
+        val finishedCrudDatas: MutableMap<String, MutableSet<CrudData>> = crudImpl.finishedCrudDatas()
+        for (entry in finishedCrudDatas) {
+            val simpleName = entry.key
+            for (crudData: CrudData in entry.value) {
+                try {
+                    dslCtx.ctxObj<ADslClass>(crudData.targetDslRef)
+                } catch (e: Exception) {
+                    throw DslException("crud targetDslRef: '${crudData.targetDslRef}' does not exist in DslCtx")
+                }
+            }
+            for (crudData: CrudData in entry.value) {
+                try {
+                    dslCtx.ctxObj<ADslClass>(crudData.sourceDslRef)
+                } catch (e: Exception) {
+                    throw DslException("crud sourceDslRef: '${crudData.sourceDslRef}' does not exist in DslCtx")
+                }
+            }
+        }
+        for ((simpleName, setOfCrudDatas) in finishedCrudDatas) {
+            dslCtx.genCtx.crudDatas.getOrPut(simpleName) { mutableMapOf() }[selfDslRef as DslRef.table] = setOfCrudDatas
+        }
     }
 
     companion object {

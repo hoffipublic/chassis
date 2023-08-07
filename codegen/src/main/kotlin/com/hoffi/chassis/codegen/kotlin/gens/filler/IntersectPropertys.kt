@@ -2,7 +2,6 @@ package com.hoffi.chassis.codegen.kotlin.gens.filler
 
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.Property
-import com.hoffi.chassis.shared.shared.reffing.MODELKIND
 import com.squareup.kotlinpoet.ClassName
 
 object IntersectPropertys {
@@ -27,7 +26,6 @@ object IntersectPropertys {
     }
 
     fun intersectPropsOf(
-        modelkind: MODELKIND,
         targetGenModel: GenModel,
         sourceGenModel: GenModel,
         sourceVarNamePostfix: String = "",
