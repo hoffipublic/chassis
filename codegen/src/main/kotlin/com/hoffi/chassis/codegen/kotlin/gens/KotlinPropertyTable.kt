@@ -4,7 +4,6 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.Initializer
 import com.hoffi.chassis.chassismodel.PoetHelpers.nullable
 import com.hoffi.chassis.chassismodel.RuntimeDefaults
-import com.hoffi.chassis.chassismodel.RuntimeDefaults.UUID_PROPNAME
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.chassismodel.typ.TYP
@@ -25,7 +24,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.asTypeName
 
 context(GenCtxWrapper)
-class KotlinPropertyTable(property: Property, val genModel: KotlinClassModelTable) : AKotlinProperty(property, genModel.modelClassData) {
+class KotlinPropertyTable(property: Property, val propItsKotlinClassModelTable: KotlinClassModelTable) : AKotlinProperty(property, propItsKotlinClassModelTable.modelClassData) {
     override val builder: PropertySpec.Builder = whenInit()
 
     private fun whenInit(): PropertySpec.Builder {
@@ -44,21 +43,21 @@ class KotlinPropertyTable(property: Property, val genModel: KotlinClassModelTabl
             preCollection = {
             },
             isModel = {
-                initBuilder = PropertySpec.builder(property.name, ColumnClassName.parameterizedBy(RuntimeDefaults.classNameUUID), property.modifiers)
+                initBuilder = PropertySpec.builder(property.name(postfix = RuntimeDefaults.UUID_PROPNAME), ColumnClassName.parameterizedBy(RuntimeDefaults.classNameUUID), property.modifiers)
                 if ( ( ! property.initializer.hasOriginalInitializer()) && (Tag.NO_DEFAULT_INITIALIZER !in property.tags) ) {
                     val defaultInitializer = Initializer.of("%T.%L", this.modelClassName.poetType, "NULL")
                     initializerCodeBlockBuilder.add(defaultInitializer.codeBlockFull())
                 }
             },
             isPoetType = {
-                initBuilder = PropertySpec.builder(property.name, ColumnClassName.parameterizedBy(property.poetType), property.modifiers)
+                initBuilder = PropertySpec.builder(property.name(), ColumnClassName.parameterizedBy(property.poetType), property.modifiers)
                 if ( ( ! property.initializer.hasOriginalInitializer()) && (Tag.NO_DEFAULT_INITIALIZER !in property.tags) ) {
                     val defaultInitializer = Initializer.of("%T.%L", this.modelClassName.poetType, "NULL")
                     initializerCodeBlockBuilder.add(defaultInitializer.codeBlockFull())
                 }
             },
             isTyp = {
-                initBuilder = PropertySpec.builder(property.name, ColumnClassName.parameterizedBy(property.poetType), property.modifiers)
+                initBuilder = PropertySpec.builder(property.name(), ColumnClassName.parameterizedBy(property.poetType), property.modifiers)
                 if ( ( ! property.initializer.hasOriginalInitializer()) && (Tag.NO_DEFAULT_INITIALIZER !in property.tags) ) {
                     val defaultInitializer = this.typ.defaultInitializer
                     initializerCodeBlockBuilder.add(defaultInitializer.codeBlockFull())
@@ -69,29 +68,29 @@ class KotlinPropertyTable(property: Property, val genModel: KotlinClassModelTabl
                 //val reffedTable_DTO_GenModel: GenModel = genCtx.genModel(this.modelSubElementRef)
                 val reffedTableDslRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)
                 val reffedTable: GenModel = genCtx.genModel(reffedTableDslRef)
-                val fk = genModel.addFK(
+                val fk = propItsKotlinClassModelTable.addIncomingFK(
                     fromTableRef = reffedTableDslRef,
                     //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.modelClassData.modelSubElRef.parentDslRef)),
-                    toTable = this@KotlinPropertyTable.genModel,
+                    toTableRef = this@KotlinPropertyTable.modelClassData.modelSubElRef,
                     this@KotlinPropertyTable.property,
                     COLLECTIONTYP.LIST // <-- differs
                 )
-                initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable())
-                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, fk.varName) // placeholder property TODO let's see if exposed explodes on this
+                initBuilder = PropertySpec.builder(property.name(), Any::class.asTypeName().nullable())
+                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, propItsKotlinClassModelTable.fkPropVarNames(fk).first) // placeholder property TODO let's see if exposed explodes on this
             },
             isModelSet = {
                 //val reffedTable_DTO_GenModel: GenModel = genCtx.genModel(this.modelSubElementRef)
                 val reffedTableDslRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)
                 val reffedTable: GenModel = genCtx.genModel(reffedTableDslRef)
-                val fk = genModel.addFK(
+                val fk = propItsKotlinClassModelTable.addIncomingFK(
                     fromTableRef = reffedTableDslRef,
                     //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.modelClassData.modelSubElRef.parentDslRef)),
-                    toTable = this@KotlinPropertyTable.genModel,
+                    toTableRef = this@KotlinPropertyTable.modelClassData.modelSubElRef,
                     this@KotlinPropertyTable.property,
                     COLLECTIONTYP.SET // <-- differs
                 )
-                initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable())
-                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, fk.varName) // placeholder property TODO let's see if exposed explodes on this
+                initBuilder = PropertySpec.builder(property.name(), Any::class.asTypeName().nullable())
+                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, propItsKotlinClassModelTable.fkPropVarNames(fk).first) // placeholder property TODO let's see if exposed explodes on this
             },
             isModelCollection = {
                 TODO()
@@ -100,24 +99,24 @@ class KotlinPropertyTable(property: Property, val genModel: KotlinClassModelTabl
                 TODO()
             },
             isPoetTypeList = {
-                initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable()) // TODO()
+                initBuilder = PropertySpec.builder(property.name(), Any::class.asTypeName().nullable()) // TODO()
                     .addKdoc("not implemented yet")
                 initializerCodeBlockBuilder.add("null")
             },
             isPoetTypeSet = {
-                initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable()) // TODO()
+                initBuilder = PropertySpec.builder(property.name(), Any::class.asTypeName().nullable()) // TODO()
                     .addKdoc("not implemented yet")
                 initializerCodeBlockBuilder.add("null")
             },
             isPoetTypeCollection = { },
             isPoetTypeIterable = { },
             isTypList = {
-                initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable()) // TODO()
+                initBuilder = PropertySpec.builder(property.name(), Any::class.asTypeName().nullable()) // TODO()
                     .addKdoc("not implemented yet")
                 initializerCodeBlockBuilder.add("null")
             },
             isTypSet = {
-                initBuilder = PropertySpec.builder(property.name, Any::class.asTypeName().nullable()) // TODO()
+                initBuilder = PropertySpec.builder(property.name(), Any::class.asTypeName().nullable()) // TODO()
                     .addKdoc("not implemented yet")
                 initializerCodeBlockBuilder.add("null")
             },
@@ -141,7 +140,7 @@ class KotlinPropertyTable(property: Property, val genModel: KotlinClassModelTabl
         when (eitherTypOrModelOrPoetType) {
             is EitherTypOrModelOrPoetType.EitherTyp -> {
                 val (dbTypeName, dbInitializer) = DB.coreTypeTranslation(eitherTypOrModelOrPoetType.typ)
-                dbInitializer.originalArgs.add(property.columnName)
+                dbInitializer.originalArgs.add(property.columnName())
                 if (eitherTypOrModelOrPoetType.typ == TYP.STRING) {
                     dbInitializer.originalArgs.add(if (property.length == DEFAULT_INT) DEFAULT_VARCHAR_LENGTH else property.length)
                 }
@@ -159,10 +158,10 @@ class KotlinPropertyTable(property: Property, val genModel: KotlinClassModelTabl
                 val (nullQM, nullFunc) = if (Tag.NULLABLE in property.tags) Pair("?", ".nullable()") else Pair("", "")
                 eitherTypOrModelOrPoetType.initializer.originalFormat = "uuid(%S$nullQM).uniqueIndex().references(%T.%L)$nullFunc"
                 eitherTypOrModelOrPoetType.initializer.originalArgs.clear()
-                eitherTypOrModelOrPoetType.initializer.originalArgs.add(property.columnName)
+                eitherTypOrModelOrPoetType.initializer.originalArgs.add(property.columnName())
                 val correspondingTable = genCtx.genModel(DslRef.table(C.DEFAULT, eitherTypOrModelOrPoetType.modelSubElementRef.parentDslRef))
                 eitherTypOrModelOrPoetType.initializer.originalArgs.add(correspondingTable.modelClassName.poetType)
-                eitherTypOrModelOrPoetType.initializer.originalArgs.add(UUID_PROPNAME)
+                eitherTypOrModelOrPoetType.initializer.originalArgs.add(RuntimeDefaults.UUID_PROPNAME)
 
                 eitherTypOrModelOrPoetType.modelSubElementRefExpanded = DslRef.table(C.DEFAULT, eitherTypOrModelOrPoetType.modelSubElementRef.parentDslRef)
             }

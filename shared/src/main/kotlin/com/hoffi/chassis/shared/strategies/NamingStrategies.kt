@@ -1,6 +1,8 @@
 package com.hoffi.chassis.shared.strategies
 
+import com.hoffi.chassis.chassismodel.Cap
 import com.hoffi.chassis.chassismodel.MixedCaseString
+import com.hoffi.chassis.chassismodel.decap
 import com.hoffi.chassis.shared.helpers.ifNotBlank
 import com.hoffi.chassis.shared.helpers.joinName
 import com.hoffi.chassis.shared.parsedata.ModelClassData
@@ -86,11 +88,11 @@ interface IVarNameStrategy : INamingStrategy {
 
 object VarNameStrategyLowerCamelCase : IVarNameStrategy {
     override fun nameOf(string: String) = MixedCaseString(string).toLowerCamelCase()
-    override fun nameOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string).toLowerCamelCase()
+    override fun nameOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string, prefix, postfix).toLowerCamelCase()
     override fun nameUpperFirstOf(string: String) = MixedCaseString(string).toUpperCamelCase()
-    override fun nameUpperFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string).toUpperCamelCase()
+    override fun nameUpperFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string, prefix, postfix).toUpperCamelCase()
     override fun nameLowerFirstOf(string: String) = MixedCaseString(string).toLowerCamelCase()
-    override fun nameLowerFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string).toLowerCamelCase()
+    override fun nameLowerFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string, prefix, postfix).toLowerCamelCase()
 }
 
 object TableNameStrategy {
@@ -107,10 +109,10 @@ interface ITableNameStrategy : INamingStrategy {
 object TableNameStrategyLowerSnakeCase : ITableNameStrategy {
     override fun nameOf(string: String) = MixedCaseString(string).toLowerSnakeCase()
     override fun nameOf(string: String, prefix: String, postfix: String) = MixedCaseString("${prefix.ifNotBlank { "${prefix}_" }}$string${postfix.ifNotBlank { "_$postfix" }}").toLowerSnakeCase()
-    override fun nameUpperFirstOf(string: String) = MixedCaseString(string).toLowerSnakeCase().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-    override fun nameUpperFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString("${prefix.ifNotBlank { "${prefix}_" }}$string${postfix.ifNotBlank { "_$postfix" }}").toLowerSnakeCase().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-    override fun nameLowerFirstOf(string: String) = MixedCaseString(string).toLowerSnakeCase().replaceFirstChar { it.lowercase() }
-    override fun nameLowerFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString("${prefix.ifNotBlank { "${prefix}_" }}$string${postfix.ifNotBlank { "_$postfix" }}").toLowerSnakeCase().replaceFirstChar { it.lowercase() }
+    override fun nameUpperFirstOf(string: String) = MixedCaseString(string).toLowerSnakeCase().Cap()
+    override fun nameUpperFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString("${prefix.ifNotBlank { "${prefix}_" }}$string${postfix.ifNotBlank { "_$postfix" }}").toLowerSnakeCase().Cap()
+    override fun nameLowerFirstOf(string: String) = MixedCaseString(string).toLowerSnakeCase().decap()
+    override fun nameLowerFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString("${prefix.ifNotBlank { "${prefix}_" }}$string${postfix.ifNotBlank { "_$postfix" }}").toLowerSnakeCase().decap()
     override fun tableName(modelName: String, prefix: String, postfix: String): String {
         return MixedCaseString(joinName(prefix, modelName, postfix)).toLowerSnakeCase()
     }

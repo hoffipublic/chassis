@@ -2,7 +2,6 @@ package com.hoffi.chassis.codegen.kotlin
 
 import com.hoffi.chassis.chassismodel.dsl.GenCtxException
 import com.hoffi.chassis.codegen.kotlin.gens.AKotlinClass
-import com.hoffi.chassis.codegen.kotlin.gens.FK
 import com.hoffi.chassis.codegen.kotlin.gens.crud.AKotlinCrud
 import com.hoffi.chassis.codegen.kotlin.gens.crud.KotlinCrudExposed
 import com.hoffi.chassis.codegen.kotlin.gens.filler.AKotlinFiller
@@ -12,6 +11,7 @@ import com.hoffi.chassis.shared.codegen.GenCtx
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.shared.CrudData
+import com.hoffi.chassis.shared.shared.FK
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
 

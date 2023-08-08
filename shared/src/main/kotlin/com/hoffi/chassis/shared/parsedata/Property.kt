@@ -3,6 +3,7 @@ package com.hoffi.chassis.shared.parsedata
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.Initializer
 import com.hoffi.chassis.chassismodel.PoetHelpers.nullable
+import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.chassismodel.typ.Mutable
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
@@ -30,9 +31,15 @@ class Property(
     var varNameStrategy = VarNameStrategy.get(IVarNameStrategy.STRATEGY.DEFAULT)
     var columnNameStrategy = VarNameStrategy.get(IVarNameStrategy.STRATEGY.LOWERSNAKECASE)
 
-    val name: String = varNameStrategy.nameLowerFirstOf(dslPropName)
-    fun name(prefix: String = "", postfix: String = "") = varNameStrategy.nameLowerFirstOf(name, prefix, postfix)
-    val columnName = columnNameStrategy.nameLowerFirstOf(dslPropName)
+    fun name(prefix: String = "", postfix: String = "") = varNameStrategy.nameLowerFirstOf(dslPropName, prefix, postfix)
+    fun columnName(prefix: String = "", postfix: String = "") = when (eitherTypModelOrClass) {
+        is EitherTypOrModelOrPoetType.EitherModel -> {
+            columnNameStrategy.nameLowerFirstOf(dslPropName, prefix, postfix + columnNameStrategy.nameUpperFirstOf(RuntimeDefaults.UUID_PROPNAME))
+        }
+        else -> {
+            columnNameStrategy.nameLowerFirstOf(dslPropName)
+        }
+    }
 
     // convenience methods
 

@@ -42,9 +42,9 @@ public fun <T> Iterable<T>.joinToStringSingleQuoted(limit: Int = -1, truncated: 
 }
 
 /** titlecase first char only */
-fun String.C() = replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(C.LOCALE) else c.toString() }
+fun String.Cap() = replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(C.LOCALE) else c.toString() }
 /** downcase first  char only */
-fun String.c() = replaceFirstChar { c -> c.lowercase() }
+fun String.decap() = replaceFirstChar { c -> c.lowercase(C.LOCALE) }
 
 // better use via instantiating a MixedCaseString value class, otherwise polluting the String class.
 //fun String.toCamelCase() = MixedCaseString(this).toCamelCase()

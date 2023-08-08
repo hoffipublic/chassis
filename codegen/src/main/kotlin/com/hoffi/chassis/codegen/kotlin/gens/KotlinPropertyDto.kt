@@ -26,7 +26,7 @@ class KotlinPropertyDto(property: Property, val genModel: KotlinClassModelDto) :
         WhensGen.whenTypeAndCollectionType(property.eitherTypModelOrClass, property.collectionType,
             preFunc = {},
             preNonCollection = {
-                initBuilder = PropertySpec.builder(property.name, property.poetType, property.modifiers)
+                initBuilder = PropertySpec.builder(property.name(), property.poetType, property.modifiers)
                 if (property.initializer.hasOriginalInitializer()) {
                     initializerCodeBlockBuilder.add(property.initializer.codeBlockFull())
                 }
@@ -34,7 +34,7 @@ class KotlinPropertyDto(property: Property, val genModel: KotlinClassModelDto) :
             preCollection = {
                 val collMutable = if (Tag.COLLECTION_IMMUTABLE in property.tags) immutable else mutable
                 val collCollectionTypWrapper = CollectionTypWrapper.of(property.collectionType, collMutable, property.isNullable, property.poetType)
-                initBuilder = PropertySpec.builder(property.name, collCollectionTypWrapper.typeName, property.modifiers)
+                initBuilder = PropertySpec.builder(property.name(), collCollectionTypWrapper.typeName, property.modifiers)
                 if (Tag.NO_DEFAULT_INITIALIZER !in property.tags) {
                     initializerCodeBlockBuilder.add(Initializer.of(collCollectionTypWrapper.initializer.format, collCollectionTypWrapper.initializer.args).codeBlockFull())
                 }
@@ -76,7 +76,7 @@ class KotlinPropertyDto(property: Property, val genModel: KotlinClassModelDto) :
             initializerCodeBlockBuilder.add(property.initializer.codeBlockAddendum())
         }
         initBuilder.initializer(initializerCodeBlockBuilder.build())
-        if (modelClassData.isUuidPrimary && property.name == UUID_PROPNAME) { initBuilder.addModifiers(KModifier.OVERRIDE) }
+        if (modelClassData.isUuidPrimary && property.dslPropName == UUID_PROPNAME) { initBuilder.addModifiers(KModifier.OVERRIDE) }
         return initBuilder
     }
 }

@@ -12,7 +12,7 @@ abstract class AKotlinProperty(val property: Property, val modelClassData: Model
     abstract val builder: PropertySpec.Builder
     override fun toString(): String = "Property(${property.propRef.parentDslRef.simpleName}) of ${modelClassData}\n${builder.build().toString()}"
 
-    fun mergePropertyIntoConstructor(): AKotlinProperty { builder.initializer(property.name) ; return this }
+    fun mergePropertyIntoConstructor(): AKotlinProperty { builder.initializer(property.name()) ; return this }
 
     fun build(): PropertySpec {
         return builder.build()

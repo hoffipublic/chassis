@@ -1,4 +1,4 @@
-package com.hoffi.chassis.codegen.kotlin.gens.filler
+package com.hoffi.chassis.codegen.kotlin
 
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.Property

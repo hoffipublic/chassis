@@ -16,6 +16,7 @@ interface IModelClassName : INamingStrategy {
     val poetTypeSimpleName: String
     val tableName: String
     val asVarName: String
+    val asVarNameWithoutPostfix: String
     val fillerPoetType: ClassName
     val crudPoetType: ClassName
 }
@@ -48,7 +49,8 @@ class ModelClassName(
         get() = (poetType as ClassName).simpleName
     private val poetTypeDslModel: TypeName by lazy { classNameStrategy.poetType(modelClassData, modelOrTypeNameString, "${basePackage.ifNotBlank{"$basePackage."}}$packageName", classPrefix, classPostfix) as ClassName }
     override val asVarName: String by lazy { classNameStrategy.asVarname(modelOrTypeNameString, classPrefix, classPostfix) }
-    override val tableName: String by lazy { tableNameStrategy.tableName(modelOrTypeNameString) /*, classPrefix, classPostfix)*/ }
+    override val asVarNameWithoutPostfix: String by lazy { classNameStrategy.asVarname(modelOrTypeNameString, classPrefix) }
+    override val tableName: String by lazy { tableNameStrategy.tableName(modelOrTypeNameString, prefix =  classPrefix) } // no postfix Dto|Table etc.
     /** only makes sense if the GenModel containing this ModelClassName is a "EitherExtendsModelOrClass.EitherModel" */
     override val fillerPoetType: ClassName
         get() = if (poetTypeDirect != null) {

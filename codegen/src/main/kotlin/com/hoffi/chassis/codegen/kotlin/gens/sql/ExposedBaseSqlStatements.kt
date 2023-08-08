@@ -8,7 +8,7 @@ class ExposedBaseSqlStatements constructor(val genModel: GenModel.TableModel) {
     fun build() {
         TODO("Not yet implemented")
         for(fk in kotlinGenCtx.allFKs()) {
-            fk.buildFK()
+            println("HERE NOT IMPLEMENTED")
         }
 
     }

@@ -52,7 +52,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                     val eitherModel = extends.typeClassOrDslRef as EitherTypOrModelOrPoetType.EitherModel
                     val reffedModel = genCtx.genModel(eitherModel.modelSubElementRef)
                     for (superConstrProp: Property in reffedModel.allProps.values.filter { Tag.CONSTRUCTOR in it.tags }) {
-                        builder.addSuperclassConstructorParameter(superConstrProp.name)
+                        builder.addSuperclassConstructorParameter(superConstrProp.name())
                     }
                 }
                 is EitherTypOrModelOrPoetType.EitherPoetType -> {
@@ -68,7 +68,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
             builder.addSuperinterface(superinterface.modelClassName.poetType)
         }
         val isUuidDto = modelClassData.propsInclSuperclassPropsMap.values.filter { Tag.Companion.PRIMARY in it.tags }
-        if (isUuidDto.size == 1 && isUuidDto.first().name == UUID_PROPNAME) {
+        if (isUuidDto.size == 1 && isUuidDto.first().dslPropName == UUID_PROPNAME) {
             builder.addSuperinterface(RuntimeDefaults.UUIDDTO_INTERFACE_CLASSNAME)
             dtoModel.isUuidPrimary = true
         }
@@ -124,7 +124,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
         val initializerCodeBlockBuilder = CodeBlock.builder()
         when (theProp.collectionType) {
             is COLLECTIONTYP.NONE -> {
-                paramBuilder = ParameterSpec.builder(theProp.name, theProp.poetType)
+                paramBuilder = ParameterSpec.builder(theProp.name(), theProp.poetType)
                 if (theProp.eitherTypModelOrClass.initializer.hasOriginalInitializer()) {
                     //paramBuilder.defaultValue(theProp.initializer.format, theProp.initializer.args)
                     paramBuilder.defaultValue(theProp.initializer.codeBlockFull())
@@ -142,9 +142,9 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                 }
                 val eitherTypOfProp = theProp.eitherTypModelOrClass
                 val constructorParam: ConstrParam = when (eitherTypOfProp) {
-                    is EitherTypOrModelOrPoetType.EitherModel -> ConstrParam(theProp.name, theProp.poetType, Initializer.of("%T.%L", theProp.poetType, "NULL"), Initializer.of("%T.%L", theProp.poetType, "NULL"))
-                    is EitherTypOrModelOrPoetType.EitherPoetType -> ConstrParam(theProp.name, theProp.poetType, Initializer.of(theProp.initializer.format, theProp.initializer.args.toMutableList()), Initializer.of(theProp.initializer.format, theProp.initializer.args.toMutableList()))
-                    is EitherTypOrModelOrPoetType.EitherTyp -> ConstrParam(theProp.name, theProp.poetType, eitherTypOfProp.typ.defaultInitializer, eitherTypOfProp.typ.defaultNull)
+                    is EitherTypOrModelOrPoetType.EitherModel -> ConstrParam(theProp.name(), theProp.poetType, Initializer.of("%T.%L", theProp.poetType, "NULL"), Initializer.of("%T.%L", theProp.poetType, "NULL"))
+                    is EitherTypOrModelOrPoetType.EitherPoetType -> ConstrParam(theProp.name(), theProp.poetType, Initializer.of(theProp.initializer.format, theProp.initializer.args.toMutableList()), Initializer.of(theProp.initializer.format, theProp.initializer.args.toMutableList()))
+                    is EitherTypOrModelOrPoetType.EitherTyp -> ConstrParam(theProp.name(), theProp.poetType, eitherTypOfProp.typ.defaultInitializer, eitherTypOfProp.typ.defaultNull)
                     is EitherTypOrModelOrPoetType.NOTHING -> TODO()
                 }
                 constrParamsWithInitializersForCompanionCreate.add(constructorParam)
@@ -152,14 +152,14 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
             is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
                 val collMutable = if (Tag.COLLECTION_IMMUTABLE in theProp.tags) immutable else mutable
                 val collTypeWrapper = CollectionTypWrapper.of(theProp.collectionType, collMutable, theProp.isNullable, theProp.poetType)
-                paramBuilder = ParameterSpec.builder(theProp.name, collTypeWrapper.typeName)
+                paramBuilder = ParameterSpec.builder(theProp.name(), collTypeWrapper.typeName)
                 if (Tag.DEFAULT_INITIALIZER in theProp.tags) {
                     //paramBuilder.defaultValue(collTypeWrapper.initializer.format, collTypeWrapper.initializer.args)
                     initializerCodeBlockBuilder.add(collTypeWrapper.initializer.format, collTypeWrapper.initializer.args)
                     initializerCodeBlockBuilder.add(theProp.initializer.codeBlockAddendum())
                     paramBuilder.defaultValue(initializerCodeBlockBuilder.build())
                 }
-                constrParamsWithInitializersForCompanionCreate.add(ConstrParam(theProp.name, collTypeWrapper.typeName, collTypeWrapper.initializer, collTypeWrapper.initializer))
+                constrParamsWithInitializersForCompanionCreate.add(ConstrParam(theProp.name(), collTypeWrapper.typeName, collTypeWrapper.initializer, collTypeWrapper.initializer))
             }
         }
         return paramBuilder
@@ -174,14 +174,14 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
     private fun buildToStringFunction() {
         if (KModifier.ABSTRACT in modelClassData.classModifiers || modelClassData.kind in listOf(TypeSpec.Kind.OBJECT, TypeSpec.Kind.INTERFACE)) return
         val toStringMembers = modelClassData.propsInclSuperclassPropsMap.values.filter { prop -> Tag.PRIMARY in prop.tags }.toMutableSet() // primaries first
-        toStringMembers.addAll(modelClassData.propsInclSuperclassPropsMap.values.filter { prop -> Tag.TO_STRING_MEMBER in prop.tags || prop.name in modelClassData.additionalToStringMemberProps }.toMutableSet())
-        toStringMembers.removeIf { prop -> prop.name in modelClassData.removeToStringMemberProps }
+        toStringMembers.addAll(modelClassData.propsInclSuperclassPropsMap.values.filter { prop -> Tag.TO_STRING_MEMBER in prop.tags || prop.dslPropName in modelClassData.additionalToStringMemberProps }.toMutableSet())
+        toStringMembers.removeIf { prop -> prop.dslPropName in modelClassData.removeToStringMemberProps }
         if (toStringMembers.isNotEmpty()) {
             val funSpecBuilder =
                 FunSpec.builder("toString").returns(String::class.asTypeName()).addModifiers(KModifier.OVERRIDE)
             val toStringPropsFormatList = mutableListOf<String>()
             for (toStringProp in toStringMembers) {
-                toStringPropsFormatList.add("${toStringProp.name}='\$${toStringProp.name}'")
+                toStringPropsFormatList.add("${toStringProp.name()}='\$${toStringProp.name()}'")
             }
             funSpecBuilder.addStatement(
                 "return %P",
@@ -205,8 +205,8 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                 .addStatement("%L", "if (this === other) return true")
                 .addStatement("if (other !is %T) return false", modelClassData.poetType)
             for (p in equalsAndHashCodeMembers) {
-                val primaryComment = if (p.name == UUID_PROPNAME) " /* PRIMARY */" else ""
-                val codeBlock = CodeBlock.builder().addStatement("if (%L != other.%L) return false%L", p.name, p.name, primaryComment)
+                val primaryComment = if (p.dslPropName == UUID_PROPNAME) " /* PRIMARY */" else ""
+                val codeBlock = CodeBlock.builder().addStatement("if (%L != other.%L) return false%L", p.name(), p.name(), primaryComment)
                 funBuilder.addCode(codeBlock.build())
             }
             funBuilder.addStatement("%L", "return true")
@@ -217,11 +217,11 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                 .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
                 .returns(Int::class.asTypeName())
             val theFirstProp =  equalsAndHashCodeMembers.removeFirst()
-            val primaryComment = if (theFirstProp.name == UUID_PROPNAME) " /* PRIMARY */" else ""
-            funBuilder.addStatement("var result = %L.hashCode()%L", theFirstProp.name, primaryComment)
+            val primaryComment = if (theFirstProp.dslPropName == UUID_PROPNAME) " /* PRIMARY */" else ""
+            funBuilder.addStatement("var result = %L.hashCode()%L", theFirstProp.name(), primaryComment)
             for (p in equalsAndHashCodeMembers) {
-                val primaryComment = if (p.name == UUID_PROPNAME) " /* PRIMARY */" else ""
-                funBuilder.addStatement("result = 31 * result + %L.hashCode()%L", p.name, primaryComment)
+                val primaryComment = if (p.dslPropName == UUID_PROPNAME) " /* PRIMARY */" else ""
+                funBuilder.addStatement("result = 31 * result + %L.hashCode()%L", p.name(), primaryComment)
             }
             funBuilder.addStatement("%L", "return result")
             builder.addFunction(funBuilder.build())
@@ -293,7 +293,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
         for (prop in modelClassData.directProps.values) {
             if (prop.eitherTypModelOrClass !is EitherTypOrModelOrPoetType.EitherModel) continue
             when (prop.collectionType) {
-                is COLLECTIONTYP.NONE -> funSpecBuilder.addStatement("%L.%L = %T._internal_createWithUuid()", modelClassData.asVarName, prop.name, prop.poetType)
+                is COLLECTIONTYP.NONE -> funSpecBuilder.addStatement("%L.%L = %T._internal_createWithUuid()", modelClassData.asVarName, prop.name(), prop.poetType)
                 else -> {}
             }
         }
@@ -310,7 +310,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
             when (prop.collectionType) {
                 is COLLECTIONTYP.NONE -> {
                     funSpecBuilder.addStatement("/* beware of recursive calls, if Type or some submodel of it has a reference to this */")
-                    funSpecBuilder.addStatement("%L.%L = %T.createDeepWithNewEmptyModels()", modelClassData.asVarName, prop.name, prop.poetType)
+                    funSpecBuilder.addStatement("%L.%L = %T.createDeepWithNewEmptyModels()", modelClassData.asVarName, prop.name(), prop.poetType)
                 }
                 else -> { }
             }

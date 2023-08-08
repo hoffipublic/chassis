@@ -3,6 +3,7 @@ package com.hoffi.chassis.codegen.kotlin.gens.filler
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.codegen.kotlin.GenDslRefHelpers
+import com.hoffi.chassis.codegen.kotlin.IntersectPropertys
 import com.hoffi.chassis.codegen.kotlin.whens.WhensGen
 import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
@@ -97,7 +98,7 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                             genCtx.genModel(DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)).poetType,
                             DB.insertMember,
                             propFiller(modelSubElementRef, MODELREFENUM.TABLE),
-                            "insertLambda", i.sourceVarName, prop.name
+                            "insertLambda", i.sourceVarName, prop.name()
                         )
                     } else {
                         //  SimpleSubentityTableFiller.batchInsertFunction(sourceSimpleEntityDto.someModelObject).invoke(this, sourceSimpleEntityDto.someModelObject)
@@ -108,51 +109,88 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                             fillerTableOfReffedModel,
                             //MemberName(fillerTableOfReffedModel, "batchInsertLambda"),
                             "batchInsertLambda",
-                            i.sourceVarName, prop.name,
+                            i.sourceVarName, prop.name(),
                             "invoke",
-                            i.sourceVarName, prop.name
+                            i.sourceVarName, prop.name()
                         )
                     }
                     bodyBuilder.addStatement(
                         "%L[%T.%L] = %L.%L.%L",
                         if (funName.originalFunName == "insertLambda") "it" else "this",
                         i.targetPoetType,
-                        prop.name,
-                        i.sourceVarName, prop.name, "uuid"
+                        prop.name(),
+                        i.sourceVarName, prop.name(), "uuid"
                     )
                     val originalRef = this.modelClassName.modelSubElRef
                     genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
                     genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
                 },
-                isPoetType = { },
+                isPoetType = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+                },
                 isTyp = {
                     bodyBuilder.addStatement(
                         "%L[%T.%L] = %L.%L",
                         if (funName.originalFunName == "insertLambda") "it" else "this",
                         i.targetPoetType,
-                        prop.name,
+                        prop.name(),
                         i.sourceVarName,
-                        prop.name
+                        prop.name()
                     )
                 },
                 postNonCollection = { },
-                isModelList = { },
-                isModelSet = { },
-                isModelCollection = {
+                isModelList = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
 
                     val originalRef = this.modelClassName.modelSubElRef
                     genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
                     genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
                 },
-                isModelIterable = { },
-                isPoetTypeList = { },
-                isPoetTypeSet = { },
-                isPoetTypeCollection = { },
-                isPoetTypeIterable = { },
-                isTypList = { },
-                isTypSet = { },
-                isTypCollection = { },
-                isTypIterable = { },
+                isModelSet = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+
+                    val originalRef = this.modelClassName.modelSubElRef
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
+                },
+                isModelCollection = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+
+                    val originalRef = this.modelClassName.modelSubElRef
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
+                },
+                isModelIterable = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+
+                    val originalRef = this.modelClassName.modelSubElRef
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
+                    genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
+                },
+                isPoetTypeList = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+                },
+                isPoetTypeSet = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+                },
+                isPoetTypeCollection = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+                },
+                isPoetTypeIterable = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+                },
+                isTypList = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+                },
+                isTypSet = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+                },
+                isTypCollection = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+                },
+                isTypIterable = {
+                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+                },
                 postCollection = { },
             )
         }
@@ -174,27 +212,53 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                 preNonCollection = { },
                 preCollection = { },
                 isModel = {
-                    funSpec.addStatement("%L.%L = %T.%L(%L)", i.targetVarName, prop.name, propFiller(modelSubElementRef, MODELREFENUM.TABLE), prop.eitherTypModelOrClass.modelClassName.asVarName, i.sourceVarName)
+                    funSpec.addStatement("%L.%L = %T.%L(%L)", i.targetVarName, prop.name(), propFiller(modelSubElementRef, MODELREFENUM.TABLE), prop.eitherTypModelOrClass.modelClassName.asVarName, i.sourceVarName)
 
                     val originalRef = this.modelClassName.modelSubElRef
                     genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, this.modelSubElementRef, originalRef, via = "TableFiller for contained prop $prop"))
                     genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, originalRef, this.modelSubElementRef, via = "TableFiller for contained prop $prop"))
                 },
-                isPoetType = { },
-                isTyp = { funSpec.addStatement("%L.%L = %L[%T.%L]", i.targetVarName, prop.name, i.sourceVarName, i.sourcePoetType, prop.name) },
+                isPoetType = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} PoetType of %T", prop.poetType)
+                },
+                isTyp = { funSpec.addStatement("%L.%L = %L[%T.%L]", i.targetVarName, prop.name(), i.sourceVarName, i.sourcePoetType, prop.name()) },
                 postNonCollection = { },
-                isModelList = { },
-                isModelSet = { },
-                isModelCollection = { },
-                isModelIterable = { },
-                isPoetTypeList = { },
-                isPoetTypeSet = { },
-                isPoetTypeCollection = { },
-                isPoetTypeIterable = { },
-                isTypList = { },
-                isTypSet = { },
-                isTypCollection = { },
-                isTypIterable = { },
+                isModelList = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+                },
+                isModelSet = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+                },
+                isModelCollection = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+                },
+                isModelIterable = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+                },
+                isPoetTypeList = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+                },
+                isPoetTypeSet = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+                },
+                isPoetTypeCollection = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+                },
+                isPoetTypeIterable = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+                },
+                isTypList = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+                },
+                isTypSet = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+                },
+                isTypCollection = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+                },
+                isTypIterable = {
+                    funSpec.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+                },
                 postCollection = { },
             )
         }

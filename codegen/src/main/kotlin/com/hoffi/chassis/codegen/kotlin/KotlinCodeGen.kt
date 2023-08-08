@@ -61,7 +61,8 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
         println("===  generate FKs     =====")
         println("===========================")
         for(fk in kotlinGenCtx.allFKs()) {
-            fk.buildFK()
+            val kotlinGenClass = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
+            kotlinGenClass.buildFK(fk)
         }
 
         println("==================================")

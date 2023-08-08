@@ -1,10 +1,12 @@
 package com.hoffi.chassis.codegen.kotlin.gens.filler
 
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.Cap
 import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
+import com.hoffi.chassis.codegen.kotlin.IntersectPropertys
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGeneratedFiller
@@ -95,7 +97,7 @@ abstract class AKotlinFiller(fillerData: FillerData, val modelkind: MODELKIND) {
         var prefix: String = ""
         var postfix: String = ""
         fun swapOutOriginalFunNameWith(otherFunName: String): String = if (prefix.isNotBlank()) {
-            prefix + otherFunName.replaceFirstChar { if (it.isLowerCase()) it.titlecase(C.LOCALE) else it.toString() } + postfix
+            prefix + otherFunName.Cap() + postfix
         } else {
             otherFunName + postfix
         }
@@ -147,12 +149,12 @@ abstract class AKotlinFiller(fillerData: FillerData, val modelkind: MODELKIND) {
                 val funSpecBuilder = FunSpec.builder(funNamePair.first)
                     .addParameter(ParameterSpec.builder(i.sourceVarName, i.sourceGenModel.poetType).build())
                     .returns(i.targetGenModel.poetType)
-                if (allPKs.size == 1 && allPKs[0].name == RuntimeDefaults.UUID_PROPNAME) {
+                if (allPKs.size == 1 && allPKs[0].dslPropName == RuntimeDefaults.UUID_PROPNAME) {
                     funSpecBuilder.addStatement("val %L = %T._internal_create()", i.targetVarName, i.sourceGenModel.poetType)
                 } else {
                     funSpecBuilder.addStatement("val %L = %T._internal_create()", i.targetVarName, i.sourceGenModel.poetType)
                     for (pkProp in allPKs) {
-                        funSpecBuilder.addStatement("%L.%L = %L.%L", i.targetVarName, pkProp.name, i.sourceVarName, pkProp.name)
+                        funSpecBuilder.addStatement("%L.%L = %L.%L", i.targetVarName, pkProp.name(), i.sourceVarName, pkProp.name())
                     }
                 }
                 funSpecBuilder.addStatement("%L(%L, %L)", funNamePair.second, i.targetVarName, i.sourceVarName)
@@ -165,9 +167,9 @@ abstract class AKotlinFiller(fillerData: FillerData, val modelkind: MODELKIND) {
     protected fun clearCollection(targetVarName: String, prop: Property): CodeBlock {
         val c = if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else ""
         return if (Tag.NULLABLE in prop.tags) {
-            buildCodeBlock { addStatement("$c%L.%L?.clear()", targetVarName, prop.name) }
+            buildCodeBlock { addStatement("$c%L.%L?.clear()", targetVarName, prop.name()) }
         } else {
-            buildCodeBlock { addStatement("$c%L.%L.clear()", targetVarName, prop.name) }
+            buildCodeBlock { addStatement("$c%L.%L.clear()", targetVarName, prop.name()) }
         }
     }
     protected fun addAll(targetVarName: String, prop: Property, sourceVarName: String): CodeBlock {
@@ -176,16 +178,16 @@ abstract class AKotlinFiller(fillerData: FillerData, val modelkind: MODELKIND) {
             is COLLECTIONTYP.NONE -> buildCodeBlock {  }
             is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
                 if (Tag.NULLABLE in prop.tags) {
-                    buildCodeBlock { addStatement("$c%L.%L?.addAll(%L.%L ?: emptyList())", targetVarName, prop.name, sourceVarName, prop.name) }
+                    buildCodeBlock { addStatement("$c%L.%L?.addAll(%L.%L ?: emptyList())", targetVarName, prop.name(), sourceVarName, prop.name()) }
                 } else {
-                    buildCodeBlock { addStatement("$c%L.%L.addAll(%L.%L)", targetVarName, prop.name, sourceVarName, prop.name) }
+                    buildCodeBlock { addStatement("$c%L.%L.addAll(%L.%L)", targetVarName, prop.name(), sourceVarName, prop.name()) }
                 }
             }
             is COLLECTIONTYP.SET -> {
                 if (Tag.NULLABLE in prop.tags) {
-                    buildCodeBlock { addStatement("$c%L.%L?.addAll(%L.%L?.toList() ?: emptyList())", targetVarName, prop.name, sourceVarName, prop.name) }
+                    buildCodeBlock { addStatement("$c%L.%L?.addAll(%L.%L?.toList() ?: emptyList())", targetVarName, prop.name(), sourceVarName, prop.name()) }
                 } else {
-                    buildCodeBlock { addStatement("$c%L.%L.addAll(%L.%L.toList())", targetVarName, prop.name, sourceVarName, prop.name) }
+                    buildCodeBlock { addStatement("$c%L.%L.addAll(%L.%L.toList())", targetVarName, prop.name(), sourceVarName, prop.name()) }
                 }
             }
         }
@@ -197,11 +199,11 @@ abstract class AKotlinFiller(fillerData: FillerData, val modelkind: MODELKIND) {
             is COLLECTIONTYP.SET, is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
                 if (Tag.NULLABLE in prop.tags) {
                     buildCodeBlock {
-                        addStatement("%L.%L?.addAll($c%L.%L?.map { %T.%L(it) } ?: emptyList())", targetVarName, prop.name, sourceVarName, prop.name, propEitherModelFillerClassName, funName)
+                        addStatement("%L.%L?.addAll($c%L.%L?.map { %T.%L(it) } ?: emptyList())", targetVarName, prop.name(), sourceVarName, prop.name(), propEitherModelFillerClassName, funName)
                     }
                 } else {
                     buildCodeBlock {
-                        addStatement("%L.%L.addAll($c%L.%L.map { %T.%L(it) })", targetVarName, prop.name, sourceVarName, prop.name, propEitherModelFillerClassName, funName)
+                        addStatement("%L.%L.addAll($c%L.%L.map { %T.%L(it) })", targetVarName, prop.name(), sourceVarName, prop.name(), propEitherModelFillerClassName, funName)
                     }
                 }
             }

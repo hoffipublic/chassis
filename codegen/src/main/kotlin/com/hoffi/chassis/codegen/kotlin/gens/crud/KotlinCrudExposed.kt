@@ -1,7 +1,7 @@
 package com.hoffi.chassis.codegen.kotlin.gens.crud
 
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
-import com.hoffi.chassis.codegen.kotlin.gens.filler.IntersectPropertys
+import com.hoffi.chassis.codegen.kotlin.IntersectPropertys
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.shared.CrudData

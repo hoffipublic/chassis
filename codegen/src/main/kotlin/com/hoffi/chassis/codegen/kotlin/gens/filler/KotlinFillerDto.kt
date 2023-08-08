@@ -4,6 +4,7 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
+import com.hoffi.chassis.codegen.kotlin.IntersectPropertys
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.SynthFillerData
@@ -49,7 +50,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     Tag.PRIMARY !in it.tags && // just a copy, so do NOT copy the "identity" over
                     it.collectionType == COLLECTIONTYP.NONE
         }) {
-            funSpec.addStatement("%L.%L = %L.%L", i.targetVarName, nonModelProp.name, i.sourceVarName, nonModelProp.name)
+            funSpec.addStatement("%L.%L = %L.%L", i.targetVarName, nonModelProp.name(), i.sourceVarName, nonModelProp.name())
         }
         funSpec.addStatement("return %L", i.targetVarName)
         builder.addFunction(funSpec.build())
@@ -70,7 +71,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> {
                             funSpec.addComment("beware of recursive calls, if Type or some submodel of it has a reference to this")
-                            funSpec.addStatement("%L.%L = %T.%L()", i.targetVarName, prop.name, prop.poetType, "createDeepWithNewEmptyModels")
+                            funSpec.addStatement("%L.%L = %T.%L()", i.targetVarName, prop.name(), prop.poetType, "createDeepWithNewEmptyModels")
                         }
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
                             funSpec.addCode(clearCollection(i.targetVarName, prop))
@@ -114,15 +115,15 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                 is EitherTypOrModelOrPoetType.EitherModel -> {
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> {
-                            funSpec.addStatement("%L.%L = %L.%L", i.targetVarName, prop.name, i.sourceVarName, prop.name)
+                            funSpec.addStatement("%L.%L = %L.%L", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
                         }
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name)
-                            funSpec.addStatement("// %L.%L.addAll(%L.%L)", i.targetVarName, prop.name, i.sourceVarName, prop.name)
+                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name())
+                            funSpec.addStatement("// %L.%L.addAll(%L.%L)", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
                         }
                         is COLLECTIONTYP.SET -> {
-                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name)
-                            funSpec.addStatement("// %L.%L.addAll(%L.%L.toList())", i.targetVarName, prop.name, i.sourceVarName, prop.name)
+                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name())
+                            funSpec.addStatement("// %L.%L.addAll(%L.%L.toList())", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
                         }
                     }
                 }
@@ -130,12 +131,12 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> {}
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name)
-                            funSpec.addStatement("// %L.%L.addAll(%L.%L)", i.targetVarName, prop.name, i.sourceVarName, prop.name)
+                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name())
+                            funSpec.addStatement("// %L.%L.addAll(%L.%L)", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
                         }
                         is COLLECTIONTYP.SET -> {
-                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name)
-                            funSpec.addStatement("// %L.%L.addAll(%L.%L.toList())", i.targetVarName, prop.name, i.sourceVarName, prop.name)
+                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name())
+                            funSpec.addStatement("// %L.%L.addAll(%L.%L.toList())", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
                         }
                     }
                 }
@@ -143,12 +144,12 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> { }
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name)
-                            funSpec.addStatement("// %L.%L.addAll(%L.%L)", i.targetVarName, prop.name, i.sourceVarName, prop.name)
+                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name())
+                            funSpec.addStatement("// %L.%L.addAll(%L.%L)", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
                         }
                         is COLLECTIONTYP.SET -> {
-                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name)
-                            funSpec.addStatement("// %L.%L.addAll(%L.%L.toList())", i.targetVarName, prop.name, i.sourceVarName, prop.name)
+                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name())
+                            funSpec.addStatement("// %L.%L.addAll(%L.%L.toList())", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
                         }
                     }
                 }
@@ -179,7 +180,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     val allPKs = i.sourceGenModel.allProps.values.filter { Tag.PRIMARY in it.tags }
                     theFunSpec.addStatement("val %L = %T._internal_create()", i.targetVarName, i.targetGenModel.poetType)
                     for (pkProp in allPKs) {
-                        theFunSpec.addStatement("%L.%L = %L.%L", i.targetVarName, pkProp.name, i.sourceVarName, pkProp.name)
+                        theFunSpec.addStatement("%L.%L = %L.%L", i.targetVarName, pkProp.name(), i.sourceVarName, pkProp.name())
                     }
                 }
                 theFunSpec
@@ -196,10 +197,10 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                         when (prop.collectionType) {
                             is COLLECTIONTYP.NONE -> {
                                 funSpec.addCode(
-                                    """if (${i.sourceVarName}.${prop.name} === %T.NULL)
-                                        |    ${i.targetVarName}.${prop.name} = ${i.sourceVarName}.${prop.name}
+                                    """if (${i.sourceVarName}.${prop.name()} === %T.NULL)
+                                        |    ${i.targetVarName}.${prop.name()} = ${i.sourceVarName}.${prop.name()}
                                         |else
-                                        |    %T.%L(${i.targetVarName}.${prop.name}, ${i.sourceVarName}.${prop.name})
+                                        |    %T.%L(${i.targetVarName}.${prop.name()}, ${i.sourceVarName}.${prop.name()})
                                         |""".trimMargin(),
                                     prop.poetType, propEitherModelFillerClassName, "copyDeepInto"
                                 )
