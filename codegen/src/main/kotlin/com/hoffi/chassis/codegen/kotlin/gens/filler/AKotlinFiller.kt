@@ -70,6 +70,7 @@ abstract class AKotlinFiller(fillerData: FillerData, val modelkind: MODELKIND) {
     }
 
     init {
+        log.info("created $this")
         kotlinGenCtx.putKotlinFillerClass(modelkind, fillerData, this)
     }
 

@@ -55,9 +55,12 @@ interface IDslRef {
             set(@Suppress("UNUSED_PARAMETER") value) {}
         override val refList: MutableList<DslRef.DslRefAtom>
             get() = mutableListOf(DslRef.DslRefAtom(C.NULLSTRING, C.NULLSTRING))
+
+        override fun toString(last: Int) = C.NULLSTRING
         override fun equals(other: Any?): Boolean = other?.equals(NULL) ?: false
         override fun hashCode(): Int = refList.hashCode()
     }
+    fun toString(last: Int): String
     override fun equals(other: Any?): Boolean
     override fun hashCode(): Int
 }
@@ -79,6 +82,7 @@ abstract class ADslRef(
         refList.add(DslRef.DslRefAtom(funcname, simpleName))
     }
 
+    override fun toString(last: Int) = refList.takeLast(last).joinToString(DslRef.ATOMSEP)
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is IDslRef) return false

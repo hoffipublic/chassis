@@ -18,6 +18,7 @@ interface IDB_Wrapper {
     fun Column(columnTypeName: ClassName) : TypeName
     fun InsertStatementTypeName(): TypeName
     val insertMember: MemberName
+    val batchInsertMember: MemberName
 
     fun coreTypeTranslation(typ: TYP): TYPTranslation
 }

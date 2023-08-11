@@ -25,6 +25,7 @@ const val ENTITYGROUP = "Entitygroup"
 const val ENTITY__BASE      = ""
 const val ENTITY__ENTITY    = "Entity"
 const val ENTITY__SUBENTITY = "Subentity"
+const val ENTITY__SOMEMODEL = "SomeModel"
 
 
 context(DslCtxWrapper)
@@ -75,7 +76,7 @@ fun entities() {
             property("aLocalDateTime", TYP.LOCALDATETIME, mutable)
             //property("someObject", Dummy::class, mutable, Tag.NO_DEFAULT_INITIALIZER, Tag.TRANSIENT)
             property("someObject", Dummy::class, mutable, Initializer.of("%T.%L", Dummy::class, "NULL"), length = C.DEFAULT_INT, Tag.TRANSIENT)
-            property("someModelObject", DTO of ENTITY__SUBENTITY, mutable)
+            property("someModelObject", DTO of ENTITY__SOMEMODEL, mutable)
             property("subentitys", "modelgroup:$ENTITYGROUP|model:$ENTITY__SUBENTITY", DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER, Tag.NULLABLE)
             property("listOfStrings", TYP.STRING, COLLECTIONTYP.LIST, Tag.COLLECTION_IMMUTABLE, Tag.CONSTRUCTOR)
 
@@ -104,7 +105,7 @@ fun entities() {
 
             table {
                 kind = DslClassObjectOrInterface.OBJECT
-                extends { replaceSuperclass = true } // just informational ... KotlinClassModelTable generates an exposedDB object : Table anyways
+                extends { replaceSuperclass = true } // mandatory for table { }, if model { } has an extends { } block
 
                 propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
                 initializer("name", APPEND, ".uniqueIndex()")
@@ -195,7 +196,7 @@ fun entities() {
                     + ( (MODEL inModelgroup PERSISTENTGROUP withModelName PERSISTENT__BASE) ) // withName COMMON__PERSISTENT) //
                 }
                 property("subEntityDtoSpecificProp", TYP.STRING, mutable = mutable, Tag.CONSTRUCTOR)
-                property("entityBackreference", DTO of ENTITY__ENTITY, mutable, Tag.TRANSIENT)
+                //property("entityBackreference", DTO of ENTITY__ENTITY, mutable, Tag.TRANSIENT)
 
 //                function("someInit") {
 //                    addModifiers(KModifier.OVERRIDE, KModifier.PROTECTED)
@@ -211,6 +212,24 @@ fun entities() {
 
             table {
                 propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+            }
+        }
+
+        model(ENTITY__SOMEMODEL) {
+            extends {
+                +(MODEL inModelgroup PERSISTENTGROUP withModelName COMMON__PERSISTENT_OPTIMISTIC)
+            }
+            property("someName", TYP.STRING, mutable, Tag.CONSTRUCTOR, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
+            property("someValue", TYP.STRING, mutable, length = 4096, Tag.CONSTRUCTOR, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
+            dto {
+            }
+            table {
+                extends { replaceSuperclass = true } // mandatory for table { }, if model { } has an extends { } block
+                propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+            }
+            filler {
+                +DTO
+                DTO mutual TABLE
             }
         }
 

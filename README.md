@@ -12,12 +12,17 @@ from a custom Kotlin DSL using <https://square.github.io/kotlinpoet>, generate:
 - Fillers
     - Dto <--> Dto
     - Table (SQL resultRow) <--> Dto
-- RDBMS access via fillers (determining how deep to CRUD ( also from/to DB) via DSL "boundaries")
+- RDBMS CRUD access via fillers (determining how deep to CRUD ( also from/to DB) via DSL "boundaries")
 
 <br/>
 
 <big><bold> This is personal "pet project" and on top still very alpha and work in progress!!!<br/>
 (although it is already a complete rewrite of the initial version) </bold></big>
+
+## Known Limitations
+
+- no Model classes with generic types, no List/Set/Collections which hold a generic type
+- cannot have more than one FK Relation to *the same* Model (e.g. one2Many to ModelX and on2One also to ModelX)
 
 ## TODO <!--- // TODO -->
 

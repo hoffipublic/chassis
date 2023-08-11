@@ -1,13 +1,11 @@
 package com.hoffi.chassis.shared.shared
 
-import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 
 class CrudData(businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef, val crud: CRUD)
     : AHasCopyBoundrysData(businessName, targetDslRef, sourceDslRef)
 {
-    override fun toString() = "${this::class.simpleName}('$businessName', ${String.format("%-6s", crud)}, target: '${targetDslRef.refList.takeLast(2).joinToString(
-        DslRef.ATOMSEP)}', source: '${sourceDslRef.refList.takeLast(2).joinToString(DslRef.ATOMSEP)}', " +
+    override fun toString() = "Crud('$businessName', ${String.format("%-6s", crud)}, '${targetDslRef.toString(2)}' <-- '${sourceDslRef.toString(2)}', " +
             theCopyBoundrys.values.joinToString("") { it.toString() }.ifBlank { "NONE" } + ")"
 
     enum class CRUD { CREATE, READ, UPDATE, DELETE }

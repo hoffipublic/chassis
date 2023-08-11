@@ -25,11 +25,16 @@ context(GenCtxWrapper)
 class KotlinClassModelTable(val tableModel: GenModel.TableModel)
     : AKotlinClass(tableModel)
 {
-    private val incomingFKs: MutableSet<FK> = mutableSetOf()
+    val incomingFKs: MutableSet<FK> = mutableSetOf()
+    val outgoingFKs: MutableSet<FK> = mutableSetOf()
     fun addIncomingFK(fromTableRef: DslRef.table, toTableRef: DslRef.IModelSubelement, property: Property, collectiontyp: COLLECTIONTYP): FK {
         val fk = FK(fromTableRef, toTableRef, property, collectiontyp)
         incomingFKs.add(fk)
         kotlinGenCtx.addFK(fk)
+        return fk
+    }
+    fun addOutgoingFK(fk: FK): FK {
+        outgoingFKs.add(fk)
         return fk
     }
 
@@ -112,6 +117,7 @@ class KotlinClassModelTable(val tableModel: GenModel.TableModel)
         val propSpecBuilder = PropertySpec.builder(fkPropVarName, DB.ColumnClassName.parameterizedBy(RuntimeDefaults.classNameUUID), fk.toProp.modifiers)
         //propSpecBuilder.initializer("uuid(%S$nullQM).uniqueIndex().references(%T.%L)$nullFunc", columnName, toTable.modelClassData.poetType, toProp.name)
         propSpecBuilder.initializer("uuid(%S).uniqueIndex().references(%T.%L)", fkPropColName, toKotlinClassmodelTable.modelClassData.poetType, "uuid") // toProp's class uuid
+        addOutgoingFK(fk)
 //        //eitherTypOrModelOrPoetType.initializer.originalFormat = "uuid(%S$nullQM).uniqueIndex().references(%T.%L)$nullFunc"
 //        //eitherTypOrModelOrPoetType.initializer.originalArgs.clear()
 //        //eitherTypOrModelOrPoetType.initializer.originalArgs.add(property.columnName)

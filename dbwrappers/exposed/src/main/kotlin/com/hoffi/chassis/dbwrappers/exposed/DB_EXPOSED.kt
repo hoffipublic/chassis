@@ -30,6 +30,7 @@ object DB_EXPOSED : IDB_Wrapper {
 
     override fun InsertStatementTypeName(): TypeName = InsertStatement::class.asTypeName().parameterizedBy(Number::class.asTypeName())
     override val insertMember = MemberName("org.jetbrains.exposed.sql", "insert")
+    override val batchInsertMember = MemberName("org.jetbrains.exposed.sql", "batchInsert")
 
     override fun coreTypeTranslation(typ: TYP): TYPTranslation {
         return when (typ) {

@@ -43,10 +43,10 @@ data class CopyBoundry(val copyType: COPYTYPE) {
         val resultString =
             if (eitherPropNames.propNames.isNotEmpty()) eitherPropNames.propNames.joinToString(",", prefix = ctPrefix, postfix = "|") else { "" } +
             if (eitherPropRefs.propRefs.isNotEmpty()) eitherPropRefs.propRefs.joinToString(",", prefix = ctPrefix, postfix = "|") {
-                it.refList.takeLast(2).joinToString(DslRef.ATOMSEP)
+                it.toString(2)
             } else { "" } +
             if (eitherModelRefs.modelRefs.isNotEmpty()) eitherModelRefs.modelRefs.joinToString(",", prefix = ctPrefix, postfix = "|") {
-                it.refList.takeLast(2).joinToString(DslRef.ATOMSEP)
+                it.toString(2)
             } else { "" } +
             if (eitherClassNames.classNames.isNotEmpty()) eitherClassNames.classNames.joinToString(",", prefix = ctPrefix) {
                 it.simpleName
