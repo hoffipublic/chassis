@@ -18,7 +18,7 @@ interface IModelClassName : INamingStrategy {
     val asVarName: String
     val asVarNameWithoutPostfix: String
     val fillerPoetType: ClassName
-    val crudPoetType: ClassName
+    val crudBasePoetTypeForAllCruds: ClassName
 }
 
 class ModelClassName(
@@ -26,7 +26,7 @@ class ModelClassName(
     var poetTypeDirect: TypeName?
 ) : IModelClassName {
     val log = LoggerFactory.getLogger(javaClass)
-    override fun toString() = poetType.toString()
+    override fun toString() = "${(poetType as ClassName).simpleNames.joinToString(".")} in ${(poetType as ClassName).packageName}"
 
     lateinit var modelClassData: ModelClassData
     var classNameStrategy = ClassNameStrategy.get(IClassNameStrategy.STRATEGY.DEFAULT)
@@ -58,7 +58,7 @@ class ModelClassName(
         } else {
             ClassName("${(poetTypeDslModel as ClassName).packageName}.filler", "Filler${(poetTypeDslModel as ClassName).simpleName}")
         }
-    override val crudPoetType: ClassName
+    override val crudBasePoetTypeForAllCruds: ClassName
         get() =  if (poetTypeDirect != null) {
             ClassName("${(poetTypeDirect as ClassName).packageName}.sql", "Crud${(poetTypeDirect as ClassName).simpleName}")
         } else {

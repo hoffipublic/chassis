@@ -74,6 +74,8 @@ class DslCrudDelegateImpl(simpleNameOfDelegator: String, delegateRef: IDslRef)
 
     private val theCrudDatas: MutableMap<String, MutableMap<String, MutableSet<CrudData>>> = mutableMapOf()
     fun getOrCreateCrudData(simpleName: String, businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef, crud: CrudData.CRUD): CrudData {
+        if (targetDslRef !is DslRef.table) throw DslException("CrudData targetDslRef always have to be DslRef.table! was $crud '$targetDslRef'")
+        if (sourceDslRef is DslRef.table)  throw DslException("CrudData sourceDslRef not allowed to be DslRef.table! was $crud '$targetDslRef'")
         val crudData = CrudData(businessName, targetDslRef, sourceDslRef, crud)
         val allForSimpleName = theCrudDatas.getOrPut(simpleName) { mutableMapOf() }
         val allForBusinessName = allForSimpleName.getOrPut(businessName) { mutableSetOf() }
@@ -89,6 +91,7 @@ class DslCrudDelegateImpl(simpleNameOfDelegator: String, delegateRef: IDslRef)
         for (crudsForSimpleNameEntry in theCrudDatas) {
             val setOfCrudData: MutableSet<CrudData> = mutableSetOf()
             resultMap[crudsForSimpleNameEntry.key] = setOfCrudData
+            // TODO log.error("Check if dtoRef is Abstract or Interface")
             for (crudData in crudsForSimpleNameEntry.value.flatMap { it.value }) {
                 // TODO check if we can remove the test if already exists in setOfCrudData
                 if (!setOfCrudData.add(crudData)) log.error("FIRST CRUD WON -> $selfDslRef crud '$crudData' for ${crudData.businessName} there already was a crud from/to $crudData")

@@ -20,7 +20,7 @@ val immutable = Mutable(false)
 val mutable = Mutable(true)
 
 sealed class COLLECTIONTYP {
-    override fun toString() = this::class.simpleName!!
+    override fun toString() = when (this) { is NONE -> "1To1" else -> this::class.simpleName!! }
     class NONE : COLLECTIONTYP()
     class LIST : COLLECTIONTYP()
     class SET : COLLECTIONTYP()

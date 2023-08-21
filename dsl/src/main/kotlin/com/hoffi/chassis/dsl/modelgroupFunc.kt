@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 context(DslCtxWrapper)
 @DslTopLevel
 fun modelgroup(simpleName: String, modelgroupBlock: DslModelgroup.() -> Unit) {
-    val log = LoggerFactory.getLogger("modelgroup")
+    val log = LoggerFactory.getLogger("modelgroupFun")
 
     log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
 

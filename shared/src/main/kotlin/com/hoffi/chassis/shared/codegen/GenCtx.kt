@@ -6,6 +6,7 @@ import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.shared.CrudData
 import com.hoffi.chassis.shared.shared.FillerData
+import com.hoffi.chassis.shared.shared.SynthCrudData
 import com.hoffi.chassis.shared.shared.SynthFillerData
 
 class GenCtx private constructor() {
@@ -16,8 +17,13 @@ class GenCtx private constructor() {
     fun allGenModels() = allGenModels.values
 
     val fillerDatas: MutableMap<String, MutableMap<DslRef.model, MutableSet<FillerData>>> = mutableMapOf()
-    val syntheticFillerDatas: MutableList<SynthFillerData> = mutableListOf()
+    private val syntheticFillerDatas: MutableSet<SynthFillerData> = mutableSetOf()
+    fun addSyntheticFillerData(synthFillerData: SynthFillerData) { syntheticFillerDatas.add(synthFillerData) }
+    fun allSyntheticFillerDatas() = syntheticFillerDatas
     val crudDatas: MutableMap<String, MutableMap<DslRef.table, MutableSet<CrudData>>> = mutableMapOf()
+    private val syntheticCrudDatas: MutableSet<SynthCrudData> = mutableSetOf()
+    fun addSyntheticCrudData(synthCrudData: SynthCrudData) { syntheticCrudDatas.add(synthCrudData) }
+    fun allSyntheticCrudDatas() = syntheticCrudDatas
 
     companion object {
         val NULL = GenCtx()

@@ -15,6 +15,7 @@ import com.hoffi.chassis.dsl.modelgroup.IDslApiConstructorVisibility.VISIBILITY.
 import com.hoffi.chassis.dsl.scratchdslEXAMPLES.COMMON__PERSISTENT_OPTIMISTIC
 import com.hoffi.chassis.shared.shared.COPYTYPE.IGNORE
 import com.hoffi.chassis.shared.shared.COPYTYPE.NEW
+import com.hoffi.chassis.shared.shared.CrudData.CRUD.CREATE
 import com.hoffi.chassis.shared.shared.CrudData.CRUD.READ
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.Tag
@@ -26,6 +27,7 @@ const val ENTITY__BASE      = ""
 const val ENTITY__ENTITY    = "Entity"
 const val ENTITY__SUBENTITY = "Subentity"
 const val ENTITY__SOMEMODEL = "SomeModel"
+const val ENTITY__SOMEOTHER = "SomeOther"
 
 
 context(DslCtxWrapper)
@@ -55,7 +57,6 @@ fun entities() {
         model(ENTITY__BASE) {
             kind = INTERFACE
             dto {}
-            table {}
         }
 
         // ================================================================================================================================
@@ -120,6 +121,10 @@ fun entities() {
                             IGNORE propName "subentitys"
                             IGNORE("subentitys", "someModelObject")
                         }
+                        (CREATE FOR DTO) deepRestrictions  {
+                            IGNORE propName "subentitys"
+                            IGNORE("subentitys", "someModelObject")
+                        }
                     }
                     READ FOR (DTO of ENTITY__SUBENTITY)
                     prefixed("subentity") {
@@ -136,7 +141,7 @@ fun entities() {
                         }
                     }
                     prefixed("woModels") {
-                        CRUD FOR (DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__BASE) deepRestrictions  {
+                        CRUD FOR (DTO inModelgroup ENTITYGROUP withModelName ENTITY__SOMEMODEL) deepRestrictions  {
                             NEW model (DTO of ENTITY__SUBENTITY)
                         }
                     }
@@ -216,6 +221,23 @@ fun entities() {
         }
 
         model(ENTITY__SOMEMODEL) {
+            extends {
+                +(MODEL inModelgroup PERSISTENTGROUP withModelName COMMON__PERSISTENT_OPTIMISTIC)
+            }
+            property("someName", TYP.STRING, mutable, Tag.CONSTRUCTOR, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
+            property("someValue", TYP.STRING, mutable, length = 4096, Tag.CONSTRUCTOR, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
+            dto {
+            }
+            table {
+                extends { replaceSuperclass = true } // mandatory for table { }, if model { } has an extends { } block
+                propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+            }
+            filler {
+                +DTO
+                DTO mutual TABLE
+            }
+        }
+        model(ENTITY__SOMEOTHER) {
             extends {
                 +(MODEL inModelgroup PERSISTENTGROUP withModelName COMMON__PERSISTENT_OPTIMISTIC)
             }

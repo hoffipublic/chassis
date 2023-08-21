@@ -17,17 +17,19 @@ import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.Property
+import com.hoffi.chassis.shared.shared.FK
 import com.hoffi.chassis.shared.shared.Tag
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 
 context(GenCtxWrapper)
-class KotlinPropertyTable(property: Property, val propItsKotlinClassModelTable: KotlinClassModelTable) : AKotlinProperty(property, propItsKotlinClassModelTable.modelClassData) {
-    override val builder: PropertySpec.Builder = whenInit()
+class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn: KotlinClassModelTable) : AKotlinProperty(property, kotlinClassModelTablePropIsIn.modelClassData) {
+    override val builder: PropertySpec.Builder = PropertySpec.builder("dummy", Any::class.asClassName())
 
-    private fun whenInit(): PropertySpec.Builder {
+    fun whenInit(): PropertySpec.Builder {
         lateinit var initBuilder: PropertySpec.Builder
         val initializerCodeBlockBuilder = CodeBlock.builder()
         WhensGen.whenTypeAndCollectionType(property.eitherTypModelOrClass, property.collectionType,
@@ -48,6 +50,10 @@ class KotlinPropertyTable(property: Property, val propItsKotlinClassModelTable: 
                     val defaultInitializer = Initializer.of("%T.%L", this.modelClassName.poetType, "NULL")
                     initializerCodeBlockBuilder.add(defaultInitializer.codeBlockFull())
                 }
+                val fk = kotlinClassModelTablePropIsIn.addOutgoingFK(
+                    FK(fromTableRef = this@KotlinPropertyTable.modelClassData.modelSubElRef, toTableRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef), this@KotlinPropertyTable.property, COLLECTIONTYP.NONE)
+                )
+
             },
             isPoetType = {
                 initBuilder = PropertySpec.builder(property.name(), ColumnClassName.parameterizedBy(property.poetType), property.modifiers)
@@ -68,7 +74,7 @@ class KotlinPropertyTable(property: Property, val propItsKotlinClassModelTable: 
                 //val reffedTable_DTO_GenModel: GenModel = genCtx.genModel(this.modelSubElementRef)
                 val reffedTableDslRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)
                 val reffedTable: GenModel = genCtx.genModel(reffedTableDslRef)
-                val fk = propItsKotlinClassModelTable.addIncomingFK(
+                val fk = kotlinClassModelTablePropIsIn.addIncomingFK(
                     fromTableRef = reffedTableDslRef,
                     //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.modelClassData.modelSubElRef.parentDslRef)),
                     toTableRef = this@KotlinPropertyTable.modelClassData.modelSubElRef,
@@ -76,13 +82,13 @@ class KotlinPropertyTable(property: Property, val propItsKotlinClassModelTable: 
                     COLLECTIONTYP.LIST // <-- differs
                 )
                 initBuilder = PropertySpec.builder(property.name(), Any::class.asTypeName().nullable())
-                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, propItsKotlinClassModelTable.fkPropVarNames(fk).first) // placeholder property TODO let's see if exposed explodes on this
+                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, kotlinClassModelTablePropIsIn.fkPropVarNameUUID(fk).first) // placeholder property TODO let's see if exposed explodes on this
             },
             isModelSet = {
                 //val reffedTable_DTO_GenModel: GenModel = genCtx.genModel(this.modelSubElementRef)
                 val reffedTableDslRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)
                 val reffedTable: GenModel = genCtx.genModel(reffedTableDslRef)
-                val fk = propItsKotlinClassModelTable.addIncomingFK(
+                val fk = kotlinClassModelTablePropIsIn.addIncomingFK(
                     fromTableRef = reffedTableDslRef,
                     //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.modelClassData.modelSubElRef.parentDslRef)),
                     toTableRef = this@KotlinPropertyTable.modelClassData.modelSubElRef,
@@ -90,7 +96,7 @@ class KotlinPropertyTable(property: Property, val propItsKotlinClassModelTable: 
                     COLLECTIONTYP.SET // <-- differs
                 )
                 initBuilder = PropertySpec.builder(property.name(), Any::class.asTypeName().nullable())
-                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, propItsKotlinClassModelTable.fkPropVarNames(fk).first) // placeholder property TODO let's see if exposed explodes on this
+                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, kotlinClassModelTablePropIsIn.fkPropVarNameUUID(fk).first) // placeholder property TODO let's see if exposed explodes on this
             },
             isModelCollection = {
                 TODO()
@@ -156,7 +162,7 @@ class KotlinPropertyTable(property: Property, val propItsKotlinClassModelTable: 
             is EitherTypOrModelOrPoetType.EitherModel -> {
                 //public var someModelObject: Column<UUID> = uuid("SimpleSubentity_uuid").uniqueIndex().references(SimpleSubentityTable.uuid)
                 val (nullQM, nullFunc) = if (Tag.NULLABLE in property.tags) Pair("?", ".nullable()") else Pair("", "")
-                eitherTypOrModelOrPoetType.initializer.originalFormat = "uuid(%S$nullQM).uniqueIndex().references(%T.%L)$nullFunc"
+                eitherTypOrModelOrPoetType.initializer.originalFormat = "uuid(%S$nullQM).references(%T.%L)$nullFunc"
                 eitherTypOrModelOrPoetType.initializer.originalArgs.clear()
                 eitherTypOrModelOrPoetType.initializer.originalArgs.add(property.columnName())
                 val correspondingTable = genCtx.genModel(DslRef.table(C.DEFAULT, eitherTypOrModelOrPoetType.modelSubElementRef.parentDslRef))

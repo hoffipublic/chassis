@@ -1,11 +1,20 @@
 package com.hoffi.chassis.codegen.kotlin.gens.crud
 
+import com.hoffi.chassis.chassismodel.RuntimeDefaults
+import com.hoffi.chassis.chassismodel.dsl.GenException
+import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
+import com.hoffi.chassis.codegen.kotlin.GenDslRefHelpers
 import com.hoffi.chassis.codegen.kotlin.IntersectPropertys
+import com.hoffi.chassis.codegen.kotlin.gens.KotlinClassModelTable
+import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
+import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
-import com.hoffi.chassis.shared.shared.CrudData
+import com.hoffi.chassis.shared.shared.*
 import com.hoffi.chassis.shared.whens.WhensDslRef
+import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
 context(GenCtxWrapper)
 class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
@@ -17,11 +26,35 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
 
     override fun build(crudData: CrudData) {
         currentCrudData = crudData
-        if (alreadyCreated(crudData)) return
-        log.trace("build({}, {})", currentCrudData)
+        currentAHasCopyBoundryData = crudData
+        if (alreadyCreated(currentCrudData)) {
+            if (currentCrudData !is SynthCrudData) log.warn("Already Created specific Exposed CRUD: $currentCrudData for $this")
+            return
+        }
+        log.trace("build({})", currentCrudData)
+        if (crudData.sourceDslRef.parentDslRef.simpleName != crudData.targetDslRef.parentDslRef.simpleName) {
+            // CREATE from some other DTO than this CRUD's Table
+            return
+        }
+
+        // if we didn't explicitly declared a filler in the DSL ... but we need it for the CRUDs
+        // CrudData always(!) has targetDslRef Table
+        // FillerData might have targetDslRef DTO <-- TABLE sourceDslRef
+        when (currentCrudData.crud) {
+            CrudData.CRUD.CREATE -> genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.targetDslRef, currentCrudData.sourceDslRef, currentCrudData, via = "${this::class.simpleName} '$crudData'"))
+            CrudData.CRUD.READ ->   genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.sourceDslRef, currentCrudData.targetDslRef, currentCrudData, via = "${this::class.simpleName} '$crudData'"))
+            CrudData.CRUD.UPDATE -> genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.targetDslRef, currentCrudData.sourceDslRef, currentCrudData, via = "${this::class.simpleName} '$crudData'"))
+            CrudData.CRUD.DELETE -> genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.targetDslRef, currentCrudData.sourceDslRef, currentCrudData, via = "${this::class.simpleName} '$crudData'"))
+        }
 
         val targetGenModel: GenModel = genCtx.genModel(crudData.targetDslRef)
         val sourceGenModel: GenModel = genCtx.genModel(crudData.sourceDslRef)
+
+        if (sourceGenModel.isInterface || KModifier.ABSTRACT in sourceGenModel.classModifiers) {
+            log.error("crudData source is Interface or Abstract: $crudData for $this")
+            return
+            throw GenException("crudData source is Interface or Abstract: $crudData for $this")
+        }
 
         val intersectPropsData = IntersectPropertys.intersectPropsOf(
             targetGenModel,
@@ -30,168 +63,230 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             "", ""
         )
 
-        intersectPropsData.sourceVarName = WhensDslRef.whenModelSubelement(sourceGenModel.modelSubElRef,
+        intersectPropsData.sourceVarName = WhensDslRef.whenModelSubelement(
+            sourceGenModel.modelSubElRef,
             isDtoRef = { "source${intersectPropsData.sourceVarNamePostfix}" },
-            isTableRef = { "resultRow${intersectPropsData.sourceVarNamePostfix}" },
+            isTableRef = { throw GenException("CrudData.sourceDslRef not allowed to be DslRef.table") },
         )
-        intersectPropsData.targetVarName = WhensDslRef.whenModelSubelement(targetGenModel.modelSubElRef,
-            isDtoRef = { "target${intersectPropsData.targetVarNamePostfix}" },
+        intersectPropsData.targetVarName = WhensDslRef.whenModelSubelement(
+            targetGenModel.modelSubElRef,
+            isDtoRef = { throw GenException("CrudData.targetDslRef has to be DslRef.table") },
             isTableRef = { "resultRow${intersectPropsData.targetVarNamePostfix}" },
         )
 
-//println(crudPoetType)
 //        val crudBuilder = TypeSpec.objectBuilder(crudPoetType)
 //        builder.addType(crudBuilder.build())
 
-        if (currentCrudData.targetDslRef !is DslRef.table) {
-            //createFromTable(intersectPropsData)
-        } else {
-            //insertLambdas(intersectPropsData)
+        when (currentCrudData.crud) {
+            CrudData.CRUD.CREATE -> { insertDb(intersectPropsData) }
+            CrudData.CRUD.READ ->   { log.warn("KotlinCrudExposed for ${currentCrudData.crud} not implemented yet") ; return }
+            CrudData.CRUD.UPDATE -> { log.warn("KotlinCrudExposed for ${currentCrudData.crud} not implemented yet") ; return }
+            CrudData.CRUD.DELETE -> { log.warn("KotlinCrudExposed for ${currentCrudData.crud} not implemented yet") ; return }
         }
+        super.alreadyCreated = true
     }
 
-//    private fun insertLambdas(i: IntersectPropertys.CommonPropData) {
-//        var returnLambdaTypeName = LambdaTypeName.get(i.targetPoetType, DB.InsertStatementTypeName(), returnType = UNIT)
-//        var funName = funNameCrud("insertLambda", currentCrudData)
-//        var funSpec = FunSpec.builder(funName.funName)
-//            .addParameter(i.sourceVarName, i.sourcePoetType)
-//            .returns(returnLambdaTypeName)
-//        var body = insertBody(i, funSpec, funName)
-//        funSpec.addCode(body)
-//        builder.addFunction(funSpec.build())
-//
-//        returnLambdaTypeName = LambdaTypeName.get(DB.BatchInsertStatement, GenDslRefHelpers.dtoClassName(i.sourceGenModel, genCtx), returnType = UNIT)
-//        funName = funNameCrud("batchInsertLambda", currentCrudData)
-//        funSpec = FunSpec.builder(funName.funName)
-//            .addParameter(i.sourceVarName, i.sourcePoetType)
-//            .returns(returnLambdaTypeName)
-//        body = insertBody(i, funSpec, funName)
-//        funSpec.addCode(body)
-//        builder.addFunction(funSpec.build())
-//    }
-//
-//    private fun insertBody(i: IntersectPropertys.CommonPropData, funSpec: FunSpec.Builder, funName: FunName): CodeBlock {
-//        var bodyBuilder = CodeBlock.builder()
-//            .beginControlFlow("return {") // This will take care of the {} and indentations
+    private fun insertDb(i: IntersectPropertys.CommonPropData) {
+        val tableClassModel: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
+        val outgoingFKs = tableClassModel.outgoingFKs
+        val incomingFKs = tableClassModel.incomingFKs
+
+        // add neede syntheticCruds (if not specified in DSL), we'll also need the Fillers for them, too
+        for (propEither in i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }.map { it.eitherTypModelOrClass }) {
+            if (propEither is EitherTypOrModelOrPoetType.EitherModel) {
+                val propSubElRef = propEither.modelSubElementRef
+                genCtx.addSyntheticCrudData(SynthCrudData.create(DslRef.table(propSubElRef.simpleName, propSubElRef.parentDslRef), DslRef.dto(propSubElRef.simpleName, propSubElRef.parentDslRef), currentCrudData, "via insert"))
+            }
+        }
+
+        val insertLambda = LambdaTypeName.get(i.targetPoetType, DB.InsertStatementTypeName(), returnType = UNIT)
+        val batchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatement, GenDslRefHelpers.dtoClassName(i.sourceGenModel, genCtx), returnType = UNIT)
+
+        // ============================
+        // fun insertDb
+        // ============================
+        var funNameInsertOrBatch = funNameExpanded("insertDb", currentCrudData)
+        var funSpec = FunSpec.builder(funNameInsertOrBatch.funName)
+            .addParameter(i.sourceVarName, i.sourcePoetType)
+            .addOutgoingFKParams(outgoingFKs, tableClassModel, COLLECTIONTYP.COLLECTION, funNameInsertOrBatch)
+            .addParameter(ParameterSpec.builder("customStatements", insertLambda).defaultValue("{}").build())
+        //.returns(returnLambdaTypeName)
+        funSpec
+            .addComment("insert 1To1 Models")
+            .insertOutgoing1To1Props(outgoingFKs, funNameInsertOrBatch, currentCrudData, i, COLLECTIONTYP.NONE)
+            .addComment("insertShallow %L and add outgoing ManyTo1-backrefUuids and 1To1-forwardRefUuids", i.targetGenModel.poetTypeSimpleName)
+            .beginControlFlow("%T.%M", i.targetPoetType, DB.insertMember)
+            .addStatement("%T.%L(%L).invoke(this, it)", i.targetFillerPoetType, funNameInsertOrBatch.swapOutOriginalFunNameWith("fillShallowLambda"), i.sourceVarName)
+            .addComment("outgoing FK uuid refs")
+            .addOutgoingFKProps(outgoingFKs, funNameInsertOrBatch, currentCrudData, i)
+            //.addStatement("%T.%L(source).invoke(this, it)", i.targetFillerPoetType, funNameInsertOrBatch.swapOutOriginalFunNameWith("insertShallowWith1To1sLambda"))
+            .addStatement("customStatements.invoke(this, it)")
+            .endControlFlow()
+
+            .addComment("insert ManyTo1 Instances")
+            .insertManyTo1ModelsBody(incomingFKs, funNameInsertOrBatch, i)
+        builder.addFunction(funSpec.build())
+
+        // ============================
+        // fun batchInsertDb
+        // ============================
+        funNameInsertOrBatch = funNameExpanded("batchInsertDb", currentCrudData)
+        funSpec = FunSpec.builder(funNameInsertOrBatch.funName)
+            .addParameter(i.sourceVarName + "s", ClassName("kotlin.collections", "Collection").parameterizedBy(i.sourcePoetType))
+            .addOutgoingFKParams(outgoingFKs, tableClassModel, COLLECTIONTYP.COLLECTION, funNameInsertOrBatch)
+            .addParameter(ParameterSpec.builder("customStatements", batchInsertLambda).defaultValue("{}").build())
+        //.returns(returnLambdaTypeName)
+        funSpec
+            .addComment("insert 1To1 Models")
+            .insertOutgoing1To1Props(outgoingFKs,funNameInsertOrBatch, currentCrudData, i, COLLECTIONTYP.NONE)
+            .addComment("batchInsertShallow %L and add outgoing ManyTo1-backrefUuids and 1To1-forwardRefUuids", i.targetGenModel.poetTypeSimpleName)
+            .beginControlFlow("%T.%M(%L, shouldReturnGeneratedValues = false)", i.targetPoetType, DB.batchInsertMember, i.sourceVarName + "s")
+            .addStatement("%T.%L().invoke(this, it)", i.targetFillerPoetType, funNameInsertOrBatch.swapOutOriginalFunNameWith("batchFillShallowLambda"))
+            .addComment("outgoing FK uuid refs")
+            .addOutgoingFKProps(outgoingFKs, funNameInsertOrBatch, currentCrudData, i)
+            .addStatement("customStatements(it)")
+            .endControlFlow()
+            .addComment("batchInsert ManyTo1 Instances")
+            .insertManyTo1ModelsBody(incomingFKs, funNameInsertOrBatch, i)
+        builder.addFunction(funSpec.build())
+    }
+
+    private fun FunSpec.Builder.insertManyTo1ModelsBody(incomingFKs: MutableSet<FK>, funNameInsertOrBatch: FunName, i: IntersectPropertys.CommonPropData): FunSpec.Builder {
+        var none = true
+        if (funNameInsertOrBatch.originalFunName.startsWith("batch")) {
+            for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
+                none = false
+                addStatement("%T.%L(%L.flatMap { it.%L%L }, %L.flatMap { %L -> %L.%L%L.map { it.%L to %L.%L } }.toMap())",
+                    propCrud((fk.toProp.eitherTypModelOrClass as EitherTypOrModelOrPoetType.EitherModel).modelSubElementRef, CrudData.CRUD.CREATE),
+                    funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertDb"),
+                    i.sourceVarName + "s",
+                    fk.toProp.name(), if (fk.toProp.isNullable) " ?: emptyList()" else "",
+                    i.sourceVarName + "s",
+                    i.sourceVarName, i.sourceVarName,
+                    fk.toProp.name(), if (fk.toProp.isNullable) "!!" else "",
+                    RuntimeDefaults.UUID_PROPNAME, i.sourceVarName, RuntimeDefaults.UUID_PROPNAME
+                )
+            }
+        } else {
+            for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
+                none = false
+                addStatement("%T.%L(%L.%L%L, %L%L.%L%L%L.associate { it.%L to %L.%L } /* , otherBackref1, otherBackref2, ... */)",
+                    propCrud(fk.fromTableRef, CrudData.CRUD.CREATE),
+                    funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertDb"),
+                    i.sourceVarName,
+                    fk.toProp.name(), if (fk.toProp.isNullable) " ?: emptyList()" else "",
+                    if (fk.toProp.isNullable) "(" else "",
+                    i.sourceVarName,
+                    fk.toProp.name(), if (fk.toProp.isNullable) " ?: emptyList()" else "",
+                    if (fk.toProp.isNullable) ")" else "",
+                    RuntimeDefaults.UUID_PROPNAME,
+                    i.sourceVarName,
+                    RuntimeDefaults.UUID_PROPNAME
+                )
+            }
+        }
+        if (none) addStatement("// NONE")
+        return this
 //        // allProps as a) Table's always gatherProps from superclasses and b) alle table columns have to be filled
-//        for (prop in i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }) {
-//            WhensGen.whenTypeAndCollectionType(
-//                prop.eitherTypModelOrClass, prop.collectionType,
-//                preFunc = { },
-//                preNonCollection = { },
-//                preCollection = { },
-//                isModel = {
-//                    // TODO one2One check if dependant model Table Entry already exists!
-//                    if (funName.originalFunName == "insertLambda") {
-//                        // SimpleSubentityTable.insert(SimpleSubentityTableCrud.insertFunction(sourceSimpleEntityDto.someModelObject))
-//                        bodyBuilder.addStatement("// TODO one2One check if dependant model Table Entry already exists!")
-//                        bodyBuilder.addStatement(
-//                            "%T.%M(%T.%L(%L.%L))",
-//                            genCtx.genModel(DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)).poetType,
-//                            DB.insertMember,
-//                            propCrud(modelSubElementRef, MODELREFENUM.TABLE),
-//                            "insertLambda", i.sourceVarName, prop.name
-//                        )
-//                    } else {
-//                        //  SimpleSubentityTableCrud.batchInsertFunction(sourceSimpleEntityDto.someModelObject).invoke(this, sourceSimpleEntityDto.someModelObject)
-//                        val crudTableOfReffedModel = genCtx.genModel(DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)).crudPoetType
-//                        bodyBuilder.addStatement("// TODO one2One check if dependant model Table Entry already exists!")
-//                        bodyBuilder.addStatement(
-//                            "%T.%L(%L.%L).%L(this, %L.%L)",
-//                            crudTableOfReffedModel,
-//                            //MemberName(crudTableOfReffedModel, "batchInsertLambda"),
-//                            "batchInsertLambda",
-//                            i.sourceVarName, prop.name,
-//                            "invoke",
-//                            i.sourceVarName, prop.name
-//                        )
-//                    }
-//                    bodyBuilder.addStatement(
-//                        "%L[%T.%L] = %L.%L.%L",
-//                        if (funName.originalFunName == "insertLambda") "it" else "this",
-//                        i.targetPoetType,
-//                        prop.name,
-//                        i.sourceVarName, prop.name, "uuid"
-//                    )
-//                    val originalRef = this.modelClassName.modelSubElRef
-//                    genCtx.syntheticCrudDatas.add(SynthCrudData(currentCrudData.businessName, this.modelSubElementRef, originalRef, via = "TableCrud for contained prop $prop"))
-//                    genCtx.syntheticCrudDatas.add(SynthCrudData(currentCrudData.businessName, originalRef, this.modelSubElementRef, via = "TableCrud for contained prop $prop"))
-//                },
-//                isPoetType = { },
-//                isTyp = {
-//                    bodyBuilder.addStatement(
-//                        "%L[%T.%L] = %L.%L",
-//                        if (funName.originalFunName == "insertLambda") "it" else "this",
-//                        i.targetPoetType,
-//                        prop.name,
-//                        i.sourceVarName,
-//                        prop.name
-//                    )
-//                },
-//                postNonCollection = { },
-//                isModelList = { },
-//                isModelSet = { },
-//                isModelCollection = {
-//
-//                    val originalRef = this.modelClassName.modelSubElRef
-//                    genCtx.syntheticCrudDatas.add(SynthCrudData(currentCrudData.businessName, this.modelSubElementRef, originalRef, via = "TableCrud for contained prop $prop"))
-//                    genCtx.syntheticCrudDatas.add(SynthCrudData(currentCrudData.businessName, originalRef, this.modelSubElementRef, via = "TableCrud for contained prop $prop"))
-//                },
-//                isModelIterable = { },
-//                isPoetTypeList = { },
-//                isPoetTypeSet = { },
-//                isPoetTypeCollection = { },
-//                isPoetTypeIterable = { },
-//                isTypList = { },
-//                isTypSet = { },
-//                isTypCollection = { },
-//                isTypIterable = { },
-//                postCollection = { },
-//            )
-//        }
-//        var body = bodyBuilder.endControlFlow().build()
-//        return body
-//    }
-//
-//    private fun createFromTable(i: IntersectPropertys.CommonPropData) {
-//        val funName = funNameCrud(i.targetGenModel.asVarName, currentCrudData)
-//        log.trace("currentCrudData: -> {}\n{}", funName, currentCrudData)
-//        val funSpec = FunSpec.builder(funName.funName)
-//            .addParameter(i.sourceVarName, DB.ResultRowClassName)
-//            .returns(i.targetPoetType)
-//        //val targetSimpleEntityDto = SimpleEntityDto._internal_create()
-//        funSpec.addStatement("val %L = %T._internal_create()", i.targetVarName, i.targetPoetType)
 //        for (prop in i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }) {
 //            WhensGen.whenTypeAndCollectionType(prop.eitherTypModelOrClass, prop.collectionType,
 //                preFunc = { },
 //                preNonCollection = { },
 //                preCollection = { },
-//                isModel = {
-//                    funSpec.addStatement("%L.%L = %T.%L(%L)", i.targetVarName, prop.name, propCrud(modelSubElementRef, MODELREFENUM.TABLE), prop.eitherTypModelOrClass.modelClassName.asVarName, i.sourceVarName)
-//
-//                    val originalRef = this.modelClassName.modelSubElRef
-//                    genCtx.syntheticCrudDatas.add(SynthCrudData(currentCrudData.businessName, this.modelSubElementRef, originalRef, via = "TableCrud for contained prop $prop"))
-//                    genCtx.syntheticCrudDatas.add(SynthCrudData(currentCrudData.businessName, originalRef, this.modelSubElementRef, via = "TableCrud for contained prop $prop"))
-//                },
+//                isModel = { },
 //                isPoetType = { },
-//                isTyp = { funSpec.addStatement("%L.%L = %L[%T.%L]", i.targetVarName, prop.name, i.sourceVarName, i.sourcePoetType, prop.name) },
+//                isTyp = { },
 //                postNonCollection = { },
-//                isModelList = { },
-//                isModelSet = { },
-//                isModelCollection = { },
-//                isModelIterable = { },
-//                isPoetTypeList = { },
-//                isPoetTypeSet = { },
-//                isPoetTypeCollection = { },
-//                isPoetTypeIterable = { },
-//                isTypList = { },
-//                isTypSet = { },
-//                isTypCollection = { },
-//                isTypIterable = { },
+//                isModelList = {
+//                    none = false
+//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+//
+//                    addSyntheticCrud(this, this@KotlinCrudExposed.currentCrudData, via = "KotlinCrud for prop: '$prop' from currentFillerData: ${currentCrudData}")
+//                },
+//                isModelSet = {
+//                    none = false
+//                    //bodyBuilder.addStatement(
+//                    //    "%T.%M(%L.%L ?: emptyList(), shouldReturnGeneratedValues = false, body = %T.%L(%L.%L))",
+//                    //    genCtx.genModel(DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)).poetType,
+//                    //    DB.batchInsertMember,
+//                    //    funNameInsertOrBatch.sourceOrIt(i.sourceVarName),
+//                    //    prop.name(),
+//                    //    propFiller(modelSubElementRef, MODELREFENUM.TABLE),
+//                    //    "batchInsertLambda",
+//                    //    funNameInsertOrBatch.sourceOrIt(i.sourceVarName),
+//                    //    RuntimeDefaults.UUID_PROPNAME
+//                    //)
+//                    addSyntheticCrud(this, this@KotlinCrudExposed.currentCrudData, via = "KotlinCrud for prop: '$prop' from currentFillerData: ${currentCrudData}")
+//
+//                    ////for (entityDtoBackref in sources) {
+//                    ////    CrudSimpleSubentityTableCREATE.batchInsert(entityDtoBackref.subentitys ?: emptyList(), entityDtoBackref)
+//                    ////    //CrudSimpleOtherModelTableCREATE.batchInsert(entityDtoBackref.otherModels, entityDtoBackref)
+//                    ////}
+//                    if (funNameInsertOrBatch.originalFunName.startsWith("batch")) {
+//                        bodyBuilder.beginControlFlow("for (%L in %L)", i.sourceVarName, i.sourceVarName + "s")
+//                    }
+//                    bodyBuilder.addStatement(
+//                        "%T.%L(%L.%L%L, %L) /* , otherBackref1, otherBackref2) */",
+//                        propCrud(this.modelSubElementRef, CrudData.CRUD.CREATE),
+//                        "batchInsertDb",
+//                        i.sourceVarName,
+//                        prop.name(),
+//                        " ?: emptyList()",
+//                        i.sourceVarName
+//                    )
+//                    if (funNameInsertOrBatch.originalFunName.startsWith("batch")) {
+//                        bodyBuilder.endControlFlow()
+//                    }
+//                },
+//                isModelCollection = {
+//                    none = false
+//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+//
+//                    addSyntheticCrud(this, this@KotlinCrudExposed.currentCrudData, via = "KotlinCrud for prop: '$prop' from currentFillerData: ${currentCrudData}")
+//                },
+//                isModelIterable = {
+//                    none = false
+//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+//
+//                    addSyntheticCrud(this, this@KotlinCrudExposed.currentCrudData, via = "KotlinCrud for prop: '$prop' from currentFillerData: ${currentCrudData}")
+//                },
+//                isPoetTypeList = {
+//                    none = false
+//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+//                },
+//                isPoetTypeSet = {
+//                    none = false
+//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+//                },
+//                isPoetTypeCollection = {
+//                    none = false
+//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+//                },
+//                isPoetTypeIterable = {
+//                    none = false
+//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+//                },
+//                isTypList = {
+//                    none = false
+//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+//                },
+//                isTypSet = {
+//                    none = false
+//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+//                },
+//                isTypCollection = {
+//                    none = false
+//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+//                },
+//                isTypIterable = {
+//                    none = false
+//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+//                },
 //                postCollection = { },
 //            )
 //        }
-//        funSpec.addStatement("return %L", i.targetVarName)
-//        builder.addFunction(funSpec.build())
-//    }
+//        if (none) bodyBuilder.addStatement("// NONE")
+//        var body = bodyBuilder.build()
+//        return body
+    }
 }

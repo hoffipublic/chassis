@@ -19,7 +19,11 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
 
     override fun build(modelkind: MODELKIND, fillerData: FillerData) {
         currentFillerData = fillerData
-        if (alreadyCreated(fillerData)) return
+        currentAHasCopyBoundryData = fillerData
+        if (alreadyCreated(currentFillerData)) {
+            if (currentFillerData !is SynthFillerData) log.warn("Already Created specific $modelkind, FILLER: $currentFillerData for $this")
+            return
+        }
         //log.trace("build({}, {})", modelkind, currentFillerData)
 
         val intersectPropsData = IntersectPropertys.intersectPropsOf(
@@ -36,10 +40,11 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
         copyShallowWithNewModelsInto(intersectPropsData)
         copyShallowAndTakeSameModelsInto(intersectPropsData)
         deepCopyAndDeepClone(intersectPropsData)
+        super.alreadyCreated = true
     }
 
     private fun copyShallowIgnoreModelsInto(i: IntersectPropertys.CommonPropData) {
-        val funName = funNameFiller("copyShallowIgnoreModelsInto", currentFillerData)
+        val funName = funNameExpanded("copyShallowIgnoreModelsInto", currentFillerData)
         val funSpec = FunSpec.builder(funName.funName)
             .addParameter(i.targetVarName, i.targetGenModel.poetType)
             .addParameter(i.sourceVarName, i.sourceGenModel.poetType)
@@ -57,7 +62,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
     }
 
     private fun copyShallowWithNewModelsInto(i: IntersectPropertys.CommonPropData) {
-        val funName = funNameFiller("copyShallowWithNewModelsInto", currentFillerData)
+        val funName = funNameExpanded("copyShallowWithNewModelsInto", currentFillerData)
         val funSpec = FunSpec.builder(funName.funName)
             .addParameter(i.targetVarName, i.targetGenModel.poetType)
             .addParameter(i.sourceVarName, i.sourceGenModel.poetType)
@@ -102,7 +107,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
     }
 
     private fun copyShallowAndTakeSameModelsInto(i: IntersectPropertys.CommonPropData) {
-        val funName = funNameFiller("copyShallowAndTakeSameModelsInto", currentFillerData)
+        val funName = funNameExpanded("copyShallowAndTakeSameModelsInto", currentFillerData)
         val funSpec = FunSpec.builder(funName.funName)
             .addParameter(i.targetVarName, i.targetGenModel.poetType)
             .addParameter(i.sourceVarName, i.sourceGenModel.poetType)
@@ -164,7 +169,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
         val funNames = listOf("copyDeepInto", "cloneDeep")
         for (theFunName in funNames) {
             if (theFunName == "cloneDeep" && (KModifier.ABSTRACT in i.targetGenModel.classModifiers || currentFillerData.businessName != C.DEFAULT) ) continue
-            val funName = funNameFiller(theFunName, currentFillerData)
+            val funName = funNameExpanded(theFunName, currentFillerData)
             val funSpec = if (theFunName == "copyDeepInto") {
                 val theFunSpec = FunSpec.builder(funName.funName)
                     .addParameter(i.targetVarName, i.targetGenModel.poetType)
@@ -192,8 +197,8 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                 val propEither = prop.eitherTypModelOrClass
                 when (propEither) {
                     is EitherTypOrModelOrPoetType.EitherModel -> {
-                        genCtx.syntheticFillerDatas.add(SynthFillerData(currentFillerData.businessName, propEither.modelSubElementRef, propEither.modelSubElementRef, via = "propTypeEither is Model in deepCopyAndClone of $currentFillerData"))
-                        val propEitherModelFillerClassName = prop.eitherTypModelOrClass.modelClassName.fillerPoetType
+                        genCtx.addSyntheticFillerData(SynthFillerData.create(propEither.modelSubElementRef, propEither.modelSubElementRef, currentFillerData, via = "propTypeEither is Model in deepCopyAndClone of $currentFillerData"))
+                        val propEitherModelFillerClassName = propEither.modelClassName.fillerPoetType
                         when (prop.collectionType) {
                             is COLLECTIONTYP.NONE -> {
                                 funSpec.addCode(

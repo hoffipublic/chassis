@@ -10,6 +10,7 @@ class FK(
     var toProp: Property,
     val COLLECTIONTYP: COLLECTIONTYP,
 ) : Comparable<FK> {
+    override fun toString() = "FK($COLLECTIONTYP prop='${toProp.name()}', '${toTableRef.toString(2)}' <-- '${fromTableRef.toString(2)}'})"
     override fun compareTo(other: FK): Int = toProp.dslPropName.compareTo(other.toProp.dslPropName)
 
     override fun equals(other: Any?): Boolean {

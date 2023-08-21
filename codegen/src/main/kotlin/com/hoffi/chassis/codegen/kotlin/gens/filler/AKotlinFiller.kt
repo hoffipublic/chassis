@@ -1,14 +1,12 @@
 package com.hoffi.chassis.codegen.kotlin.gens.filler
 
-import com.hoffi.chassis.chassismodel.C
-import com.hoffi.chassis.chassismodel.Cap
 import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.codegen.kotlin.IntersectPropertys
+import com.hoffi.chassis.codegen.kotlin.gens.ABaseForCrudAndFiller
 import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGeneratedFiller
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.Property
@@ -16,52 +14,46 @@ import com.hoffi.chassis.shared.shared.AHasCopyBoundrysData
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
-import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.squareup.kotlinpoet.*
 import okio.Path
 import org.slf4j.LoggerFactory
 
 context(GenCtxWrapper)
-abstract class AKotlinFiller(fillerData: FillerData, val modelkind: MODELKIND) {
+abstract class AKotlinFiller(fillerData: FillerData, modelkind: MODELKIND): ABaseForCrudAndFiller(fillerData, modelkind) {
     private val fillerDataTargetDslRef = fillerData.targetDslRef
     var currentFillerData: FillerData = fillerData // changes for every build() call, also helpfull for debugging
     override fun toString() = "${this::class.simpleName}(current${currentFillerData})"
     protected val log = LoggerFactory.getLogger(this::class.java)
     /** fillerName -> source(!) DslRef (as each targetDslRef has its own KotlinFiller Instance */
-    val alreadyCreated: MutableSet<AHasCopyBoundrysData> = mutableSetOf()
-    fun alreadyCreated(fillerData: FillerData) = ! alreadyCreated.add(fillerData)
+    val alreadyCreatedCruds: MutableSet<AHasCopyBoundrysData> = mutableSetOf()
+    fun alreadyCreated(fillerData: FillerData) = ! alreadyCreatedCruds.add(fillerData)
 
     var fillerBasePath: Path
     var fillerPath: Path
-    val fillerPoetType = when (modelkind) {
-        MODELKIND.DTOKIND -> {
-            val targetGenModel = genCtx.genModel(fillerData.targetDslRef)
-            fillerBasePath = targetGenModel.modelClassName.basePath
-            fillerPath =     targetGenModel.modelClassName.path
-            targetGenModel.fillerPoetType
-        }
-        MODELKIND.TABLEKIND -> {
-            if (fillerData.targetDslRef !is DslRef.table) {
-                val sourceGenModel = genCtx.genModel(fillerData.sourceDslRef)
-                fillerBasePath = sourceGenModel.modelClassName.basePath
-                fillerPath =     sourceGenModel.modelClassName.path
-                sourceGenModel.fillerPoetType
-            } else {
+    val fillerPoetType: ClassName
+
+    init {
+        when (modelkind) {
+            MODELKIND.DTOKIND -> {
                 val targetGenModel = genCtx.genModel(fillerData.targetDslRef)
                 fillerBasePath = targetGenModel.modelClassName.basePath
                 fillerPath =     targetGenModel.modelClassName.path
-                targetGenModel.fillerPoetType
+                fillerPoetType = targetGenModel.fillerPoetType
+            }
+            MODELKIND.TABLEKIND -> {
+                if (fillerData.targetDslRef !is DslRef.table) {
+                    val sourceGenModel = genCtx.genModel(fillerData.sourceDslRef)
+                    fillerBasePath = sourceGenModel.modelClassName.basePath
+                    fillerPath =     sourceGenModel.modelClassName.path
+                    fillerPoetType = sourceGenModel.fillerPoetType
+                } else {
+                    val targetGenModel = genCtx.genModel(fillerData.targetDslRef)
+                    fillerBasePath = targetGenModel.modelClassName.basePath
+                    fillerPath =     targetGenModel.modelClassName.path
+                    fillerPoetType = targetGenModel.fillerPoetType
+                }
             }
         }
-    }
-    fun propFiller(targetDslRef: IDslRef, modelrefenum: MODELREFENUM): ClassName {
-        val swappedDslRef = when (modelrefenum) {
-            MODELREFENUM.MODEL -> throw GenException("MODELs do not have fillers themselves")
-            MODELREFENUM.DTO -> DslRef.dto(C.DEFAULT, targetDslRef.parentDslRef)
-            MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, targetDslRef.parentDslRef)
-        }
-        val swappedGenModel = genCtx.genModel(swappedDslRef)
-        return ClassName((swappedGenModel.poetType as ClassName).packageName + ".filler", "Filler" + (swappedGenModel.poetType as ClassName).simpleName)
     }
 
     val builder = TypeSpec.objectBuilder(fillerPoetType).apply {
@@ -85,50 +77,14 @@ abstract class AKotlinFiller(fillerData: FillerData, val modelkind: MODELKIND) {
             fileSpec.writeTo(out)
         } else {
             try {
-                fileSpec.writeTo((fillerBasePath/fillerPath).toNioPath())
+                val targetPathWithoutPackageAndFile = (fillerBasePath/fillerPath).toNioPath()
+                log.info("writing: $targetPathWithoutPackageAndFile/${fillerPoetType.toString().replace('.', '/')}.kt")
+                fileSpec.writeTo(targetPathWithoutPackageAndFile)
             } catch (e: Exception) {
                 throw GenException(e.message ?: "unknown error", e)
             }
         }
         return typeSpec
-    }
-
-    data class FunName(val funName: String, val originalFunName:String) {
-        enum class FUNNAMEMODE { DEFAULT, JUSTPREPOSTFIX}
-        var prefix: String = ""
-        var postfix: String = ""
-        fun swapOutOriginalFunNameWith(otherFunName: String): String = if (prefix.isNotBlank()) {
-            prefix + otherFunName.Cap() + postfix
-        } else {
-            otherFunName + postfix
-        }
-    }
-    fun funNameFiller(origFunName: String, fillerData: FillerData, funNameMode: FunName.FUNNAMEMODE = FunName.FUNNAMEMODE.DEFAULT): FunName {
-        val funName = if (fillerData.businessName == C.DEFAULT) {
-            if (fillerData.sourceDslRef == fillerData.targetDslRef || fillerData.targetDslRef is DslRef.table || fillerData.sourceDslRef is DslRef.table || funNameMode == FunName.FUNNAMEMODE.JUSTPREPOSTFIX) {
-                FunName(origFunName, origFunName).also { it.prefix = "" ; it.postfix = "" }
-            } else {
-                val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
-                val sourceGenModel: GenModel = genCtx.genModel(fillerData.sourceDslRef)
-                val prefix = targetGenModel.nameLowerFirstOf(sourceGenModel.poetTypeSimpleName)
-                FunName(prefix + targetGenModel.nameUpperFirstOf(origFunName), origFunName)
-                    . also { it.prefix = prefix ; it.postfix = "" }
-            }
-        } else {
-            val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
-            if (fillerData.sourceDslRef == fillerData.targetDslRef || fillerData.targetDslRef is DslRef.table || fillerData.sourceDslRef is DslRef.table || funNameMode == FunName.FUNNAMEMODE.JUSTPREPOSTFIX) {
-                val prefix = targetGenModel.nameLowerFirstOf(fillerData.businessName)
-                FunName(prefix + targetGenModel.nameUpperFirstOf(origFunName), origFunName)
-                    .also { it.prefix = prefix ; it.postfix = "" }
-            } else {
-                val sourceGenModel: GenModel = genCtx.genModel(fillerData.sourceDslRef)
-                val businessNamePrefix = targetGenModel.nameLowerFirstOf(fillerData.businessName)
-                val prefix = targetGenModel.nameUpperFirstOf(sourceGenModel.poetTypeSimpleName)
-                FunName(businessNamePrefix + prefix + targetGenModel.nameUpperFirstOf(origFunName), origFunName)
-                    .also { it.prefix = businessNamePrefix + prefix ; it.postfix = "" }
-            }
-        }
-        return funName
     }
 
     fun nullSentinel(funBuilder: FunSpec.Builder, targetVarName: String, targetModel: GenModel) {

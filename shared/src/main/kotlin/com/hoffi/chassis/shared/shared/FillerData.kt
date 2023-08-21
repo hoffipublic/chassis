@@ -21,7 +21,19 @@ open class FillerData(businessName: String, targetDslRef: IDslRef, sourceDslRef:
         return result
     }
 }
-class SynthFillerData(businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef, val via: String)
+class SynthFillerData private constructor(businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef, val via: String)
     : FillerData(businessName, targetDslRef, sourceDslRef) {
     override fun toString() = "Synth${super.toString()}->\"$via\""
+    companion object {
+        fun create(targetDslRef: IDslRef, sourceDslRef: IDslRef, originalFiller: FillerData, via: String): SynthFillerData {
+            val synthFillerData = SynthFillerData(originalFiller.businessName, targetDslRef, sourceDslRef, via)
+            synthFillerData.theCopyBoundrys.putAll(originalFiller.theCopyBoundrys)
+            return synthFillerData
+        }
+        fun create(targetDslRef: IDslRef, sourceDslRef: IDslRef, originalCrud: CrudData, via: String): SynthFillerData {
+            val synthFillerData = SynthFillerData(originalCrud.businessName, targetDslRef, sourceDslRef, via)
+            synthFillerData.theCopyBoundrys.putAll(originalCrud.theCopyBoundrys)
+            return synthFillerData
+        }
+    }
 }

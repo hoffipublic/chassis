@@ -2,7 +2,7 @@ package com.hoffi.chassis.shared.shared
 
 import com.hoffi.chassis.shared.dsl.IDslRef
 
-class CrudData(businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef, val crud: CRUD)
+open class CrudData(businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef, val crud: CRUD)
     : AHasCopyBoundrysData(businessName, targetDslRef, sourceDslRef)
 {
     override fun toString() = "Crud('$businessName', ${String.format("%-6s", crud)}, '${targetDslRef.toString(2)}' <-- '${sourceDslRef.toString(2)}', " +
@@ -25,5 +25,17 @@ class CrudData(businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRe
         result = 31 * result + sourceDslRef.hashCode()
         result = 31 * result + crud.hashCode()
         return result
+    }
+}
+
+class SynthCrudData private constructor(businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef, crud: CRUD, val via: String)
+    : CrudData(businessName, targetDslRef, sourceDslRef, crud) {
+    override fun toString() = "Synth${super.toString()}->\"$via\""
+    companion object {
+        fun create(targetDslRef: IDslRef, sourceDslRef: IDslRef, originalCrud: CrudData, via: String): SynthCrudData {
+            val synthCrudData = SynthCrudData(originalCrud.businessName, targetDslRef, sourceDslRef, originalCrud.crud, via)
+            synthCrudData.theCopyBoundrys.putAll(originalCrud.theCopyBoundrys)
+            return synthCrudData
+        }
     }
 }

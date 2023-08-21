@@ -9,12 +9,14 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
+import org.slf4j.LoggerFactory
 
 abstract class AHasPropertys(val modelClassData: ModelClassData)
 
 context(GenCtxWrapper)
 abstract class AKotlinClass(modelClassData: ModelClassData) : AHasPropertys(modelClassData) {
     override fun toString() = "${this::class.simpleName}(${modelClassData})"
+    private val log = LoggerFactory.getLogger(javaClass)
 
     init {
         kotlinGenCtx.putKotlinGenClass(modelClassData.modelSubElRef, this)
@@ -50,7 +52,9 @@ abstract class AKotlinClass(modelClassData: ModelClassData) : AHasPropertys(mode
             fileSpec.writeTo(out)
         } else {
             try {
-                fileSpec.writeTo((modelClassData.modelClassName.basePath / modelClassData.modelClassName.path).toNioPath())
+                val targetPathWithoutPackageAndFile = (modelClassData.modelClassName.basePath/modelClassData.modelClassName.path).toNioPath()
+                log.info("writing: $targetPathWithoutPackageAndFile/${modelClassData.modelClassName.poetType.toString().replace('.', '/')}.kt")
+                fileSpec.writeTo(targetPathWithoutPackageAndFile)
             } catch (e: Exception) {
                 throw GenException(e.message ?: "unknown error", e)
             }

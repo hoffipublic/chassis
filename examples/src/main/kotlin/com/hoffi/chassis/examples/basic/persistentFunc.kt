@@ -39,8 +39,6 @@ fun baseModelsPersistent() {
             dto("other") {
                 kind = OBJECT
             }
-            table {
-            }
         }
         model(PERSISTENT__Abstract) {
             classModifiers(KModifier.ABSTRACT)
