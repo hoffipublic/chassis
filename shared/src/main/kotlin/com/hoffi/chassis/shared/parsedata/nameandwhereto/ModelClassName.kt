@@ -25,7 +25,7 @@ class ModelClassName(
     var poetTypeDirect: ClassName?
 ) : IModelClassName {
     val log = LoggerFactory.getLogger(javaClass)
-    override fun toString() = "${(poetType as ClassName).simpleNames.joinToString(".")} in ${(poetType as ClassName).packageName}"
+    override fun toString() = "${poetType.simpleNames.joinToString(".")} in ${poetType.packageName}"
 
     lateinit var modelClassData: ModelClassData
     var classNameStrategy = ClassNameStrategy.get(IClassNameStrategy.STRATEGY.DEFAULT)
@@ -45,7 +45,7 @@ class ModelClassName(
         get() = poetTypeDirect ?: poetTypeDslModel
         set(value) { poetTypeDirect = value }
     override val poetTypeSimpleName: String
-        get() = (poetType as ClassName).simpleName
+        get() = poetType.simpleName
     private val poetTypeDslModel: ClassName by lazy { classNameStrategy.poetType(modelClassData, modelOrTypeNameString, "${basePackage.ifNotBlank{"$basePackage."}}$packageName", classPrefix, classPostfix) as ClassName }
     override val asVarName: String by lazy { classNameStrategy.asVarname(modelOrTypeNameString, classPrefix, classPostfix) }
     override val asVarNameWithoutPostfix: String by lazy { classNameStrategy.asVarname(modelOrTypeNameString, classPrefix) }
@@ -55,13 +55,13 @@ class ModelClassName(
         get() = if (poetTypeDirect != null) {
             ClassName("${(poetTypeDirect as ClassName).packageName}.filler", "Filler${(poetTypeDirect as ClassName).simpleName}")
         } else {
-            ClassName("${(poetTypeDslModel as ClassName).packageName}.filler", "Filler${(poetTypeDslModel as ClassName).simpleName}")
+            ClassName("${poetTypeDslModel.packageName}.filler", "Filler${poetTypeDslModel.simpleName}")
         }
     override val crudBasePoetTypeForAllCruds: ClassName
         get() =  if (poetTypeDirect != null) {
             ClassName("${(poetTypeDirect as ClassName).packageName}.sql", "Crud${(poetTypeDirect as ClassName).simpleName}")
         } else {
-            ClassName("${(poetTypeDslModel as ClassName).packageName}.sql", "Crud${(poetTypeDslModel as ClassName).simpleName}")
+            ClassName("${poetTypeDslModel.packageName}.sql", "Crud${poetTypeDslModel.simpleName}")
         }
 
     override fun nameOf(string: String) = classNameStrategy.nameOf(string)

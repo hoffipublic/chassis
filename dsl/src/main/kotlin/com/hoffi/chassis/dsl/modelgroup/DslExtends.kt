@@ -150,7 +150,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
 
     /** inherit from same SubElement Type (e.g. dto/table/...) with simpleName C.DEFAULT, of an element (e.g. model) in the same group which has this name */
     override operator fun String.unaryPlus() {
-        val (groupRef, elementRef, subelementRef) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslExtendsDelegateImpl)
+        val (groupRef, _, _) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslExtendsDelegateImpl)
         val refTarget: DslRef.IModelOrModelSubelement = WhensDslRef.whenModelOrModelSubelement(dslExtendsDelegateImpl.parentDslRef,
             isModelRef = { DslRef.model(this, groupRef) },
             isDtoRef =   { DslRef.dto(C.DEFAULT, DslRef.model(this, groupRef)) },

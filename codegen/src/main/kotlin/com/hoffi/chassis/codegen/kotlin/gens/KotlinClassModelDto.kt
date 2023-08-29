@@ -88,7 +88,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
             }
             is EitherTypOrModelOrPoetType.EitherPoetType -> TODO()
             is EitherTypOrModelOrPoetType.EitherTyp -> TODO()
-            is EitherTypOrModelOrPoetType.NOTHING, null -> {}
+            is EitherTypOrModelOrPoetType.NOTHING -> {}
         }
 
         // add primary constructor propertys
@@ -185,7 +185,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
             }
             funSpecBuilder.addStatement(
                 "return %P",
-                "${(modelClassData.poetType as ClassName).simpleName}(${toStringPropsFormatList.joinToString()})"
+                "${modelClassData.poetType.simpleName}(${toStringPropsFormatList.joinToString()})"
             )
             builder.addFunction(funSpecBuilder.build())
         }
@@ -220,8 +220,8 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
             val primaryComment = if (theFirstProp.dslPropName == UUID_PROPNAME) " /* PRIMARY */" else ""
             funBuilder.addStatement("var result = %L.hashCode()%L", theFirstProp.name(), primaryComment)
             for (p in equalsAndHashCodeMembers) {
-                val primaryComment = if (p.dslPropName == UUID_PROPNAME) " /* PRIMARY */" else ""
-                funBuilder.addStatement("result = 31 * result + %L.hashCode()%L", p.name(), primaryComment)
+                val primaryCommentInner = if (p.dslPropName == UUID_PROPNAME) " /* PRIMARY */" else ""
+                funBuilder.addStatement("result = 31 * result + %L.hashCode()%L", p.name(), primaryCommentInner)
             }
             funBuilder.addStatement("%L", "return result")
             builder.addFunction(funBuilder.build())

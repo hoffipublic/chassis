@@ -34,7 +34,7 @@ object FramedOutput {
         return LINES(lines.joinToString("\n$HMIDDLE", HTOP, "\n$HMIDDLESEP${"─".repeat(max.coerceAtLeast(MIN))}"), max)
     }
 
-    fun cmdOutput(s: String, hasHeader: Boolean = true, maxSoFar: Int = 25, where: WHERE = WHERE.MIDDLE): LINES {
+    fun cmdOutput(s: String, maxSoFar: Int = 25, where: WHERE = WHERE.MIDDLE): LINES {
         val lines = s.split("\n")
         val max = lines.maxOf { it.length }
         return LINES(when (where) {
@@ -75,12 +75,14 @@ object FramedOutput {
         val channel = Channel<String>(1)
         runBlocking {
             // start producer on different Dispatcher Scope than outJob
+            @Suppress("unused_variable")
             val producerJob: Deferred<Unit> =
                 async(Dispatchers.IO) {
                     println("starting producer...")
                     produceSomeStrings(channel)
                     println("( producer ready. )")
                 }
+            @Suppress("unused_variable")
             val outJob: Deferred<Unit> =
                 async {
                     println("starting toOut() ...")
@@ -93,8 +95,8 @@ object FramedOutput {
 
     fun String.runCommand(
         workingDir: File = File("."),
-        timeoutAmount: Long = 60L,
-        timeoutUnit: TimeUnit = TimeUnit.SECONDS
+        @Suppress("unused") timeoutAmount: Long = 60L,
+        @Suppress("unused") timeoutUnit: TimeUnit = TimeUnit.SECONDS
     ): BufferedSource = ProcessBuilder("\\s".toRegex().split(this))
         .directory(workingDir)
         .redirectOutput(ProcessBuilder.Redirect.PIPE)

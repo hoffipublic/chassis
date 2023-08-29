@@ -1,5 +1,6 @@
 package com.hoffi.chassis.codegen.kotlin.gens.crud
 
+import com.hoffi.chassis.chassismodel.PoetHelpers.nullable
 import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
@@ -53,7 +54,6 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
 
         if (sourceGenModel.isInterface || KModifier.ABSTRACT in sourceGenModel.classModifiers) {
             log.error("crudData source is Interface or Abstract: $crudData for $this")
-            return
             throw GenException("crudData source is Interface or Abstract: $crudData for $this")
         }
 
@@ -99,7 +99,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         }
 
         val insertLambda = LambdaTypeName.get(i.targetPoetType, DB.InsertStatementTypeName(), returnType = UNIT)
-        val batchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatement, GenDslRefHelpers.dtoClassName(i.sourceGenModel, genCtx), returnType = UNIT)
+        val batchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatementClassName, GenDslRefHelpers.dtoClassName(i.sourceGenModel, genCtx), returnType = UNIT)
 
         // ============================
         // fun insertDb
@@ -112,12 +112,12 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         //.returns(returnLambdaTypeName)
         funSpec
             .addComment("insert 1To1 Models")
-            .insertOutgoing1To1Props(outgoingFKs, funNameInsertOrBatch, currentCrudData, i, COLLECTIONTYP.NONE)
+            .insertOutgoing1To1Props(outgoingFKs, funNameInsertOrBatch, i)
             .addComment("insertShallow %L and add outgoing ManyTo1-backrefUuids and 1To1-forwardRefUuids", i.targetGenModel.poetTypeSimpleName)
             .beginControlFlow("%T.%M", i.targetPoetType, DB.insertMember)
             .addStatement("%T.%L(%L).invoke(this, it)", i.targetFillerPoetType, funNameInsertOrBatch.swapOutOriginalFunNameWith("fillShallowLambda"), i.sourceVarName)
             .addComment("outgoing FK uuid refs")
-            .addOutgoingFKProps(outgoingFKs, funNameInsertOrBatch, currentCrudData, i)
+            .addOutgoingFKProps(outgoingFKs, funNameInsertOrBatch, i)
             //.addStatement("%T.%L(source).invoke(this, it)", i.targetFillerPoetType, funNameInsertOrBatch.swapOutOriginalFunNameWith("insertShallowWith1To1sLambda"))
             .addStatement("customStatements.invoke(this, it)")
             .endControlFlow()
@@ -137,12 +137,12 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         //.returns(returnLambdaTypeName)
         funSpec
             .addComment("insert 1To1 Models")
-            .insertOutgoing1To1Props(outgoingFKs,funNameInsertOrBatch, currentCrudData, i, COLLECTIONTYP.NONE)
+            .insertOutgoing1To1Props(outgoingFKs,funNameInsertOrBatch, i)
             .addComment("batchInsertShallow %L and add outgoing ManyTo1-backrefUuids and 1To1-forwardRefUuids", i.targetGenModel.poetTypeSimpleName)
             .beginControlFlow("%T.%M(%L, shouldReturnGeneratedValues = false)", i.targetPoetType, DB.batchInsertMember, i.sourceVarName + "s")
             .addStatement("%T.%L().invoke(this, it)", i.targetFillerPoetType, funNameInsertOrBatch.swapOutOriginalFunNameWith("batchFillShallowLambda"))
             .addComment("outgoing FK uuid refs")
-            .addOutgoingFKProps(outgoingFKs, funNameInsertOrBatch, currentCrudData, i)
+            .addOutgoingFKProps(outgoingFKs, funNameInsertOrBatch, i)
             .addStatement("customStatements(it)")
             .endControlFlow()
             .addComment("batchInsert ManyTo1 Instances")
@@ -302,17 +302,80 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             }
         }
 
-        val insertLambda = LambdaTypeName.get(i.targetPoetType, DB.InsertStatementTypeName(), returnType = UNIT)
-        val batchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatement, GenDslRefHelpers.dtoClassName(i.sourceGenModel, genCtx), returnType = UNIT)
+        var funName: FunName
+        var funSpec: FunSpec.Builder
+        if (incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }.size + outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }.size > 0) {
+            // ============================
+            // fun simpleEntityTableJoin
+            // ============================
+            funName = funNameExpanded(i.targetGenModel.asVarName + "Join", currentCrudData)
+            funSpec = FunSpec.builder(funName.funName).addModifiers(KModifier.PRIVATE)
+                .returns(DB.JoinClassName)
+            funSpec
+                .addStatement("val join: Join = %T", i.targetPoetType)
+                .addJoinsForOne2OneModels(outgoingFKs, i)
+                .addJoinsForMany2OneModels(incomingFKs, i)
+                .addStatement("return join")
+            builder.addFunction(funSpec.build())
+            // ============================
+            // fun execToDb
+            // ============================
+            funName = funNameExpanded("execToDb", currentCrudData)
+            funSpec = FunSpec.builder(funName.funName).addModifiers(KModifier.PRIVATE)
+                .addParameter("selectLambda", LambdaTypeName.get(receiver = DB.SqlExpressionBuilderClassName, parameters = emptyList(), returnType = DB.OpClassName.parameterizedBy(BOOLEAN)))
+                .returns(List::class.asTypeName().parameterizedBy(DB.ResultRowClassName))
+            funSpec
+                .addStatement("val join: Join = %L()", funName.swapOutOriginalFunNameWith(i.targetGenModel.asVarName + "Join"))
+                .addStatement("val query: %T = join.%M(selectLambda)", DB.QueryClassName, DB.selectMember)
+                .addComment("execute query against DB")
+                .addStatement("val resultRowList: List<%T> = query.toList()", DB.ResultRowClassName)
+                .addStatement("return resultRowList")
+            builder.addFunction(funSpec.build())
+            // ============================
+            // fun readByJoin
+            // ============================
+            funName = funNameExpanded("readByJoin", currentCrudData)
+            @OptIn(ExperimentalKotlinPoetApi::class)
+            funSpec = FunSpec.builder(funName.funName).contextReceivers(DB.TransactionClassName)
+                .addParameter("selectLambda", LambdaTypeName.get(receiver = DB.SqlExpressionBuilderClassName, parameters = emptyList(), returnType = DB.OpClassName.parameterizedBy(BOOLEAN)))
+                .returns(List::class.asTypeName().parameterizedBy(i.sourcePoetType))
+            funSpec
+            // val resultRowList: List<ResultRow> = execToDb(selectLambda)
+            // // unmarshalling _within_ transaction scope
+            // val selectedEntityDtos = unmarshallSimpleEntityDtos(resultRowList)
+            // return selectedEntityDtos
+                .addStatement("val resultRowList: List<%T> = %L(selectLambda)", DB.ResultRowClassName, "execToDb")
+                .addComment("unmarshalling _within_ transaction scope")
+                .addStatement("val selected%L = %L(resultRowList)", i.sourcePoetType.simpleName, funName.swapOutOriginalFunNameWith("unmarshall${i.sourcePoetType.simpleName}s"))
+                .addStatement("return selected%L", i.sourcePoetType.simpleName)
+            builder.addFunction(funSpec.build())
+            // ============================
+            // fun readByJoinNewTransaction
+            // ============================
+            funName = funNameExpanded("readByJoinNewTransaction", currentCrudData)
+            @OptIn(ExperimentalKotlinPoetApi::class)
+            funSpec = FunSpec.builder(funName.funName).contextReceivers(DB.TransactionClassName)
+                .addParameter("db", DB.DatabaseClassName.nullable())
+                .addParameter("selectLambda", LambdaTypeName.get(receiver = DB.SqlExpressionBuilderClassName, parameters = emptyList(), returnType = DB.OpClassName.parameterizedBy(BOOLEAN)))
+                .returns(List::class.asTypeName().parameterizedBy(i.sourcePoetType))
+            funSpec
+            // val resultRowList: List<ResultRow> = transaction(db = db) {
+            //     addLogger(StdOutSqlLogger)
+            //     execToDb(selectLambda)
+            // }
+            // // unmarshalling _outside_ transaction scope
+            // val selectedEntityDtos = unmarshallSimpleEntityDtos(resultRowList)
+            // return selectedEntityDtos
+                .beginControlFlow("val resultRowList: List<%T> = %M(db = db)", DB.ResultRowClassName, DB.transactionMember)
+                .addStatement("%M(%T)", DB.transactionAddLoggerMember, DB.StdOutSqlLoggerClassName)
+                .addStatement("execToDb(selectLambda)")
+                .endControlFlow()
+                .addComment("unmarshalling _outside_ transaction scope")
+                .addStatement("val selected%L = %L(resultRowList)", i.sourcePoetType.simpleName, funName.swapOutOriginalFunNameWith("unmarshall${i.sourcePoetType.simpleName}s"))
+                .addStatement("return selected%L", i.sourcePoetType.simpleName)
+            builder.addFunction(funSpec.build())
+        }
 
-        // ============================
-        // fun readDb
-        // ============================
-        var funName = funNameExpanded("toBeDone", currentCrudData)
-        var funSpec = FunSpec.builder(funName.funName)
-            .addParameter(i.sourceVarName, i.sourcePoetType)
-            .addOutgoingFKParams(outgoingFKs, tableClassModel, COLLECTIONTYP.COLLECTION, funName)
-            .addParameter(ParameterSpec.builder("customStatements", insertLambda).defaultValue("{}").build())
 
         // ============================
         // private fun unmarshall
@@ -325,33 +388,30 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             .addComment("base model NULL")
             .addStatement("var current%L: %T = %T.NULL", i.sourceGenModel.poetTypeSimpleName, i.sourcePoetType, i.sourcePoetType)
             .addComment("many2One models NULL")
-            .addMany2OneNulls(incomingFKs, funName, i)
+            .addMany2OneNulls(incomingFKs)
+            // unmarshall
             .addStatement("val iter = resultRowList.iterator()")
-            .addComment("initial iteration")
-            .addModels(incomingFKs, outgoingFKs, funName, i, false)
-            .addComment("remaining iterations")
-            .addModels(incomingFKs, outgoingFKs, funName, i, true)
+            .addModels(incomingFKs, outgoingFKs, i)
             .addStatement("return read%Ls", i.sourceGenModel.poetTypeSimpleName)
         builder.addFunction(funSpec.build())
     }
 
-    private fun FunSpec.Builder.addMany2OneNulls(incomingFKs: MutableSet<FK>, funName: FunName, i: IntersectPropertys.CommonPropData): FunSpec.Builder {
+    private fun FunSpec.Builder.addMany2OneNulls(incomingFKs: MutableSet<FK>): FunSpec.Builder {
         var none = true
         for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
             none = false
             //var currentSimpleSubentityDto: SimpleSubentityDto = SimpleSubentityDto.NULL
             addStatement("var current%L = %T.NULL", fk.toProp.name(), fk.toProp.poetType)
         }
+        if (none) addComment("NONE")
         return this
     }
 
-    private fun FunSpec.Builder.addModels(incomingFKs: MutableSet<FK>, outgoingFKs: MutableSet<FK>, funName: FunName, i: IntersectPropertys.CommonPropData, remainingIteration: Boolean): FunSpec.Builder {
-        this.beginControlFlow("%L (iter.hasNext())", if (remainingIteration) "while" else "if")
+    private fun FunSpec.Builder.addModels(incomingFKs: MutableSet<FK>, outgoingFKs: MutableSet<FK>, i: IntersectPropertys.CommonPropData): FunSpec.Builder {
+        this.beginControlFlow("while (iter.hasNext())")
             .addStatement("val rr: ResultRow = iter.next()")
-        if (remainingIteration) {
-            // if (rr[SimpleEntityTable.uuid] != currentSimpleEntityDto.uuid) {
-            beginControlFlow("if (rr[%T.%L] != current%L.%L)", i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, i.sourceGenModel.poetTypeSimpleName, RuntimeDefaults.UUID_PROPNAME)
-        }
+        // if (rr[SimpleEntityTable.uuid] != currentSimpleEntityDto.uuid) {
+        beginControlFlow("if (rr[%T.%L] != current%L.%L)", i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, i.sourceGenModel.poetTypeSimpleName, RuntimeDefaults.UUID_PROPNAME)
         this.addComment("base model")
         this.addStatement("current%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, propFiller(i.sourceGenModel.modelSubElRef, MODELREFENUM.TABLE), i.sourceGenModel.asVarName)
             .addStatement("read%Ls.add(current%L)", i.sourceGenModel.poetTypeSimpleName, i.sourceGenModel.poetTypeSimpleName)
@@ -362,26 +422,45 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             this.addStatement("current%L.%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), propFiller(fk.toTableRef, MODELREFENUM.TABLE), fk.toProp.eitherTypModelOrClass.modelClassName.asVarName)
         }
         if (none) this.addComment("NONE")
-        if (remainingIteration) {
-            endControlFlow()
-        }
+        endControlFlow()
         this.addComment("many2One models")
         none = true
         for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
             none = false
             val toPropTableGenModel = genCtx.genModel(fk.fromTableRef)
             //val toPropDtoGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
-            if (remainingIteration) {
-                beginControlFlow("if (rr[%T.%L] != current%L.%L)", toPropTableGenModel.poetType, RuntimeDefaults.UUID_PROPNAME, fk.toProp.name(), RuntimeDefaults.UUID_PROPNAME)
-            }
+            beginControlFlow("if (rr[%T.%L] != current%L.%L)", toPropTableGenModel.poetType, RuntimeDefaults.UUID_PROPNAME, fk.toProp.name(), RuntimeDefaults.UUID_PROPNAME)
             addStatement("current%L = %T.%L(rr)", fk.toProp.name(), propFiller(fk.fromTableRef, MODELREFENUM.TABLE), fk.toProp.eitherTypModelOrClass.modelClassName.asVarName)
             addStatement("current%L.%L%L.add(current%L)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
-            if (remainingIteration) {
-                endControlFlow()
-            }
+            endControlFlow()
         }
         if (none) this.addComment("NONE")
         endControlFlow() // of if/while
+        return this
+    }
+
+    private fun FunSpec.Builder.addJoinsForOne2OneModels(outgoingFKs: MutableSet<FK>, i: IntersectPropertys.CommonPropData): FunSpec.Builder {
+        this.addComment("one2One models")
+        var none = true
+        for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
+            none = false
+            val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinClassModelTable
+            //val toPropTableGenModel = genCtx.genModel(fk.toTableRef)
+            //val toPropDtoGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
+            addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassData.poetType, DB.JoinTypeClassName, i.targetPoetType, toPropKotlinClassModelTable.fkPropVarNameUUID(fk).first, toPropKotlinClassModelTable.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME)
+        }
+        if (none) addComment("NONE")
+        return this
+    }
+    private fun FunSpec.Builder.addJoinsForMany2OneModels(incomingFKs: MutableSet<FK>, i: IntersectPropertys.CommonPropData): FunSpec.Builder {
+        this.addComment("one2One models")
+        var none = true
+        for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
+            none = false
+            val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
+            addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassData.poetType, DB.JoinTypeClassName, i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, toPropKotlinClassModelTable.modelClassData.poetType, toPropKotlinClassModelTable.fkPropVarNameUUID(fk).first)
+        }
+        if (none) addComment("NONE")
         return this
     }
 }

@@ -31,7 +31,7 @@ fun modelgroup(simpleName: String, modelgroupBlock: DslModelgroup.() -> Unit) {
             dslModelgroup.prepareExtends(dslCtx)
             dslModelgroup.prepareGatherPropertys(dslCtx)
             dslModelgroup.apply(modelgroupBlock)
-            dslModelgroup.finish(dslCtx)
+            dslModelgroup.finish()
         }
         dslCtx.PASS_FINISHGENMODELS -> {
             // we do not decend the dsl tree in this Pass !!!

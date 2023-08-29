@@ -23,9 +23,9 @@ object IntersectPropertys {
         var targetVarName = "target$targetVarNamePostfix"
         var sourceVarName = "source$sourceVarNamePostfix"
         val targetPoetType: ClassName
-            get() = targetGenModel.poetType as ClassName
+            get() = targetGenModel.poetType
         val sourcePoetType: ClassName
-            get() = sourceGenModel.poetType as ClassName
+            get() = sourceGenModel.poetType
         val dtoGenModelTarget: GenModel = genCtx.genModel(DslRef.dto(targetGenModel.modelSubElRef.simpleName, targetGenModel.modelSubElRef.parentDslRef))
         val tableGenModelTarget: GenModel = genCtx.genModel(DslRef.table(targetGenModel.modelSubElRef.simpleName, targetGenModel.modelSubElRef.parentDslRef))
         val dtoGenModelSource: GenModel = genCtx.genModel(DslRef.dto(sourceGenModel.modelSubElRef.simpleName, sourceGenModel.modelSubElRef.parentDslRef))

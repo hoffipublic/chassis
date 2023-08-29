@@ -7,7 +7,6 @@ import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.codegen.kotlin.GenDslRefHelpers
 import com.hoffi.chassis.codegen.kotlin.IntersectPropertys
-import com.hoffi.chassis.codegen.kotlin.gens.KotlinClassModelTable
 import com.hoffi.chassis.codegen.kotlin.whens.WhensGen
 import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
@@ -73,19 +72,19 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
     }
 
     private fun fillLambdas(i: IntersectPropertys.CommonPropData) {
-        val kotlinGenClassTable: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
-        val outgoingFKs = kotlinGenClassTable.outgoingFKs
+        //val kotlinGenClassTable: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
+        //val outgoingFKs = kotlinGenClassTable.outgoingFKs
 
         log.trace("fillLambdas: -> from {}", currentFillerData)
 
         val returnInsertLambda = LambdaTypeName.get(i.targetPoetType, DB.InsertStatementTypeName(), returnType = UNIT)
-        val returnBatchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatement, GenDslRefHelpers.dtoClassName(i.sourceGenModel, genCtx), returnType = UNIT)
+        val returnBatchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatementClassName, GenDslRefHelpers.dtoClassName(i.sourceGenModel, genCtx), returnType = UNIT)
 
         var funNameInsertOrBatch = funNameExpanded("fillShallowLambda", currentFillerData)
         var funSpec = FunSpec.builder(funNameInsertOrBatch.funName)
             .addParameter(i.sourceVarName, i.sourcePoetType)
             .returns(returnInsertLambda)
-        var body = insertShallowBody(i, funSpec, funNameInsertOrBatch)
+        var body = insertShallowBody(i, funNameInsertOrBatch)
         funSpec.addCode(body)
         builder.addFunction(funSpec.build())
         /**
@@ -94,12 +93,12 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
         funNameInsertOrBatch = funNameExpanded("batchFillShallowLambda", currentFillerData)
         funSpec = FunSpec.builder(funNameInsertOrBatch.funName)
             .returns(returnBatchInsertLambda)
-        body = insertShallowBody(i, funSpec, funNameInsertOrBatch)
+        body = insertShallowBody(i, funNameInsertOrBatch)
         funSpec.addCode(body)
         builder.addFunction(funSpec.build())
     }
 
-    private fun insertShallowBody(i: IntersectPropertys.CommonPropData, funSpec: FunSpec.Builder, funNameInsertOrBatch: FunName): CodeBlock {
+    private fun insertShallowBody(i: IntersectPropertys.CommonPropData, funNameInsertOrBatch: FunName): CodeBlock {
         val bodyBuilder = CodeBlock.builder()
             .beginControlFlow("return {") // This will take care of the {} and indentations
         // allProps as a) Table's always gatherProps from superclasses and b) alle table columns have to be filled

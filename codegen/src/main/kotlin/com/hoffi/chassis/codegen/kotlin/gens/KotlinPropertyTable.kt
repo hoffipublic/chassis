@@ -50,7 +50,7 @@ class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn:
                     val defaultInitializer = Initializer.of("%T.%L", this.modelClassName.poetType, "NULL")
                     initializerCodeBlockBuilder.add(defaultInitializer.codeBlockFull())
                 }
-                val fk = kotlinClassModelTablePropIsIn.addOutgoingFK(
+                kotlinClassModelTablePropIsIn.addOutgoingFK(
                     FK(fromTableRef = this@KotlinPropertyTable.modelClassData.modelSubElRef, toTableRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef), this@KotlinPropertyTable.property, COLLECTIONTYP.NONE)
                 )
 
@@ -145,7 +145,7 @@ class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn:
         val eitherTypOrModelOrPoetType: EitherTypOrModelOrPoetType = property.eitherTypModelOrClass
         when (eitherTypOrModelOrPoetType) {
             is EitherTypOrModelOrPoetType.EitherTyp -> {
-                val (dbTypeName, dbInitializer) = DB.coreTypeTranslation(eitherTypOrModelOrPoetType.typ)
+                val (_, dbInitializer) = DB.coreTypeTranslation(eitherTypOrModelOrPoetType.typ)
                 dbInitializer.originalArgs.add(property.columnName())
                 if (eitherTypOrModelOrPoetType.typ == TYP.STRING) {
                     dbInitializer.originalArgs.add(if (property.length == DEFAULT_INT) DEFAULT_VARCHAR_LENGTH else property.length)

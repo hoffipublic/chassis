@@ -14,11 +14,20 @@ import org.jetbrains.exposed.sql.statements.InsertStatement
 import kotlin.reflect.KClass
 
 object DB_EXPOSED : IDB_Wrapper {
+    override val BatchInsertStatementClassName = ClassName("org.jetbrains.exposed.sql.statements", "BatchInsertStatement")
+    override val ColumnClassName = ClassName("org.jetbrains.exposed.sql", "Column")
+    override val ColumnSetClassName = ClassName("org.jetbrains.exposed.sql", "ColumnSet")
+    override val DatabaseClassName = ClassName("org.jetbrains.exposed.sql","Database")
+    override val JoinClassName = ClassName("org.jetbrains.exposed.sql", "Join")
+    override val JoinTypeClassName = ClassName("org.jetbrains.exposed.sql", "JoinType")
+    override val OpClassName = ClassName("org.jetbrains.exposed.sql", "Op")
+    override val QueryClassName = ClassName("org.jetbrains.exposed.sql", "Query")
+    override val ResultRowClassName = ClassName("org.jetbrains.exposed.sql", "ResultRow")
+    override val SqlExpressionBuilderClassName = ClassName("org.jetbrains.exposed.sql", "SqlExpressionBuilder")
+    override val StdOutSqlLoggerClassName = ClassName("org.jetbrains.exposed.sql", "StdOutSqlLogger")
     override val TableClassName = ClassName("org.jetbrains.exposed.sql","Table")
     override val TablePrimaryKeyClassName = ClassName("org.jetbrains.exposed.sql","Table", "PrimaryKey")
-    override val ColumnClassName = ClassName("org.jetbrains.exposed.sql", "Column")
-    override val ResultRowClassName = ClassName("org.jetbrains.exposed.sql", "ResultRow")
-    override val BatchInsertStatement = ClassName("org.jetbrains.exposed.sql.statements", "BatchInsertStatement")
+    override val TransactionClassName = ClassName("org.jetbrains.exposed.sql", "Transaction")
 
 
     override fun Column(columnKClass: KClass<*>) : TypeName {
@@ -31,6 +40,9 @@ object DB_EXPOSED : IDB_Wrapper {
     override fun InsertStatementTypeName(): TypeName = InsertStatement::class.asTypeName().parameterizedBy(Number::class.asTypeName())
     override val insertMember = MemberName("org.jetbrains.exposed.sql", "insert")
     override val batchInsertMember = MemberName("org.jetbrains.exposed.sql", "batchInsert")
+    override val selectMember = MemberName("org.jetbrains.exposed.sql", "select")
+    override val transactionAddLoggerMember = MemberName("org.jetbrains.exposed.sql", "addLogger", isExtension = true)
+    override val transactionMember = MemberName("org.jetbrains.exposed.sql.transactions", "transaction")
 
     override fun coreTypeTranslation(typ: TYP): TYPTranslation {
         return when (typ) {

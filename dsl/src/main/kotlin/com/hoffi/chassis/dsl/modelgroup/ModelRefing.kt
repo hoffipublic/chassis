@@ -40,7 +40,7 @@ class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelRef
     fun fakeOf(modelelement: MODELREFENUM, thisModelgroupSubElementSimpleName: String): IDslRef = modelelement of thisModelgroupSubElementSimpleName
 
     override infix fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): IDslRef {
-        val (groupRef, elementLevelRef, _) = groupElementAndSubelementLevelDslRef(dslClass)
+        val (groupRef, _, _) = groupElementAndSubelementLevelDslRef(dslClass)
         val dslRef: IDslRef =  when (this) {
             MODELREFENUM.MODEL -> DslRef.model(thisModelgroupSubElementSimpleName, groupRef)
             MODELREFENUM.DTO ->   DslRef.dto(  C.DEFAULT, DslRef.model(thisModelgroupSubElementSimpleName, groupRef))
@@ -77,7 +77,7 @@ class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelRef
             return DslRef.groupElementAndSubelementLevelDslRef(dslClass.selfDslRef)
         }
         fun defaultSubElementWithName(simpleName: String, dslClass: ADslClass): DslRef.ISubElementLevel {
-            val (groupRef, elementRef, subelementLevelRef) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslClass)
+            val (groupRef, _, subelementLevelRef) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslClass)
             if (subelementLevelRef == null) throw DslException("$dslClass not under a sub(!)element (dto, table, ...)")
             val dslRef: DslRef.ISubElementLevel = WhensDslRef.whenModelSubelement(subelementLevelRef,
                 isDtoRef =   { DslRef.dto(C.DEFAULT, DslRef.model(simpleName, groupRef)) },

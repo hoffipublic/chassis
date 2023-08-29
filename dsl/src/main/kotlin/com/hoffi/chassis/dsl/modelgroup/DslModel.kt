@@ -238,7 +238,6 @@ globalDslCtx = dslCtx // TODO remove workaround
         // consistency check if filler referenced models really exist and do not point into "nirvana"
         val finishedFillerDatas: MutableMap<String, MutableSet<FillerData>> = fillerImpl.finishedFillerDatas()
         for (entry in finishedFillerDatas) {
-            val simpleName = entry.key
             for (fillerData: FillerData in entry.value) {
                 try {
                     dslCtx.ctxObj<ADslClass>(fillerData.targetDslRef)
@@ -522,7 +521,7 @@ class DslTable(
         val tableModel = GenModel.TableModel(selfDslRef as DslRef.table, modelClassName)
         dslCtx.genCtx.putModel(selfDslRef, tableModel)
         val dslModel: DslModel = dslCtx.ctxObj(parentDslRef)
-        val dslGroup: DslModelgroup = dslCtx.ctxObj(parentDslRef.parentDslRef)
+        //val dslGroup: DslModelgroup = dslCtx.ctxObj(parentDslRef.parentDslRef)
 
         tableModel.kind = TypeSpec.Kind.OBJECT
         //tableModel.constructorVisibility = if (constructorVisibility) if (dslModel.constructorVisibility) dslGroup.constructorVisibility else dslModel.constructorVisibility else constructorVisibility
@@ -537,7 +536,6 @@ class DslTable(
         // consistency check if filler referenced models really exist and do not point into "nirvana"
         val finishedCrudDatas: MutableMap<String, MutableSet<CrudData>> = crudImpl.finishedCrudDatas()
         for (entry in finishedCrudDatas) {
-            val simpleName = entry.key
             for (crudData: CrudData in entry.value) {
                 try {
                     dslCtx.ctxObj<ADslClass>(crudData.targetDslRef)

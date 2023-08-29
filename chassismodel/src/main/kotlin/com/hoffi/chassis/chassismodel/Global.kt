@@ -222,21 +222,21 @@ fun String.padForHeader(
                         }
                     }
                 }
-                val usedSpace = line.length + padBefore + spacesBefore + padAfter + spacesAfter
-                val leftover = fixedLength - usedSpace
-                if (padBefore > abs(leftover)) {
-                    padBefore += leftover // shorten padBefore as it is long enough
+                val usedSpaceInner = line.length + padBefore + spacesBefore + padAfter + spacesAfter
+                val leftoverInner = fixedLength - usedSpaceInner
+                if (padBefore > abs(leftoverInner)) {
+                    padBefore += leftoverInner // shorten padBefore as it is long enough
                 } else {
-                    when (leftover) {
+                    when (leftoverInner) {
                         in Int.MIN_VALUE..-4 -> { spacesAfter = 0; spacesBefore = 0; padAfter = 0; padBefore = 0 }
                         -3 -> { spacesAfter--; spacesBefore--; padAfter--; if (padBefore > 1) { padBefore--; padAfter++ } }
                         -2 -> { spacesAfter--; spacesBefore--; if (padBefore > 1) { padBefore--; padAfter++ } }
                         -1 -> { spacesAfter--; if (padBefore > 1) { padBefore--; padAfter++ } }
                         else -> { // leftover was >= 0
                             if (padWithPadChar) {
-                                padAfter += leftover
+                                padAfter += leftoverInner
                             } else {
-                                spacesAfter += leftover
+                                spacesAfter += leftoverInner
                             }
                         }
                     }
@@ -279,21 +279,21 @@ fun String.padForHeader(
                         }
                     }
                 }
-                val usedSpace = line.length + padBefore + spacesBefore + padAfter + spacesAfter
-                val leftover = fixedLength - usedSpace
-                if (padAfter > abs(leftover)) {
-                    padAfter += leftover // shorten padBefore as it is long enough
+                val usedSpaceInner = line.length + padBefore + spacesBefore + padAfter + spacesAfter
+                val leftoverInner = fixedLength - usedSpaceInner
+                if (padAfter > abs(leftoverInner)) {
+                    padAfter += leftoverInner // shorten padBefore as it is long enough
                 } else {
-                    when (leftover) {
+                    when (leftoverInner) {
                         in Int.MIN_VALUE..-4 -> { spacesAfter = 0; spacesBefore = 0; padAfter = 0; padBefore = 0 }
                         -3 -> { spacesBefore--; spacesAfter--; padBefore--; if (padAfter > 1) { padAfter--; padBefore++ } }
                         -2 -> { spacesBefore--; spacesAfter--; if (padAfter > 1) { padAfter--; padBefore++ } }
                         -1 -> { spacesBefore--; if (padAfter > 1) { padAfter--; padBefore++ } }
                         else -> { // new leftover was >= 0
                             if (padWithPadChar) {
-                                padBefore += leftover
+                                padBefore += leftoverInner
                             } else {
-                                spacesBefore += leftover
+                                spacesBefore += leftoverInner
                             }
                         }
                     }
@@ -346,23 +346,23 @@ fun String.padForHeader(
                         }
                     }
 
-                    val usedSpace = line.length + padBefore + spacesBefore + padAfter + spacesAfter
-                    val leftover = fixedLength - usedSpace
-                    if (padBefore > abs(leftover)) {
-                        padBefore += leftover // shorten padBefore as it is long enough
+                    val usedSpaceInner = line.length + padBefore + spacesBefore + padAfter + spacesAfter
+                    val leftoverInner = fixedLength - usedSpaceInner
+                    if (padBefore > abs(leftoverInner)) {
+                        padBefore += leftoverInner // shorten padBefore as it is long enough
                     } else {
-                        when (leftover) {
+                        when (leftoverInner) {
                             in Int.MIN_VALUE..-4 -> { spacesAfter = 0; spacesBefore = 0; padAfter = 0; padBefore = 0 }
                             -3 -> { spacesAfter--; spacesBefore--; padBefore--; if (padAfter > 1) { padAfter--; padBefore++ } }
                             -2 -> { spacesAfter--; spacesBefore--; if (padAfter > 1) { padAfter--; padBefore++ } }
                             -1 -> { spacesAfter--; if (padAfter > 1) { padAfter--; padBefore++ } }
                             else -> { // new leftover was >= 0
                                 if (padWithPadChar) {
-                                    padBefore += (leftover / 2f).roundToInt()
-                                    padAfter  += (leftover / 2)
+                                    padBefore += (leftoverInner / 2f).roundToInt()
+                                    padAfter  += (leftoverInner / 2)
                                 } else {
-                                    spacesBefore += (leftover / 2f).roundToInt()
-                                    spacesAfter  += (leftover / 2)
+                                    spacesBefore += (leftoverInner / 2f).roundToInt()
+                                    spacesAfter  += (leftoverInner / 2)
                                 }
                             }
                         }

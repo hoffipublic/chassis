@@ -110,7 +110,7 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
             MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, targetDslRef.parentDslRef)
         }
         val swappedGenModel = genCtx.genModel(swappedDslRef)
-        return ClassName((swappedGenModel.poetType as ClassName).packageName + ".filler", "Filler" + (swappedGenModel.poetType as ClassName).simpleName)
+        return ClassName(swappedGenModel.poetType.packageName + ".filler", "Filler" + swappedGenModel.poetType.simpleName)
     }
     fun propCrud(targetDslRef: IDslRef, crud: CrudData.CRUD): ClassName {
         // TODO remove sentinel?
@@ -118,7 +118,7 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
         val swappedDslRef = DslRef.table(C.DEFAULT, targetDslRef.parentDslRef)
         val swappedGenModel = genCtx.genModel(swappedDslRef)
         //CrudData.CRUD.CREATE -> ClassName((swappedGenModel.poetType as ClassName).packageName + ".sql", swappedGenModel.modelClassName.crudBasePoetTypeForAllCruds + crud.toString())
-        return ClassName((swappedGenModel.poetType as ClassName).packageName + ".sql", swappedGenModel.modelClassName.crudBasePoetTypeForAllCruds.simpleName + crud.toString())
+        return ClassName(swappedGenModel.poetType.packageName + ".sql", swappedGenModel.modelClassName.crudBasePoetTypeForAllCruds.simpleName + crud.toString())
     }
 
     //protected fun FunSpec.Builder.addOne2ManyIncomingFKParamUuidMaps(outgoingFKs: MutableSet<FK>, kotlinGenClassTable: KotlinClassModelTable): FunSpec.Builder {
@@ -199,11 +199,11 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
         }
         return this
     }
-    protected fun FunSpec.Builder.insertOutgoing1To1Props(outgoingFKs: MutableSet<FK>, funNameInsertOrBatch: FunName, currentCrudData: CrudData, i: IntersectPropertys.CommonPropData, collectionType: COLLECTIONTYP): FunSpec.Builder {
-        this.addCode(buildCodeBlock { this.insertOutgoing1To1Props(outgoingFKs, funNameInsertOrBatch, currentCrudData, i, collectionType) })
+    protected fun FunSpec.Builder.insertOutgoing1To1Props(outgoingFKs: MutableSet<FK>, funNameInsertOrBatch: FunName, i: IntersectPropertys.CommonPropData): FunSpec.Builder {
+        this.addCode(buildCodeBlock { this.insertOutgoing1To1Props(outgoingFKs, funNameInsertOrBatch, i) })
         return this
     }
-    protected fun CodeBlock.Builder.insertOutgoing1To1Props(outgoingFKs: MutableSet<FK>, funNameInsertOrBatch: FunName, currentCrudData: CrudData, i: IntersectPropertys.CommonPropData, collectionType: COLLECTIONTYP): CodeBlock.Builder {
+    protected fun CodeBlock.Builder.insertOutgoing1To1Props(outgoingFKs: MutableSet<FK>, funNameInsertOrBatch: FunName, i: IntersectPropertys.CommonPropData): CodeBlock.Builder {
         var none = true
         if (funNameInsertOrBatch.originalFunName.startsWith("batch")) {
             for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
@@ -222,11 +222,11 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
         if (none) addStatement("// NONE")
         return this
     }
-    protected fun FunSpec.Builder.addOutgoingFKProps(outgoingFKs: MutableSet<FK>, funNameInsertOrBatch: FunName, currentCrudData: CrudData, i: IntersectPropertys.CommonPropData): FunSpec.Builder {
-        this.addCode(buildCodeBlock { this.addOutgoingFKProps(outgoingFKs, funNameInsertOrBatch, currentCrudData, i)})
+    protected fun FunSpec.Builder.addOutgoingFKProps(outgoingFKs: MutableSet<FK>, funNameInsertOrBatch: FunName, i: IntersectPropertys.CommonPropData): FunSpec.Builder {
+        this.addCode(buildCodeBlock { this.addOutgoingFKProps(outgoingFKs, funNameInsertOrBatch, i)})
         return this
     }
-    protected fun CodeBlock.Builder.addOutgoingFKProps(outgoingFKs: MutableSet<FK>, funNameInsertOrBatch: FunName, currentCrudData: CrudData, i: IntersectPropertys.CommonPropData): CodeBlock.Builder {
+    protected fun CodeBlock.Builder.addOutgoingFKProps(outgoingFKs: MutableSet<FK>, funNameInsertOrBatch: FunName, i: IntersectPropertys.CommonPropData): CodeBlock.Builder {
         var none = true
         for (fk in outgoingFKs) {
             val kotlinGenClassTable: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable

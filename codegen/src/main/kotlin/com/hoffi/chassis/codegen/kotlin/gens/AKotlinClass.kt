@@ -5,7 +5,6 @@ import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGenerated
 import com.hoffi.chassis.shared.parsedata.ModelClassData
-import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -24,13 +23,13 @@ abstract class AKotlinClass(modelClassData: ModelClassData) : AHasPropertys(mode
 
     var builder = when (modelClassData.kind) {
         TypeSpec.Kind.OBJECT -> {
-            TypeSpec.objectBuilder(modelClassData.poetType as ClassName)
+            TypeSpec.objectBuilder(modelClassData.poetType)
         }
         TypeSpec.Kind.INTERFACE -> {
-            TypeSpec.interfaceBuilder(modelClassData.poetType as ClassName)
+            TypeSpec.interfaceBuilder(modelClassData.poetType)
         }
         else -> {
-            TypeSpec.classBuilder(modelClassData.poetType as ClassName)
+            TypeSpec.classBuilder(modelClassData.poetType)
         }
     }.apply {
         kdocGenerated(modelClassData)
@@ -45,7 +44,7 @@ abstract class AKotlinClass(modelClassData: ModelClassData) : AHasPropertys(mode
     fun getOrCreateCompanion(): TypeSpec.Builder = companionBuilder ?: TypeSpec.companionObjectBuilder().also { companionBuilder = it }
 
     fun generate(out: Appendable? = null): TypeSpec {
-        val fileSpecBuilder = FileSpec.builder(modelClassData.modelClassName.poetType as ClassName)
+        val fileSpecBuilder = FileSpec.builder(modelClassData.modelClassName.poetType)
         val typeSpec = builder.build()
         val fileSpec = fileSpecBuilder.addType(typeSpec).build()
         if (out != null) {

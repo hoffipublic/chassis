@@ -107,7 +107,7 @@ globalDslCtx = dslCtx // TODO remove workaround
         }
     }
 
-    fun finish(dslCtx: DslCtx) {
+    fun finish() {
 
     }
     fun prepareNameAndWheretos(dslCtx: DslCtx) {
@@ -239,7 +239,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                 }
                 val listOfExtendsModelClass = genModel.extends.values.filter { it.typeClassOrDslRef is EitherTypOrModelOrPoetType.EitherModel }.map { it.typeClassOrDslRef as EitherTypOrModelOrPoetType.EitherModel }
                 for (extendsEitherModel in listOfExtendsModelClass) {
-                    val reffedSubElRef = extendsEitherModel.modelSubElementRef
+                    //val reffedSubElRef = extendsEitherModel.modelSubElementRef
                     val reffedModel = subelementGenModel(extendsEitherModel, dslSubel, dslCtx)
                     val reffedModelClassName = reffedModel.modelClassName
                     extendsEitherModel.modelClassName = reffedModelClassName
@@ -248,7 +248,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                     var extendsTypClassOrDslRef = extends.typeClassOrDslRef
                     when (extendsTypClassOrDslRef) {
                         is EitherTypOrModelOrPoetType.EitherModel -> {
-                            val reffedSubElRef = extendsTypClassOrDslRef.modelSubElementRef
+                            //val reffedSubElRef = extendsTypClassOrDslRef.modelSubElementRef
                             val reffedModel = subelementGenModel(extendsTypClassOrDslRef, dslSubel, dslCtx)
                             val reffedModelClassName = reffedModel.modelClassName
                             extendsTypClassOrDslRef.modelClassName = reffedModelClassName
@@ -258,7 +258,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                     for (extendsInterface in extends.superInterfaces) {
                         when (extendsInterface) {
                             is EitherTypOrModelOrPoetType.EitherModel -> {
-                                val reffedSubElRef = extendsInterface.modelSubElementRef
+                                //val reffedSubElRef = extendsInterface.modelSubElementRef
                                 val reffedModel = subelementGenModel(extendsInterface, dslSubel, dslCtx)
                                 val reffedModelClassName = reffedModel.modelClassName
                                 extendsInterface.modelClassName = reffedModelClassName

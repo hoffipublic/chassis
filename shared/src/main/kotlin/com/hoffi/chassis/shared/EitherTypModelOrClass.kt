@@ -30,7 +30,7 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
 
     class EitherTyp constructor(val typ: TYP, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName!!.removePrefix("Either")}($typ)"
-        init { modelClassName = fakePoetTypeClassName(typ.poetType, typ.isInterface) }
+        init { modelClassName = fakePoetTypeClassName(typ.poetType) }
         override val isInterface = typ.isInterface
         override fun finish(replaceAppendOrModify: ReplaceAppendOrModify, formatAddendum: String, argsAddendum: MutableList<Any>): EitherTypOrModelOrPoetType {
             return EitherTyp(typ, Initializer.of(initializer.originalFormat, initializer.originalArgs, replaceAppendOrModify, formatAddendum, argsAddendum))
@@ -63,7 +63,7 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
     }
     class EitherPoetType constructor(val poetType: ClassName, override var isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName!!.removePrefix("Either")}($poetType)"
-        init { modelClassName = fakePoetTypeClassName(poetType, isInterface) }
+        init { modelClassName = fakePoetTypeClassName(poetType) }
         override fun finish(replaceAppendOrModify: ReplaceAppendOrModify, formatAddendum: String, argsAddendum: MutableList<Any>): EitherTypOrModelOrPoetType {
             return EitherPoetType(poetType, isInterface, Initializer.of(initializer.originalFormat, initializer.originalArgs, replaceAppendOrModify, formatAddendum, argsAddendum))
         }
@@ -95,7 +95,7 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
     override fun hashCode() = modelClassName.hashCode()
 
 
-    protected fun fakePoetTypeClassName(thePoetType: ClassName, isInterface: Boolean): ModelClassName = ModelClassName(IDslRef.NULL, thePoetType).apply {
+    protected fun fakePoetTypeClassName(thePoetType: ClassName): ModelClassName = ModelClassName(IDslRef.NULL, thePoetType).apply {
             classNameStrategy = NameAndWheretoDefaults.classNameStrategy
             tableNameStrategy = NameAndWheretoDefaults.tableNameStrategy
             basePath = NameAndWheretoDefaults.basePath
