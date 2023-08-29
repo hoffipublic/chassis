@@ -6,13 +6,12 @@ import com.hoffi.chassis.shared.helpers.ifNotBlank
 import com.hoffi.chassis.shared.parsedata.ModelClassData
 import com.hoffi.chassis.shared.strategies.*
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.TypeName
 import okio.Path
 import org.slf4j.LoggerFactory
 
 interface IModelClassName : INamingStrategy {
     var modelOrTypeNameString: String
-    var poetType: TypeName
+    var poetType: ClassName
     val poetTypeSimpleName: String
     val tableName: String
     val asVarName: String
@@ -23,7 +22,7 @@ interface IModelClassName : INamingStrategy {
 
 class ModelClassName(
     val modelSubElRef: IDslRef,
-    var poetTypeDirect: TypeName?
+    var poetTypeDirect: ClassName?
 ) : IModelClassName {
     val log = LoggerFactory.getLogger(javaClass)
     override fun toString() = "${(poetType as ClassName).simpleNames.joinToString(".")} in ${(poetType as ClassName).packageName}"
@@ -42,12 +41,12 @@ class ModelClassName(
     override var modelOrTypeNameString: String = modelSubElRef.parentDslRef.simpleName.ifBlank { log.warn("empty simpleName of model '${modelSubElRef.parentDslRef}'") ; "" }
 
     // we need to wait until all properties are set on the instance before we can pre-calculate the "derived" properties via strategies:
-    override var poetType: TypeName
+    override var poetType: ClassName
         get() = poetTypeDirect ?: poetTypeDslModel
         set(value) { poetTypeDirect = value }
     override val poetTypeSimpleName: String
         get() = (poetType as ClassName).simpleName
-    private val poetTypeDslModel: TypeName by lazy { classNameStrategy.poetType(modelClassData, modelOrTypeNameString, "${basePackage.ifNotBlank{"$basePackage."}}$packageName", classPrefix, classPostfix) as ClassName }
+    private val poetTypeDslModel: ClassName by lazy { classNameStrategy.poetType(modelClassData, modelOrTypeNameString, "${basePackage.ifNotBlank{"$basePackage."}}$packageName", classPrefix, classPostfix) as ClassName }
     override val asVarName: String by lazy { classNameStrategy.asVarname(modelOrTypeNameString, classPrefix, classPostfix) }
     override val asVarNameWithoutPostfix: String by lazy { classNameStrategy.asVarname(modelOrTypeNameString, classPrefix) }
     override val tableName: String by lazy { tableNameStrategy.tableName(modelOrTypeNameString, prefix =  classPrefix) } // no postfix Dto|Table etc.

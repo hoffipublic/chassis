@@ -12,6 +12,7 @@ import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.shared.*
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.hoffi.chassis.shared.whens.WhensDslRef
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -57,9 +58,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         }
 
         val intersectPropsData = IntersectPropertys.intersectPropsOf(
-            targetGenModel,
-            sourceGenModel,
-            //kotlinGenCtx.kotlinGenClass(crudData.sourceDslRef),
+            genCtx, targetGenModel, sourceGenModel,
             "", ""
         )
 
@@ -79,7 +78,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
 
         when (currentCrudData.crud) {
             CrudData.CRUD.CREATE -> { insertDb(intersectPropsData) }
-            CrudData.CRUD.READ ->   { log.warn("KotlinCrudExposed for ${currentCrudData.crud} not implemented yet") ; return }
+            CrudData.CRUD.READ ->   { readDb(intersectPropsData) }
             CrudData.CRUD.UPDATE -> { log.warn("KotlinCrudExposed for ${currentCrudData.crud} not implemented yet") ; return }
             CrudData.CRUD.DELETE -> { log.warn("KotlinCrudExposed for ${currentCrudData.crud} not implemented yet") ; return }
         }
@@ -288,5 +287,101 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
 //        if (none) bodyBuilder.addStatement("// NONE")
 //        var body = bodyBuilder.build()
 //        return body
+    }
+
+    private fun readDb(i: IntersectPropertys.CommonPropData) {
+        val tableClassModel: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
+        val outgoingFKs = tableClassModel.outgoingFKs
+        val incomingFKs = tableClassModel.incomingFKs
+
+        // add neede syntheticCruds (if not specified in DSL), we'll also need the Fillers for them, too
+        for (propEither in i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }.map { it.eitherTypModelOrClass }) {
+            if (propEither is EitherTypOrModelOrPoetType.EitherModel) {
+                val propSubElRef = propEither.modelSubElementRef
+                genCtx.addSyntheticCrudData(SynthCrudData.create(DslRef.table(propSubElRef.simpleName, propSubElRef.parentDslRef), DslRef.dto(propSubElRef.simpleName, propSubElRef.parentDslRef), currentCrudData, "via insert"))
+            }
+        }
+
+        val insertLambda = LambdaTypeName.get(i.targetPoetType, DB.InsertStatementTypeName(), returnType = UNIT)
+        val batchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatement, GenDslRefHelpers.dtoClassName(i.sourceGenModel, genCtx), returnType = UNIT)
+
+        // ============================
+        // fun readDb
+        // ============================
+        var funName = funNameExpanded("toBeDone", currentCrudData)
+        var funSpec = FunSpec.builder(funName.funName)
+            .addParameter(i.sourceVarName, i.sourcePoetType)
+            .addOutgoingFKParams(outgoingFKs, tableClassModel, COLLECTIONTYP.COLLECTION, funName)
+            .addParameter(ParameterSpec.builder("customStatements", insertLambda).defaultValue("{}").build())
+
+        // ============================
+        // private fun unmarshall
+        // ============================
+        funName = funNameExpanded("unmarshall${i.sourcePoetType.simpleName}s", currentCrudData)
+        funSpec = FunSpec.builder(funName.funName).addModifiers(KModifier.PRIVATE)
+            .addParameter("resultRowList", List::class.asTypeName().parameterizedBy(DB.ResultRowClassName))
+            .returns(List::class.asTypeName().parameterizedBy(i.sourcePoetType))
+            .addStatement("val read%Ls = mutableListOf<%T>()", i.sourceGenModel.poetTypeSimpleName, i.sourceGenModel.poetType)
+            .addComment("base model NULL")
+            .addStatement("var current%L: %T = %T.NULL", i.sourceGenModel.poetTypeSimpleName, i.sourcePoetType, i.sourcePoetType)
+            .addComment("many2One models NULL")
+            .addMany2OneNulls(incomingFKs, funName, i)
+            .addStatement("val iter = resultRowList.iterator()")
+            .addComment("initial iteration")
+            .addModels(incomingFKs, outgoingFKs, funName, i, false)
+            .addComment("remaining iterations")
+            .addModels(incomingFKs, outgoingFKs, funName, i, true)
+            .addStatement("return read%Ls", i.sourceGenModel.poetTypeSimpleName)
+        builder.addFunction(funSpec.build())
+    }
+
+    private fun FunSpec.Builder.addMany2OneNulls(incomingFKs: MutableSet<FK>, funName: FunName, i: IntersectPropertys.CommonPropData): FunSpec.Builder {
+        var none = true
+        for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
+            none = false
+            //var currentSimpleSubentityDto: SimpleSubentityDto = SimpleSubentityDto.NULL
+            addStatement("var current%L = %T.NULL", fk.toProp.name(), fk.toProp.poetType)
+        }
+        return this
+    }
+
+    private fun FunSpec.Builder.addModels(incomingFKs: MutableSet<FK>, outgoingFKs: MutableSet<FK>, funName: FunName, i: IntersectPropertys.CommonPropData, remainingIteration: Boolean): FunSpec.Builder {
+        this.beginControlFlow("%L (iter.hasNext())", if (remainingIteration) "while" else "if")
+            .addStatement("val rr: ResultRow = iter.next()")
+        if (remainingIteration) {
+            // if (rr[SimpleEntityTable.uuid] != currentSimpleEntityDto.uuid) {
+            beginControlFlow("if (rr[%T.%L] != current%L.%L)", i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, i.sourceGenModel.poetTypeSimpleName, RuntimeDefaults.UUID_PROPNAME)
+        }
+        this.addComment("base model")
+        this.addStatement("current%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, propFiller(i.sourceGenModel.modelSubElRef, MODELREFENUM.TABLE), i.sourceGenModel.asVarName)
+            .addStatement("read%Ls.add(current%L)", i.sourceGenModel.poetTypeSimpleName, i.sourceGenModel.poetTypeSimpleName)
+        this.addComment("one2One models")
+        var none = true
+        for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
+            none = false
+            this.addStatement("current%L.%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), propFiller(fk.toTableRef, MODELREFENUM.TABLE), fk.toProp.eitherTypModelOrClass.modelClassName.asVarName)
+        }
+        if (none) this.addComment("NONE")
+        if (remainingIteration) {
+            endControlFlow()
+        }
+        this.addComment("many2One models")
+        none = true
+        for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
+            none = false
+            val toPropTableGenModel = genCtx.genModel(fk.fromTableRef)
+            //val toPropDtoGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
+            if (remainingIteration) {
+                beginControlFlow("if (rr[%T.%L] != current%L.%L)", toPropTableGenModel.poetType, RuntimeDefaults.UUID_PROPNAME, fk.toProp.name(), RuntimeDefaults.UUID_PROPNAME)
+            }
+            addStatement("current%L = %T.%L(rr)", fk.toProp.name(), propFiller(fk.fromTableRef, MODELREFENUM.TABLE), fk.toProp.eitherTypModelOrClass.modelClassName.asVarName)
+            addStatement("current%L.%L%L.add(current%L)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
+            if (remainingIteration) {
+                endControlFlow()
+            }
+        }
+        if (none) this.addComment("NONE")
+        endControlFlow() // of if/while
+        return this
     }
 }

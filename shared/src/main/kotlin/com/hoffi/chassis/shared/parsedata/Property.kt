@@ -13,6 +13,7 @@ import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.Tags
 import com.hoffi.chassis.shared.strategies.IVarNameStrategy
 import com.hoffi.chassis.shared.strategies.VarNameStrategy
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeName
 
@@ -49,7 +50,7 @@ class Property(
         get() = Tag.NULLABLE_GENERICTYPE in tags
     val isInterface: Boolean
         get() = eitherTypModelOrClass.isInterface
-    val poetType: TypeName
+    val poetType: ClassName
         get() = when (collectionType) {
             is COLLECTIONTYP.NONE ->
                 if (isNullable) { eitherTypModelOrClass.modelClassName.poetType.nullable() } else { eitherTypModelOrClass.modelClassName.poetType }

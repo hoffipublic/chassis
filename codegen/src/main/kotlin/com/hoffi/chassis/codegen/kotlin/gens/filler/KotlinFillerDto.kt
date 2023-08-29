@@ -27,6 +27,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
         //log.trace("build({}, {})", modelkind, currentFillerData)
 
         val intersectPropsData = IntersectPropertys.intersectPropsOf(
+            genCtx,
             genCtx.genModel(fillerData.targetDslRef),
             genCtx.genModel(fillerData.sourceDslRef), "", ""
         )

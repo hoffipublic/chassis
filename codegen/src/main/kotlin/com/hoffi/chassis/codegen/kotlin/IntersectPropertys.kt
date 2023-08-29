@@ -1,11 +1,14 @@
 package com.hoffi.chassis.codegen.kotlin
 
+import com.hoffi.chassis.shared.codegen.GenCtx
+import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.Property
 import com.squareup.kotlinpoet.ClassName
 
 object IntersectPropertys {
     data class CommonPropData(
+        val genCtx: GenCtx,
         val targetGenModel: GenModel,
         val targetFillerPoetType: ClassName,
         val sourceGenModel: GenModel,
@@ -17,15 +20,20 @@ object IntersectPropertys {
         val sourceVarNamePostfix: String,
         val targetVarNamePostfix: String,
     ) {
-        var sourceVarName = "source$sourceVarNamePostfix"
         var targetVarName = "target$targetVarNamePostfix"
+        var sourceVarName = "source$sourceVarNamePostfix"
         val targetPoetType: ClassName
             get() = targetGenModel.poetType as ClassName
         val sourcePoetType: ClassName
             get() = sourceGenModel.poetType as ClassName
+        val dtoGenModelTarget: GenModel = genCtx.genModel(DslRef.dto(targetGenModel.modelSubElRef.simpleName, targetGenModel.modelSubElRef.parentDslRef))
+        val tableGenModelTarget: GenModel = genCtx.genModel(DslRef.table(targetGenModel.modelSubElRef.simpleName, targetGenModel.modelSubElRef.parentDslRef))
+        val dtoGenModelSource: GenModel = genCtx.genModel(DslRef.dto(sourceGenModel.modelSubElRef.simpleName, sourceGenModel.modelSubElRef.parentDslRef))
+        val tableGenModelSource: GenModel = genCtx.genModel(DslRef.table(sourceGenModel.modelSubElRef.simpleName, sourceGenModel.modelSubElRef.parentDslRef))
     }
 
     fun intersectPropsOf(
+        genCtx: GenCtx,
         targetGenModel: GenModel,
         sourceGenModel: GenModel,
         sourceVarNamePostfix: String = "",
@@ -51,6 +59,7 @@ object IntersectPropertys {
         val sourceFillerPoetType = sourceGenModel.fillerPoetType
 
         return CommonPropData(
+            genCtx,
             targetGenModel,
             targetFillerPoetType,
             sourceGenModel,

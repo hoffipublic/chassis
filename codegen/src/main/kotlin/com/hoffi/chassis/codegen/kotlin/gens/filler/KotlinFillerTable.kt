@@ -49,9 +49,7 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
 
 
         val intersectPropsData = IntersectPropertys.intersectPropsOf(
-            targetGenModel,
-            sourceGenModel,
-            //kotlinGenCtx.kotlinGenClass(fillerData.sourceDslRef),
+            genCtx, targetGenModel, sourceGenModel,
             "", ""
         )
 

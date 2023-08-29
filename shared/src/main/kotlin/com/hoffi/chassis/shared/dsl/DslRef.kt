@@ -262,6 +262,14 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
         val COUNTSEP = "/"
         fun refListJoin(refList: List<DslRefAtom>) = refList.joinToString(REFSEP)
         fun refAtomsListFull(refString: String, dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEFAULT)) = refString.split(REFSEP).map { DslRefAtom.from(it) }.toMutableList().also {if (it.isNotEmpty() && it.first().functionName != "disc") it.add(0, DslRefAtom("disc", dslDiscriminator.dslDiscriminator))}
+        fun groupElementAndSubelementLevelDslRef(dslRef: IDslRef): Triple<IDslRef, IDslRef, IDslRef?> {
+            if (dslRef.refList.size < 2) throw DslRefException("DslRef not at least ElementLevel depth $dslRef")
+            if (dslRef.refList.size == 3) return Triple(dslRef.parentDslRef.parentDslRef, dslRef.parentDslRef, dslRef)
+            if (dslRef.refList.size == 2) return Triple(dslRef.parentDslRef, dslRef, null)
+            var subelDslRef = dslRef
+            while (subelDslRef.refList.size > 3) { subelDslRef = subelDslRef.parentDslRef }
+            return Triple(subelDslRef.parentDslRef.parentDslRef, subelDslRef.parentDslRef, subelDslRef)
+        }
         fun genericInstance(): DslRef = modelgroup(C.NULLSTRING, DslDiscriminator(C.NULLSTRING))
         fun <T : IDslRef> funcname(dslRefClass: KClass<T>): String {
             val companion = dslRefClass.companionObjectInstance ?: return "$dslRefClass has no companion object with val funcname"

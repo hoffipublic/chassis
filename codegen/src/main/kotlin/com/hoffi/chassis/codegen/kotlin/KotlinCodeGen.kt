@@ -204,8 +204,8 @@ for (crudData in genCtx.crudDatas[C.DEFAULT]?.flatMap { it.value } ?: mutableSet
         println("===  write CRUDs           =====")
         println("==================================")
         for(aKotlinCrudExposed in kotlinGenCtx.allKotlinCrudClasses()) {
-            if ((aKotlinCrudExposed.originalAHasCopyBoundrysData as CrudData).crud != CrudData.CRUD.CREATE) {
-                log.error("{}() skip writing anything else than CREATE CRUD for {}", object {}.javaClass.enclosingMethod.name, aKotlinCrudExposed)
+            if ((aKotlinCrudExposed.originalAHasCopyBoundrysData as CrudData).crud in listOf(CrudData.CRUD.DELETE, CrudData.CRUD.UPDATE)) {
+                log.error("{}() skip writing anything else than CREATE|READ CRUD for {}", object {}.javaClass.enclosingMethod.name, aKotlinCrudExposed)
                 continue
             }
             log.info("{}() write CRUD for {}", object{}.javaClass.enclosingMethod.name, aKotlinCrudExposed)

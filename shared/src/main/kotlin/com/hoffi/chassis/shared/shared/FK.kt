@@ -13,6 +13,10 @@ class FK(
     override fun toString() = "FK($COLLECTIONTYP prop='${toProp.name()}', '${toTableRef.toString(2)}' <-- '${fromTableRef.toString(2)}'})"
     override fun compareTo(other: FK): Int = toProp.dslPropName.compareTo(other.toProp.dslPropName)
 
+    //val toPropElementRef = DslRef.groupElementAndSubelementLevelDslRef(toProp.propRef).second
+    val toPropSubelementRef = toProp.propRef.parentDslRef
+    val toPropElementRef = toProp.propRef.parentDslRef.parentDslRef
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is FK) return false
