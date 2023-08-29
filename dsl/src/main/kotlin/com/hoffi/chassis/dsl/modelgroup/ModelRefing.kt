@@ -27,24 +27,24 @@ class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelRef
 
     override infix fun MODELREFENUM.of(thisModelgroupSubElementRef: IDslRef): IDslRef {
         if (thisModelgroupSubElementRef !is DslRef.IModelSubelement) throw DslException("is no subelement level ref $thisModelgroupSubElementRef")
-        val (groupRef, elementLevelRef, _) = groupElementAndSubelementLevelDslRef(dslClass)
-        val simpleName = elementLevelRef.simpleName
+        val modelRef = DslRef.modelRefFrom(dslClass.selfDslRef)
         val dslRef: IDslRef = when (this) {
-            MODELREFENUM.MODEL -> DslRef.model(simpleName, groupRef)
-            MODELREFENUM.DTO ->   DslRef.dto(  C.DEFAULT, DslRef.model(simpleName, groupRef))
-            MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, DslRef.model(simpleName, groupRef))
+            MODELREFENUM.MODEL -> modelRef
+            MODELREFENUM.DTO ->   DslRef.dto(  C.DEFAULT, modelRef)
+            MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, modelRef)
         }
         return dslRef
     }
 
-    fun fakeOf(modelelement: MODELREFENUM, thisModelgroupSubElementSimpleName: String): IDslRef = modelelement of thisModelgroupSubElementSimpleName
+    fun fakeOf(modelelement: MODELREFENUM, thisModelgroupsModelSimpleName: String): IDslRef = modelelement of thisModelgroupsModelSimpleName
 
-    override infix fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): IDslRef {
-        val (groupRef, _, _) = groupElementAndSubelementLevelDslRef(dslClass)
+    override infix fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): IDslRef {
+        val groupRef = DslRef.groupRefFrom(dslClass.selfDslRef)
+        val otherModelRef = DslRef.model(thisModelgroupsModelSimpleName, groupRef)
         val dslRef: IDslRef =  when (this) {
-            MODELREFENUM.MODEL -> DslRef.model(thisModelgroupSubElementSimpleName, groupRef)
-            MODELREFENUM.DTO ->   DslRef.dto(  C.DEFAULT, DslRef.model(thisModelgroupSubElementSimpleName, groupRef))
-            MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, DslRef.model(thisModelgroupSubElementSimpleName, groupRef))
+            MODELREFENUM.MODEL -> otherModelRef
+            MODELREFENUM.DTO ->   DslRef.dto(  C.DEFAULT, otherModelRef)
+            MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, otherModelRef)
         }
         return dslRef
     }
@@ -70,20 +70,14 @@ class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelRef
     }
 
     companion object {
-        fun groupElementAndSubelementLevelDslRef(dslRef: IDslRef): Triple<IDslRef, IDslRef, IDslRef?> {
-            return DslRef.groupElementAndSubelementLevelDslRef(dslRef)
-        }
-        fun groupElementAndSubelementLevelDslRef(dslClass: ADslClass): Triple<IDslRef, IDslRef, IDslRef?> {
-            return DslRef.groupElementAndSubelementLevelDslRef(dslClass.selfDslRef)
-        }
-        fun defaultSubElementWithName(simpleName: String, dslClass: ADslClass): DslRef.ISubElementLevel {
-            val (groupRef, _, subelementLevelRef) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslClass)
+        fun defaultSubElementOfModelNamed(modelSimpleName: String, dslClass: ADslClass): DslRef.ISubElementLevel {
+            val (groupRef, _, subelementLevelRef) = DslRef.groupAndElementAndSubelementLevelDslRef(dslClass.selfDslRef)
             if (subelementLevelRef == null) throw DslException("$dslClass not under a sub(!)element (dto, table, ...)")
             val dslRef: DslRef.ISubElementLevel = WhensDslRef.whenModelSubelement(subelementLevelRef,
-                isDtoRef =   { DslRef.dto(C.DEFAULT, DslRef.model(simpleName, groupRef)) },
-                isTableRef = { DslRef.table(C.DEFAULT, DslRef.model(simpleName, groupRef)) },
+                isDtoRef =   { DslRef.dto(C.DEFAULT, DslRef.model(modelSimpleName, groupRef)) },
+                isTableRef = { DslRef.table(C.DEFAULT, DslRef.model(modelSimpleName, groupRef)) },
             ) {
-                DslException("$dslClass has is not under or has no subelement named $simpleName")
+                DslException("$dslClass has is not under or has no subelement named $modelSimpleName")
             }
             return dslRef
         }

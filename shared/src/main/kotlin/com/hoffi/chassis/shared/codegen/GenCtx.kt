@@ -9,6 +9,19 @@ import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.SynthCrudData
 import com.hoffi.chassis.shared.shared.SynthFillerData
 
+/**
+ * on finishing Dsl/Ctx parsing/generation this is filled and "passed on" to codegen</br>
+ * (to "get rid" of "things" that only are specific/related/needed/meaning in DSL parsing)
+ * Structures used in here are meant to be:</br>
+ * - as far as possible unrelated to the structure and "necessities" of DSL and DSL parsing
+ * - "bite-sized" for codegen</br>
+ * - have ALL information codegen ever might need from the DSL
+ * - not to be bloated added or extended for things that codegen might need
+ * GenCtx is the "information result" from dsl-parsing in easy to digest and immutable structures for codegen.
+ * As such, GenCtx should NOT be used or "polluted" with ctx-stuff needed for codegen. Such things go into e.g. class KotlinGenCtx</br>
+ * As this GenCtx is shared between dsl-project and codegen-project,
+ * it only should contain "bite sized information" that are NOT ALTERED after its generation in DSL finishing related to/from DslParsing result passing to codegen-project.</br>
+ */
 class GenCtx private constructor() {
     lateinit var genRun: GenRun
     private val allGenModels: MutableMap<IDslRef, GenModel> = mutableMapOf()

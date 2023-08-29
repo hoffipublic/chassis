@@ -4,9 +4,7 @@ import com.hoffi.chassis.chassismodel.PoetHelpers.nullable
 import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
-import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
-import com.hoffi.chassis.codegen.kotlin.GenDslRefHelpers
-import com.hoffi.chassis.codegen.kotlin.IntersectPropertys
+import com.hoffi.chassis.codegen.kotlin.*
 import com.hoffi.chassis.codegen.kotlin.gens.KotlinClassModelTable
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.db.DB
@@ -73,9 +71,6 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             isTableRef = { "resultRow${intersectPropsData.targetVarNamePostfix}" },
         )
 
-//        val crudBuilder = TypeSpec.objectBuilder(crudPoetType)
-//        builder.addType(crudBuilder.build())
-
         when (currentCrudData.crud) {
             CrudData.CRUD.CREATE -> { insertDb(intersectPropsData) }
             CrudData.CRUD.READ ->   { readDb(intersectPropsData) }
@@ -99,7 +94,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         }
 
         val insertLambda = LambdaTypeName.get(i.targetPoetType, DB.InsertStatementTypeName(), returnType = UNIT)
-        val batchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatementClassName, GenDslRefHelpers.dtoClassName(i.sourceGenModel, genCtx), returnType = UNIT)
+        val batchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatementClassName, GenDslRefHelpers.dtoClassName(i.sourceGenModel), returnType = UNIT)
 
         // ============================
         // fun insertDb
@@ -107,7 +102,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         var funNameInsertOrBatch = funNameExpanded("insertDb", currentCrudData)
         var funSpec = FunSpec.builder(funNameInsertOrBatch.funName)
             .addParameter(i.sourceVarName, i.sourcePoetType)
-            .addOutgoingFKParams(outgoingFKs, tableClassModel, COLLECTIONTYP.COLLECTION, funNameInsertOrBatch)
+            .addOutgoingFKParams(outgoingFKs, COLLECTIONTYP.COLLECTION, funNameInsertOrBatch)
             .addParameter(ParameterSpec.builder("customStatements", insertLambda).defaultValue("{}").build())
         //.returns(returnLambdaTypeName)
         funSpec
@@ -132,7 +127,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         funNameInsertOrBatch = funNameExpanded("batchInsertDb", currentCrudData)
         funSpec = FunSpec.builder(funNameInsertOrBatch.funName)
             .addParameter(i.sourceVarName + "s", ClassName("kotlin.collections", "Collection").parameterizedBy(i.sourcePoetType))
-            .addOutgoingFKParams(outgoingFKs, tableClassModel, COLLECTIONTYP.COLLECTION, funNameInsertOrBatch)
+            .addOutgoingFKParams(outgoingFKs, COLLECTIONTYP.COLLECTION, funNameInsertOrBatch)
             .addParameter(ParameterSpec.builder("customStatements", batchInsertLambda).defaultValue("{}").build())
         //.returns(returnLambdaTypeName)
         funSpec
@@ -156,7 +151,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
                 none = false
                 addStatement("%T.%L(%L.flatMap { it.%L%L }, %L.flatMap { %L -> %L.%L%L.map { it.%L to %L.%L } }.toMap())",
-                    propCrud((fk.toProp.eitherTypModelOrClass as EitherTypOrModelOrPoetType.EitherModel).modelSubElementRef, CrudData.CRUD.CREATE),
+                    GenClassNames.crudFor((fk.toProp.eitherTypModelOrClass as EitherTypOrModelOrPoetType.EitherModel).modelSubElementRef, CrudData.CRUD.CREATE),
                     funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertDb"),
                     i.sourceVarName + "s",
                     fk.toProp.name(), if (fk.toProp.isNullable) " ?: emptyList()" else "",
@@ -170,7 +165,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
                 none = false
                 addStatement("%T.%L(%L.%L%L, %L%L.%L%L%L.associate { it.%L to %L.%L } /* , otherBackref1, otherBackref2, ... */)",
-                    propCrud(fk.fromTableRef, CrudData.CRUD.CREATE),
+                    GenClassNames.crudFor(fk.fromTableRef, CrudData.CRUD.CREATE),
                     funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertDb"),
                     i.sourceVarName,
                     fk.toProp.name(), if (fk.toProp.isNullable) " ?: emptyList()" else "",
@@ -340,10 +335,6 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
                 .addParameter("selectLambda", LambdaTypeName.get(receiver = DB.SqlExpressionBuilderClassName, parameters = emptyList(), returnType = DB.OpClassName.parameterizedBy(BOOLEAN)))
                 .returns(List::class.asTypeName().parameterizedBy(i.sourcePoetType))
             funSpec
-            // val resultRowList: List<ResultRow> = execToDb(selectLambda)
-            // // unmarshalling _within_ transaction scope
-            // val selectedEntityDtos = unmarshallSimpleEntityDtos(resultRowList)
-            // return selectedEntityDtos
                 .addStatement("val resultRowList: List<%T> = %L(selectLambda)", DB.ResultRowClassName, "execToDb")
                 .addComment("unmarshalling _within_ transaction scope")
                 .addStatement("val selected%L = %L(resultRowList)", i.sourcePoetType.simpleName, funName.swapOutOriginalFunNameWith("unmarshall${i.sourcePoetType.simpleName}s"))
@@ -359,13 +350,6 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
                 .addParameter("selectLambda", LambdaTypeName.get(receiver = DB.SqlExpressionBuilderClassName, parameters = emptyList(), returnType = DB.OpClassName.parameterizedBy(BOOLEAN)))
                 .returns(List::class.asTypeName().parameterizedBy(i.sourcePoetType))
             funSpec
-            // val resultRowList: List<ResultRow> = transaction(db = db) {
-            //     addLogger(StdOutSqlLogger)
-            //     execToDb(selectLambda)
-            // }
-            // // unmarshalling _outside_ transaction scope
-            // val selectedEntityDtos = unmarshallSimpleEntityDtos(resultRowList)
-            // return selectedEntityDtos
                 .beginControlFlow("val resultRowList: List<%T> = %M(db = db)", DB.ResultRowClassName, DB.transactionMember)
                 .addStatement("%M(%T)", DB.transactionAddLoggerMember, DB.StdOutSqlLoggerClassName)
                 .addStatement("execToDb(selectLambda)")
@@ -413,13 +397,13 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         // if (rr[SimpleEntityTable.uuid] != currentSimpleEntityDto.uuid) {
         beginControlFlow("if (rr[%T.%L] != current%L.%L)", i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, i.sourceGenModel.poetTypeSimpleName, RuntimeDefaults.UUID_PROPNAME)
         this.addComment("base model")
-        this.addStatement("current%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, propFiller(i.sourceGenModel.modelSubElRef, MODELREFENUM.TABLE), i.sourceGenModel.asVarName)
+        this.addStatement("current%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, GenClassNames.fillerFor(i.sourceGenModel.modelSubElRef, MODELREFENUM.TABLE), i.sourceGenModel.asVarName)
             .addStatement("read%Ls.add(current%L)", i.sourceGenModel.poetTypeSimpleName, i.sourceGenModel.poetTypeSimpleName)
         this.addComment("one2One models")
         var none = true
         for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
             none = false
-            this.addStatement("current%L.%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), propFiller(fk.toTableRef, MODELREFENUM.TABLE), fk.toProp.eitherTypModelOrClass.modelClassName.asVarName)
+            this.addStatement("current%L.%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), GenClassNames.fillerFor(fk.toTableRef, MODELREFENUM.TABLE), fk.toProp.eitherTypModelOrClass.modelClassName.asVarName)
         }
         if (none) this.addComment("NONE")
         endControlFlow()
@@ -430,7 +414,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             val toPropTableGenModel = genCtx.genModel(fk.fromTableRef)
             //val toPropDtoGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
             beginControlFlow("if (rr[%T.%L] != current%L.%L)", toPropTableGenModel.poetType, RuntimeDefaults.UUID_PROPNAME, fk.toProp.name(), RuntimeDefaults.UUID_PROPNAME)
-            addStatement("current%L = %T.%L(rr)", fk.toProp.name(), propFiller(fk.fromTableRef, MODELREFENUM.TABLE), fk.toProp.eitherTypModelOrClass.modelClassName.asVarName)
+            addStatement("current%L = %T.%L(rr)", fk.toProp.name(), GenClassNames.fillerFor(fk.fromTableRef, MODELREFENUM.TABLE), fk.toProp.eitherTypModelOrClass.modelClassName.asVarName)
             addStatement("current%L.%L%L.add(current%L)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
             endControlFlow()
         }
@@ -447,7 +431,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinClassModelTable
             //val toPropTableGenModel = genCtx.genModel(fk.toTableRef)
             //val toPropDtoGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
-            addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassData.poetType, DB.JoinTypeClassName, i.targetPoetType, toPropKotlinClassModelTable.fkPropVarNameUUID(fk).first, toPropKotlinClassModelTable.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME)
+            addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassData.poetType, DB.JoinTypeClassName, i.targetPoetType, GenNaming.fkPropVarNameUUID(fk), toPropKotlinClassModelTable.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME)
         }
         if (none) addComment("NONE")
         return this
@@ -458,7 +442,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
             none = false
             val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
-            addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassData.poetType, DB.JoinTypeClassName, i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, toPropKotlinClassModelTable.modelClassData.poetType, toPropKotlinClassModelTable.fkPropVarNameUUID(fk).first)
+            addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassData.poetType, DB.JoinTypeClassName, i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, toPropKotlinClassModelTable.modelClassData.poetType, GenNaming.fkPropVarNameUUID(fk))
         }
         if (none) addComment("NONE")
         return this

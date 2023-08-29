@@ -5,6 +5,7 @@ import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.chassismodel.dsl.DslRefException
 import com.hoffi.chassis.shared.dsl.DslRef.Companion.genericInstance
 import com.hoffi.chassis.shared.dsl.DslRefString.REF
+import com.hoffi.chassis.shared.shared.reffing.MODELKIND
 import org.reflections.Reflections
 import org.reflections.util.ConfigurationBuilder
 import org.slf4j.LoggerFactory
@@ -262,13 +263,28 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
         val COUNTSEP = "/"
         fun refListJoin(refList: List<DslRefAtom>) = refList.joinToString(REFSEP)
         fun refAtomsListFull(refString: String, dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEFAULT)) = refString.split(REFSEP).map { DslRefAtom.from(it) }.toMutableList().also {if (it.isNotEmpty() && it.first().functionName != "disc") it.add(0, DslRefAtom("disc", dslDiscriminator.dslDiscriminator))}
-        fun groupElementAndSubelementLevelDslRef(dslRef: IDslRef): Triple<IDslRef, IDslRef, IDslRef?> {
+        fun groupAndElementAndSubelementLevelDslRef(dslRef: IDslRef): Triple<IDslRef, IDslRef, IDslRef?> {
             if (dslRef.refList.size < 2) throw DslRefException("DslRef not at least ElementLevel depth $dslRef")
             if (dslRef.refList.size == 3) return Triple(dslRef.parentDslRef.parentDslRef, dslRef.parentDslRef, dslRef)
             if (dslRef.refList.size == 2) return Triple(dslRef.parentDslRef, dslRef, null)
             var subelDslRef = dslRef
             while (subelDslRef.refList.size > 3) { subelDslRef = subelDslRef.parentDslRef }
             return Triple(subelDslRef.parentDslRef.parentDslRef, subelDslRef.parentDslRef, subelDslRef)
+        }
+        fun groupRefFrom(dslRef: IDslRef) = groupAndElementAndSubelementLevelDslRef(dslRef).first
+        fun modelRefFrom(dslRef: IDslRef, swappedModelSimpleName: String = C.NULLSTRING): DslRef.model {
+            val (groupRef, elementRef, _) = groupAndElementAndSubelementLevelDslRef(dslRef)
+            return DslRef.model(if (swappedModelSimpleName == C.NULLSTRING) elementRef.simpleName else swappedModelSimpleName, groupRef)
+        }
+        fun dtoRefFrom(dslRef: IDslRef, simpleName: String = C.DEFAULT, swappedModelSimpleName: String = C.NULLSTRING): DslRef.dto =
+            DslRef.dto(simpleName, modelRefFrom(dslRef, swappedModelSimpleName))
+        fun tableRefFrom(dslRef: IDslRef, simpleName: String = C.DEFAULT, swappedModelSimpleName: String = C.NULLSTRING): DslRef.table =
+            DslRef.table(simpleName, modelRefFrom(dslRef, swappedModelSimpleName))
+        private fun subelRefOf(dslRef: IDslRef, modelkind: MODELKIND, simpleName: String = C.DEFAULT, swappedModelSimpleName: String = C.NULLSTRING): IDslRef {
+            return when (modelkind) {
+                MODELKIND.DTOKIND   -> DslRef.dtoRefFrom(dslRef, simpleName, swappedModelSimpleName)
+                MODELKIND.TABLEKIND -> DslRef.tableRefFrom(dslRef, simpleName, swappedModelSimpleName)
+            }
         }
         fun genericInstance(): DslRef = modelgroup(C.NULLSTRING, DslDiscriminator(C.NULLSTRING))
         fun <T : IDslRef> funcname(dslRefClass: KClass<T>): String {

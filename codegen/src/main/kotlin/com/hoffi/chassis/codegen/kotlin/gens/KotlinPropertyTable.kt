@@ -10,6 +10,7 @@ import com.hoffi.chassis.chassismodel.typ.TYP
 import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_INT
 import com.hoffi.chassis.chassismodel.typ.TYP.Companion.DEFAULT_VARCHAR_LENGTH
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
+import com.hoffi.chassis.codegen.kotlin.GenNaming
 import com.hoffi.chassis.codegen.kotlin.whens.WhensGen
 import com.hoffi.chassis.dbwrappers.exposed.DB_EXPOSED.ColumnClassName
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
@@ -82,7 +83,7 @@ class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn:
                     COLLECTIONTYP.LIST // <-- differs
                 )
                 initBuilder = PropertySpec.builder(property.name(), Any::class.asTypeName().nullable())
-                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, kotlinClassModelTablePropIsIn.fkPropVarNameUUID(fk).first) // placeholder property TODO let's see if exposed explodes on this
+                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, GenNaming.fkPropVarNameUUID(fk)) // placeholder property TODO let's see if exposed explodes on this
             },
             isModelSet = {
                 //val reffedTable_DTO_GenModel: GenModel = genCtx.genModel(this.modelSubElementRef)
@@ -96,7 +97,7 @@ class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn:
                     COLLECTIONTYP.SET // <-- differs
                 )
                 initBuilder = PropertySpec.builder(property.name(), Any::class.asTypeName().nullable())
-                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, kotlinClassModelTablePropIsIn.fkPropVarNameUUID(fk).first) // placeholder property TODO let's see if exposed explodes on this
+                initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, GenNaming.fkPropVarNameUUID(fk)) // placeholder property TODO let's see if exposed explodes on this
             },
             isModelCollection = {
                 TODO()

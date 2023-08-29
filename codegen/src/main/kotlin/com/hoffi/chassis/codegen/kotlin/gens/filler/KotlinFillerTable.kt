@@ -4,6 +4,7 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.Cap
 import com.hoffi.chassis.chassismodel.decap
 import com.hoffi.chassis.chassismodel.dsl.GenException
+import com.hoffi.chassis.codegen.kotlin.GenClassNames
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.codegen.kotlin.GenDslRefHelpers
 import com.hoffi.chassis.codegen.kotlin.IntersectPropertys
@@ -78,7 +79,7 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
         log.trace("fillLambdas: -> from {}", currentFillerData)
 
         val returnInsertLambda = LambdaTypeName.get(i.targetPoetType, DB.InsertStatementTypeName(), returnType = UNIT)
-        val returnBatchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatementClassName, GenDslRefHelpers.dtoClassName(i.sourceGenModel, genCtx), returnType = UNIT)
+        val returnBatchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatementClassName, GenDslRefHelpers.dtoClassName(i.sourceGenModel), returnType = UNIT)
 
         var funNameInsertOrBatch = funNameExpanded("fillShallowLambda", currentFillerData)
         var funSpec = FunSpec.builder(funNameInsertOrBatch.funName)
@@ -138,158 +139,6 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
         return body
     }
 
-//    private fun insert1to1ModelsBody(i: IntersectPropertys.CommonPropData, funSpec: FunSpec.Builder, funNameInsertOrBatch: FunName): CodeBlock {
-//        val bodyBuilder = CodeBlock.builder()
-//            .beginControlFlow("return {") // This will take care of the {} and indentations
-//        var none = true
-//        // allProps as a) Table's always gatherProps from superclasses and b) alle table columns have to be filled
-//        for (prop in i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }) {
-//            WhensGen.whenTypeAndCollectionType(prop.eitherTypModelOrClass, prop.collectionType,
-//                preFunc = { },
-//                preNonCollection = { },
-//                preCollection = { },
-//                isModel = {
-//                    none = false
-//                    // TODO one2One check if dependant model Table Entry already exists!
-//                    if (funNameInsertOrBatch.originalFunName.startsWith("insert")) {
-//                        // SimpleSubentityTable.insert(SimpleSubentityTableFiller.insertFunction(sourceSimpleEntityDto.someModelObject))
-//                        bodyBuilder.addStatement("// TODO one2One check if dependant model Table Entry already exists!")
-//                        val genModelTable = genCtx.genModel(DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef))
-//                        bodyBuilder.addStatement(
-//                            "%T.insert(%L.%L) /* TODO , backRef1: SomeDto, backRef2: SomeOtherDto */", // TODO also insert hardcoded instead swapOutOriginalFunNameWith
-//                            genModelTable.modelClassName.crudBasePoetTypeForAllCruds + CrudData.CRUD.CREATE.toString(),
-//                            // genModelTable.poetType,
-//                            i.sourceVarName, prop.name(),
-//                        )
-//                    } else {
-//                        //  SimpleSubentityTableFiller.batchInsertFunction(sourceSimpleEntityDto.someModelObject).invoke(this, sourceSimpleEntityDto.someModelObject)
-//                        val fillerTableOfReffedModel = genCtx.genModel(DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)).fillerPoetType
-//                        bodyBuilder.addStatement("// TODO one2One check if dependant model Table Entry already exists!")
-//                        bodyBuilder.addStatement(
-//                            "%T.%L().%L(this, %L.%L)",
-//                            fillerTableOfReffedModel,
-//                            //MemberName(fillerTableOfReffedModel, "batchInsertLambda"),
-//                            funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertShallowWith1To1sLambda"),
-//                            "invoke",
-//                            "it", prop.name()
-//                        )
-//                    }
-//                    KotlinFillerTablePoetStatements.fillTablePropOne2OneModelUuid(bodyBuilder, funNameInsertOrBatch, i.targetPoetType, i.sourceVarName, prop)
-//                    addSyntheticFiller(this, this@KotlinFillerTable.currentFillerData, via = "TableFiller for prop: '$prop' from currentFillerData: ${currentFillerData}")
-//                },
-//                isPoetType = { },
-//                isTyp = { },
-//                postNonCollection = { },
-//                isModelList = { },
-//                isModelSet = { },
-//                isModelCollection = { },
-//                isModelIterable = { },
-//                isPoetTypeList = { },
-//                isPoetTypeSet = { },
-//                isPoetTypeCollection = { },
-//                isPoetTypeIterable = { },
-//                isTypList = { },
-//                isTypSet = { },
-//                isTypCollection = { },
-//                isTypIterable = { },
-//                postCollection = { },
-//            )
-//        }
-//        if (none) bodyBuilder.addStatement("// NONE")
-//        var body = bodyBuilder.endControlFlow().build()
-//        return body
-//    }
-//
-//    private fun insertNon1to1ModelsBody(i: IntersectPropertys.CommonPropData, funSpec: FunSpec.Builder, funNameInsertOrBatch: FunName): CodeBlock {
-//        val bodyBuilder = CodeBlock.builder()
-//            .beginControlFlow("return {") // This will take care of the {} and indentations
-//        var none = true
-//        // allProps as a) Table's always gatherProps from superclasses and b) alle table columns have to be filled
-//        for (prop in i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }) {
-//            WhensGen.whenTypeAndCollectionType(prop.eitherTypModelOrClass, prop.collectionType,
-//                preFunc = { },
-//                preNonCollection = { },
-//                preCollection = { },
-//                isModel = { },
-//                isPoetType = { },
-//                isTyp = { },
-//                postNonCollection = { },
-//                isModelList = {
-//                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
-//
-//                    addSyntheticFiller(this, this@KotlinFillerTable.currentFillerData, via = "TableFiller for prop: '$prop' from currentFillerData: ${currentFillerData}")
-//                },
-//                isModelSet = {
-//                    none = false
-//                    //SimpleSubentityTable.batchInsert(source.subentitys ?: emptySet(), shouldReturnGeneratedValues = false,
-//                    //    body = FillerSimpleSubentityTable.batchInsertLambda(source.uuid)
-//                    //)
-//                    bodyBuilder.addStatement(
-//                        "%T.%M(%L.%L ?: emptyList(), shouldReturnGeneratedValues = false, body = %T.%L(%L.%L))",
-//                        genCtx.genModel(DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)).poetType,
-//                        DB.batchInsertMember,
-//                        funNameInsertOrBatch.sourceOrIt(i.sourceVarName),
-//                        prop.name(),
-//                        propFiller(modelSubElementRef, MODELREFENUM.TABLE),
-//                        "batchInsertLambda",
-//                        funNameInsertOrBatch.sourceOrIt(i.sourceVarName),
-//                        RuntimeDefaults.UUID_PROPNAME
-//                    )
-//                    addSyntheticFiller(this, this@KotlinFillerTable.currentFillerData, via = "TableFiller for prop: '$prop' from currentFillerData: ${currentFillerData}")
-//                },
-//                isModelCollection = {
-//                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
-//
-//                    addSyntheticFiller(this, this@KotlinFillerTable.currentFillerData, via = "TableFiller for prop: '$prop' from currentFillerData: ${currentFillerData}")
-//                },
-//                isModelIterable = {
-//                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
-//
-//                    addSyntheticFiller(this, this@KotlinFillerTable.currentFillerData, via = "TableFiller for prop: '$prop' from currentFillerData: ${currentFillerData}")
-//                },
-//                isPoetTypeList = {
-//                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
-//                },
-//                isPoetTypeSet = {
-//                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
-//                },
-//                isPoetTypeCollection = {
-//                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
-//                },
-//                isPoetTypeIterable = {
-//                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
-//                },
-//                isTypList = {
-//                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
-//                },
-//                isTypSet = {
-//                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
-//                },
-//                isTypCollection = {
-//                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
-//                },
-//                isTypIterable = {
-//                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
-//                },
-//                postCollection = { },
-//            )
-//        }
-//        if (none) bodyBuilder.addStatement("// NONE")
-//        var body = bodyBuilder.endControlFlow().build()
-//        return body
-//    }
-
     /** special case e.g. DTO <-- TABLE */
     private fun createFromTable(i: IntersectPropertys.CommonPropData) {
         val funName = if (currentFillerData.businessName == C.DEFAULT)
@@ -308,7 +157,7 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                 preNonCollection = { },
                 preCollection = { },
                 isModel = {
-                    funSpec.addStatement("%L.%L = %T.%L(%L)", i.targetVarName, prop.name(), propFiller(modelSubElementRef, MODELREFENUM.TABLE), prop.eitherTypModelOrClass.modelClassName.asVarName, i.sourceVarName)
+                    funSpec.addStatement("%L.%L = %T.%L(%L)", i.targetVarName, prop.name(), GenClassNames.fillerFor(modelSubElementRef, MODELREFENUM.TABLE), prop.eitherTypModelOrClass.modelClassName.asVarName, i.sourceVarName)
 
                     addSyntheticFillersForTableModelProp(this, this@KotlinFillerTable.currentFillerData, via = "TableFiller for prop: '$prop' from currentFillerData: ${currentFillerData}")
                 },

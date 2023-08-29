@@ -42,9 +42,6 @@ abstract class ModelClassData(
 
     var isUuidPrimary = false
 
-//    val incomingFKs = sortedSetOf<Models.DslFK>() // TODO are these really used? see AKotlinClass
-//    val outgoingFKs = sortedSetOf<Models.DslFK>() // TODO are these really used? see AKotlinClass
-
     fun filterProps(propFilter: (Property) -> Boolean): MutableSet<Property> = allProps.values.filter(propFilter).toMutableSet()
     fun filterGatheredProps(propFilter: (Property) -> Boolean = { true }): MutableSet<Property> = gatheredProps.values.filter(propFilter).toMutableSet()
     //fun filterInclSuperclassPropsMap(propFilter: (Property) -> Boolean = { true }): MutableSet<Property> = propsInclSuperclassPropsMap.values.filter(propFilter).toMutableSet()

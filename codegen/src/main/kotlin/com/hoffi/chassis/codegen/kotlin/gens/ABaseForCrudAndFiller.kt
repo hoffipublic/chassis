@@ -6,16 +6,16 @@ import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.decap
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
+import com.hoffi.chassis.codegen.kotlin.GenClassNames
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
+import com.hoffi.chassis.codegen.kotlin.GenNaming
 import com.hoffi.chassis.codegen.kotlin.IntersectPropertys
 import com.hoffi.chassis.codegen.kotlin.gens.filler.KotlinFillerTablePoetStatements
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.shared.*
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
-import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
@@ -103,40 +103,7 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
         return funName
     }
 
-    fun propFiller(targetDslRef: IDslRef, modelrefenum: MODELREFENUM): ClassName {
-        val swappedDslRef = when (modelrefenum) {
-            MODELREFENUM.MODEL -> throw GenException("MODELs do not have fillers themselves")
-            MODELREFENUM.DTO -> DslRef.dto(C.DEFAULT, targetDslRef.parentDslRef)
-            MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, targetDslRef.parentDslRef)
-        }
-        val swappedGenModel = genCtx.genModel(swappedDslRef)
-        return ClassName(swappedGenModel.poetType.packageName + ".filler", "Filler" + swappedGenModel.poetType.simpleName)
-    }
-    fun propCrud(targetDslRef: IDslRef, crud: CrudData.CRUD): ClassName {
-        // TODO remove sentinel?
-        if (targetDslRef !is DslRef.ISubElementLevel) throw GenException("targetDslRef for propCrud($targetDslRef) always should be a (model) subelement (DTO, TABLE, ...)")
-        val swappedDslRef = DslRef.table(C.DEFAULT, targetDslRef.parentDslRef)
-        val swappedGenModel = genCtx.genModel(swappedDslRef)
-        //CrudData.CRUD.CREATE -> ClassName((swappedGenModel.poetType as ClassName).packageName + ".sql", swappedGenModel.modelClassName.crudBasePoetTypeForAllCruds + crud.toString())
-        return ClassName(swappedGenModel.poetType.packageName + ".sql", swappedGenModel.modelClassName.crudBasePoetTypeForAllCruds.simpleName + crud.toString())
-    }
-
-    //protected fun FunSpec.Builder.addOne2ManyIncomingFKParamUuidMaps(outgoingFKs: MutableSet<FK>, kotlinGenClassTable: KotlinClassModelTable): FunSpec.Builder {
-    //    var none = true
-    //    for (fk in outgoingFKs) {
-    //        when (fk.COLLECTIONTYP) {
-    //            is COLLECTIONTYP.NONE -> {
-    //                continue
-    //            }
-    //            is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE, is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET -> {
-    //                addParameter(ParameterSpec.builder(fk.toProp.name() + RuntimeDefaults.UUID_PROPNAME.Cap() + "ToParentUuid", Map::class.asClassName().parameterizedBy(RuntimeDefaults.classNameUUID, RuntimeDefaults.classNameUUID)).build())
-    //            }
-    //        }
-    //    }
-    //    return this
-    //}
-
-    protected fun FunSpec.Builder.addOutgoingFKParams(outgoingFKs: MutableSet<FK>, kotlinGenClassTable: KotlinClassModelTable, collectionType: COLLECTIONTYP, funNameInsertOrBatch: FunName): FunSpec.Builder {
+    protected fun FunSpec.Builder.addOutgoingFKParams(outgoingFKs: MutableSet<FK>, collectionType: COLLECTIONTYP, funNameInsertOrBatch: FunName): FunSpec.Builder {
         var none = true
         for (fk: FK in outgoingFKs) {
             // only UUID
@@ -157,7 +124,7 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
                     val fkParamBuilder =if (funNameInsertOrBatch.originalFunName.startsWith("batch")) {
                         ParameterSpec.builder(fk.toProp.name() + RuntimeDefaults.UUID_PROPNAME.Cap() + "ToParentUuid", Map::class.asClassName().parameterizedBy(RuntimeDefaults.classNameUUID, RuntimeDefaults.classNameUUID))
                     } else {
-                        ParameterSpec.builder(kotlinGenClassTable.fkPropVarName(fk).first, toTableDtoGenModel.poetType, fk.toProp.modifiers)
+                        ParameterSpec.builder(GenNaming.fkPropVarName(fk), toTableDtoGenModel.poetType, fk.toProp.modifiers)
                     }
                     this.addParameter(fkParamBuilder.build())
                     none = false
@@ -211,12 +178,12 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
                 beginControlFlow("val %LTo%L = %L.associateWith", i.targetGenModel.asVarName, fk.toProp.name().Cap(), i.sourceVarName + "s")
                 addStatement("%L -> %L.%L", i.sourceVarName, i.sourceVarName, fk.toProp.name())
                 endControlFlow()
-                addStatement("%T.%L(%LTo%L.values)", propCrud(fk.toTableRef, CrudData.CRUD.CREATE), funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertDb"), i.targetGenModel.asVarName, fk.toProp.name().Cap())
+                addStatement("%T.%L(%LTo%L.values)", GenClassNames.crudFor(fk.toTableRef, CrudData.CRUD.CREATE), funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertDb"), i.targetGenModel.asVarName, fk.toProp.name().Cap())
             }
         } else {
             for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
                 none = false
-                addStatement("%T.%L(%L.%L)", propCrud(fk.toTableRef, CrudData.CRUD.CREATE), funNameInsertOrBatch.swapOutOriginalFunNameWith("insertDb"), i.sourceVarName, fk.toProp.name())
+                addStatement("%T.%L(%L.%L)", GenClassNames.crudFor(fk.toTableRef, CrudData.CRUD.CREATE), funNameInsertOrBatch.swapOutOriginalFunNameWith("insertDb"), i.sourceVarName, fk.toProp.name())
             }
         }
         if (none) addStatement("// NONE")
@@ -229,7 +196,6 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
     protected fun CodeBlock.Builder.addOutgoingFKProps(outgoingFKs: MutableSet<FK>, funNameInsertOrBatch: FunName, i: IntersectPropertys.CommonPropData): CodeBlock.Builder {
         var none = true
         for (fk in outgoingFKs) {
-            val kotlinGenClassTable: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
             when (fk.toProp.collectionType) {
                 is COLLECTIONTYP.NONE -> {
                    // KotlinFillerTablePoetStatements.fillTablePropTypOrPoetType(this, funNameInsertOrBatch, i.targetPoetType kotlinGenClassTable.fkPropVarNameUUID(fk).first,
@@ -241,7 +207,7 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
                             "%L[%T.%L] = %LTo%L[it]!!.%L",
                             funNameInsertOrBatch.itOrThis(),
                             i.targetPoetType,
-                            kotlinGenClassTable.fkPropVarNameUUID(fk).first,
+                            GenNaming.fkPropVarNameUUID(fk),
                             i.targetGenModel.asVarName, fk.toProp.name().Cap(),
                             RuntimeDefaults.UUID_PROPNAME
                         )
@@ -250,7 +216,7 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
                             "%L[%T.%L] = %L.%L.%L",
                             funNameInsertOrBatch.itOrThis(),
                             i.targetPoetType,
-                            kotlinGenClassTable.fkPropVarNameUUID(fk).first,
+                            GenNaming.fkPropVarNameUUID(fk),
                             i.sourceVarName,
                             fk.toProp.name(),
                             RuntimeDefaults.UUID_PROPNAME
@@ -264,7 +230,7 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
                             "%L[%T.%L] = %L[it.%L]!!",
                             funNameInsertOrBatch.itOrThis(),
                             i.targetPoetType,
-                            kotlinGenClassTable.fkPropVarNameUUID(fk).first,
+                            GenNaming.fkPropVarNameUUID(fk),
                             fk.toProp.name() + RuntimeDefaults.UUID_PROPNAME.Cap() + "ToParentUuid",
                             RuntimeDefaults.UUID_PROPNAME
                         )
@@ -273,8 +239,8 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
                             "%L[%T.%L] = %L.%L",
                             funNameInsertOrBatch.itOrThis(),
                             i.targetPoetType,
-                            kotlinGenClassTable.fkPropVarNameUUID(fk).first,
-                            kotlinGenClassTable.fkPropVarName(fk).first,
+                            GenNaming.fkPropVarNameUUID(fk),
+                            GenNaming.fkPropVarName(fk),
                             RuntimeDefaults.UUID_PROPNAME
                         )
                     }

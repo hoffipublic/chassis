@@ -224,7 +224,7 @@ class DslImplInnerFillerBlock(val businessName: String, val dslOuterFillerBlockI
     override fun <E : AHasCopyBoundrysData> FOR(vararg aHasCopyBoundryDataList: List<E>): List<E> = aHasCopyBoundryDataList.flatMap { it }
 
     override fun MODELREFENUM.unaryPlus(): List<FillerData> {
-        val (_, selfElementRef, _) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslFillerDelegateImpl)
+        val (_, selfElementRef, _) = DslRef.groupAndElementAndSubelementLevelDslRef(dslFillerDelegateImpl.selfDslRef)
         val fillerData =  when (this) {
             MODELREFENUM.MODEL -> throw DslException("filler on '${selfDslRef}' unaryPlus not allowed to a 'MODEL'")
             MODELREFENUM.DTO ->   dslFillerDelegateImpl.getOrCreateFillerData(simpleName, businessName, DslRef.dto(C.DEFAULT, selfElementRef), DslRef.dto(C.DEFAULT, selfElementRef))
@@ -297,7 +297,7 @@ class DslImplInnerFillerBlock(val businessName: String, val dslOuterFillerBlockI
     }
 
     override fun MODELREFENUM.from(other: MODELREFENUM): List<FillerData> {
-        val (_, selfElementRef, _) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslFillerDelegateImpl)
+        val (_, selfElementRef, _) = DslRef.groupAndElementAndSubelementLevelDslRef(dslFillerDelegateImpl.selfDslRef)
 
         val targetDslRef =  when (this) {
             MODELREFENUM.MODEL -> throw DslException("$this: filling a MODEL is not allowed")
@@ -315,7 +315,7 @@ class DslImplInnerFillerBlock(val businessName: String, val dslOuterFillerBlockI
 
     override fun MODELREFENUM.from(other: IDslRef): List<FillerData> {
         if (other !is DslRef.ISubElementLevel) { throw DslException("$this: filling a MODEL is not allowed") }
-        val (_, selfElementRef, _) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslFillerDelegateImpl)
+        val (_, selfElementRef, _) = DslRef.groupAndElementAndSubelementLevelDslRef(dslFillerDelegateImpl.selfDslRef)
 
         val toRef =  when (this) {
             MODELREFENUM.MODEL -> throw DslException("$this: filling a MODEL is not allowed")
@@ -328,18 +328,18 @@ class DslImplInnerFillerBlock(val businessName: String, val dslOuterFillerBlockI
 
     override fun MODELREFENUM.from(other: String): List<FillerData> {
         if (this == MODELREFENUM.MODEL) { throw DslException("$this: filling a MODEL is not allowed") }
-        val (_, _, selfSubelRef) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslFillerDelegateImpl)
+        val (_, _, selfSubelRef) = DslRef.groupAndElementAndSubelementLevelDslRef(dslFillerDelegateImpl.selfDslRef)
         if (selfSubelRef == null) throw DslException("$this filler not directly on a model/api element")
 
         val thisRef = this of selfSubelRef
-        val otherRef = DslImplModelReffing.defaultSubElementWithName(other, dslFillerDelegateImpl)
+        val otherRef = DslImplModelReffing.defaultSubElementOfModelNamed(other, dslFillerDelegateImpl)
 
         return listOf(dslFillerDelegateImpl.getOrCreateFillerData(simpleName, businessName, thisRef, otherRef))
     }
 
     override fun IDslRef.from(other: MODELREFENUM): List<FillerData> {
         if (this !is DslRef.ISubElementLevel) throw DslException("$this not sub(!)element")
-        val (_, elementRef, _) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslFillerDelegateImpl)
+        val (_, elementRef, _) = DslRef.groupAndElementAndSubelementLevelDslRef(dslFillerDelegateImpl.selfDslRef)
 
         val fromRef =  when (other) {
             MODELREFENUM.MODEL -> throw DslException("$this: filling a MODEL is not allowed")

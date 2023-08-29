@@ -15,6 +15,10 @@ import com.hoffi.chassis.shared.shared.FK
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
 
+/** wrapping the GenCtx (finished DSL-parsing result, bite-sized but _immutable for codegen_!!!)</br>
+ * plus the codegen context(s), e.g. KotlinGenCtx</br>
+ * wrapped to be conveniently accessible without having to qualify with "this@GenCtx.xyz" or "this@KotlinGenCtx.xyz"
+ * in context(GenCtxWrapper) classes and functions */
 class GenCtxWrapper(val genCtx: GenCtx) {
     override fun toString() = "${this::class.simpleName}(genCtx=$genCtx)"
     val kotlinGenCtx = KotlinGenCtx._create()
@@ -29,6 +33,8 @@ class GenCtxWrapper(val genCtx: GenCtx) {
     }
     override fun hashCode() = genCtx.hashCode()
 }
+/** specific to project codegen (kotlin) stuff (codegen subproject only write into this, not into GenCtx)</br>
+ * -> just READ the "immutable" GenCtx (which is the finished DSL parsing result bite-sized for codegen) */
 class KotlinGenCtx private constructor() {
     private val allKotlinGenClasses: MutableMap<IDslRef, AKotlinClass> = mutableMapOf()
     fun kotlinGenClass(modelSubelementRef: IDslRef) = allKotlinGenClasses[modelSubelementRef] ?: throw GenCtxException("${this::class.simpleName} does not contain a subelement model for $modelSubelementRef")
@@ -58,7 +64,7 @@ class KotlinGenCtx private constructor() {
         }
     }
     context(GenCtxWrapper)
-    fun getOrCreateKotlinFillerClassForSyntheticCrud(fillerData: FillerData): Pair<AKotlinFiller, Boolean> {
+    fun getOrCreateKotlinFillerClassForSyntheticCrud(fillerData: FillerData): Pair<AKotlinFiller, Boolean> { // TODO remove?
         val theDslRef = if (fillerData.targetDslRef is DslRef.table) {
             fillerData.targetDslRef
         } else {

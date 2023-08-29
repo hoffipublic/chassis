@@ -10,12 +10,13 @@ import com.squareup.kotlinpoet.TypeName
 
 object GenDslRefHelpers {
     fun tableClassName(tableGenModel: GenModel, genCtx: GenCtx) : TypeName {
-        if (tableGenModel.modelSubElRef.parentDslRef !is DslRef.IElementLevel) throw GenException("no IElementLEvel given")
+        if (tableGenModel.modelSubElRef.parentDslRef !is DslRef.IElementLevel) throw GenException("no IElementLevel given")
         val swappedGenModel = genCtx.genModel(DslRef.table(C.DEFAULT, tableGenModel.modelSubElRef.parentDslRef))
         return swappedGenModel.poetType
     }
-    fun dtoClassName(dtoGenModel: ModelClassData, genCtx: GenCtx) : TypeName {
-        if (dtoGenModel.modelSubElRef.parentDslRef !is DslRef.IElementLevel) throw GenException("no IElementLEvel given")
+    context(GenCtxWrapper)
+    fun dtoClassName(dtoGenModel: ModelClassData) : TypeName {
+        if (dtoGenModel.modelSubElRef.parentDslRef !is DslRef.IElementLevel) throw GenException("no IElementLevel given")
         val swappedGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, dtoGenModel.modelSubElRef.parentDslRef))
         return swappedGenModel.poetType
     }

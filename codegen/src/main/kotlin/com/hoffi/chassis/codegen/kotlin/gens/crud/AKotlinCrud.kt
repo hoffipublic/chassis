@@ -38,16 +38,6 @@ abstract class AKotlinCrud(crudData: CrudData): ABaseForCrudAndFiller(crudData, 
         }
     }
 
-    //fun propFiller(targetDslRef: IDslRef, modelrefenum: MODELREFENUM): ClassName {
-    //    val swappedDslRef = when (modelrefenum) {
-    //        MODELREFENUM.MODEL -> throw GenException("MODELs do not have fillers themselves")
-    //        MODELREFENUM.DTO -> DslRef.dto(C.DEFAULT, targetDslRef.parentDslRef)
-    //        MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, targetDslRef.parentDslRef)
-    //    }
-    //    val swappedGenModel = genCtx.genModel(swappedDslRef)
-    //    return ClassName((swappedGenModel.poetType as ClassName).packageName + ".filler", "Filler" + (swappedGenModel.poetType as ClassName).simpleName)
-    //}
-
     val builder = TypeSpec.objectBuilder(crudPoetType).apply {
         kdocGeneratedCrud(genCtx, crudData)
         addSuperinterface(RuntimeDefaults.WAS_GENERATED_INTERFACE_ClassName)
@@ -58,7 +48,6 @@ abstract class AKotlinCrud(crudData: CrudData): ABaseForCrudAndFiller(crudData, 
     }
 
     abstract fun build(crudData: CrudData)
-
 
     fun generate(out: Appendable? = null): TypeSpec {
         val fileSpecBuilder = FileSpec.builder(crudPoetType)

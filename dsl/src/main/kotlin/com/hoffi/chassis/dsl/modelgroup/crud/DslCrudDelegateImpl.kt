@@ -212,7 +212,7 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
     }
 
     override operator fun MODELREFENUM.unaryPlus(): List<CrudData> {
-        val (_, elementRef, _) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslCrudDelegateImpl)
+        val (_, elementRef, _) = DslRef.groupAndElementAndSubelementLevelDslRef(dslCrudDelegateImpl.selfDslRef)
         val crudDatas =  when (this) {
             MODELREFENUM.MODEL -> throw DslException("crudData on '${selfDslRef}' unaryPlus not allowed to a 'MODEL'")
             MODELREFENUM.DTO -> {
@@ -231,7 +231,7 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
     }
 
     override infix fun String.FOR(dslRef: IDslRef): List<CrudData> {
-        val (_, elementRef, _) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslCrudDelegateImpl)
+        val (_, elementRef, _) = DslRef.groupAndElementAndSubelementLevelDslRef(dslCrudDelegateImpl.selfDslRef)
         val tableRef = DslRef.table(C.DEFAULT, elementRef)
         val dtoRef = dslRef as DslRef.IModelOrModelSubelement
         return listOf(
@@ -256,7 +256,7 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
     }
 
     override fun CrudData.CRUD.FOR(modelrefenum: MODELREFENUM): List<CrudData> {
-        val (_, selfElementRef, _) = DslImplModelReffing.groupElementAndSubelementLevelDslRef(dslCrudDelegateImpl)
+        val (_, selfElementRef, _) = DslRef.groupAndElementAndSubelementLevelDslRef(dslCrudDelegateImpl.selfDslRef)
         val crudData =  when (modelrefenum) {
             MODELREFENUM.MODEL -> throw DslException("crud on '${selfDslRef}' unaryPlus not allowed to a 'MODEL'")
             MODELREFENUM.DTO ->   dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, DslRef.table(C.DEFAULT, selfElementRef), DslRef.dto(C.DEFAULT, selfElementRef), this)

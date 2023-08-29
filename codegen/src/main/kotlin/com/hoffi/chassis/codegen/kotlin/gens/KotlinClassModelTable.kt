@@ -1,7 +1,6 @@
 package com.hoffi.chassis.codegen.kotlin.gens
 
 import com.hoffi.chassis.chassismodel.C
-import com.hoffi.chassis.chassismodel.Cap
 import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.RuntimeDefaults.UUIDTABLE_CLASSNAME
 import com.hoffi.chassis.chassismodel.RuntimeDefaults.UUID_PROPNAME
@@ -9,6 +8,7 @@ import com.hoffi.chassis.chassismodel.dsl.GenCtxException
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.codegen.kotlin.GenDslRefHelpers
+import com.hoffi.chassis.codegen.kotlin.GenNaming
 import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
@@ -86,56 +86,18 @@ class KotlinClassModelTable(val tableModel: GenModel.TableModel)
         }
     }
 
-    /** could be static, not dependant on instance but on context(GenCtxWrapper) */
-    fun fkPropVarNameUUID(fk: FK): Pair<String, String> {
-        val fkVarName: String = when (fk.COLLECTIONTYP) {
-            is COLLECTIONTYP.NONE -> fk.toProp.name(postfix = RuntimeDefaults.UUID_PROPNAME)
-            is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                val toTableKotlinClassTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef)
-                "${toTableKotlinClassTable.modelClassData.asVarNameWithoutPostfix}${fk.toProp.name(postfix = RuntimeDefaults.UUID_PROPNAME).Cap()}"
-            }
-
-        }
-        val fkColumnName: String = when (fk.COLLECTIONTYP) {
-            is COLLECTIONTYP.NONE -> fk.toProp.name(postfix = RuntimeDefaults.UUID_PROPNAME)
-            is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                val toTableKotlinClassTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef)
-                toTableKotlinClassTable.modelClassData.modelClassName.tableNameStrategy.nameOf(toTableKotlinClassTable.modelClassData.tableName, postfix = fk.toProp.columnName())
-            }
-        }
-        return Pair(fkVarName, fkColumnName)
-    }
-    /** could be static, not dependant on instance but on context(GenCtxWrapper) */
-    fun fkPropVarName(fk: FK): Pair<String, String> {
-        val fkVarName: String = when (fk.COLLECTIONTYP) {
-            is COLLECTIONTYP.NONE -> fk.toProp.name(postfix = RuntimeDefaults.UUID_PROPNAME)
-            is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                val toTableKotlinClassTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef)
-                "${fk.toProp.name()}${toTableKotlinClassTable.modelClassData.asVarNameWithoutPostfix.Cap()}"
-            }
-
-        }
-        val fkColumnName: String = when (fk.COLLECTIONTYP) {
-            is COLLECTIONTYP.NONE -> fk.toProp.name(postfix = RuntimeDefaults.UUID_PROPNAME)
-            is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                val toTableKotlinClassTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef)
-                toTableKotlinClassTable.modelClassData.modelClassName.tableNameStrategy.nameOf(toTableKotlinClassTable.modelClassData.tableName, postfix = fk.toProp.columnName())
-            }
-        }
-        return Pair(fkVarName, fkColumnName)
-    }
-
     /** build after ALL normal KotlinClassModelTable and their "normal" props are build</br>
      * because the "dependant" KotlinClassModelTable might not yet have been generated and may not yet exist */
     fun buildMany2OneFK(fk: FK) {
-        val (fkPropVarName, fkPropColName) = fkPropVarNameUUID(fk)
+        val fkPropVarName = GenNaming.fkPropVarNameUUID(fk)
+        val fkPropColName = GenNaming.fkPropColumnNameUUID(fk)
         val toKotlinClassmodelTable: AKotlinClass = kotlinGenCtx.kotlinGenClass(fk.toTableRef)
         val propSpecBuilder = PropertySpec.builder(fkPropVarName, DB.ColumnClassName.parameterizedBy(RuntimeDefaults.classNameUUID), fk.toProp.modifiers)
         //propSpecBuilder.initializer("uuid(%S$nullQM).uniqueIndex().references(%T.%L)$nullFunc", columnName, toTable.modelClassData.poetType, toProp.name)
         propSpecBuilder.initializer("uuid(%S).references(%T.%L)", fkPropColName, toKotlinClassmodelTable.modelClassData.poetType, "uuid") // toProp's class uuid
         propSpecBuilder.addAnnotation(
             AnnotationSpec.builder(RuntimeDefaults.ANNOTATION_FKFROM_CLASSNAME)
-                .addMember("%T::class", GenDslRefHelpers.dtoClassName(toKotlinClassmodelTable.modelClassData, genCtx))
+                .addMember("%T::class", GenDslRefHelpers.dtoClassName(toKotlinClassmodelTable.modelClassData))
                 .build()
         )
         //fromKotlinClassModelTable.builder.addProperty(propSpecBuilder.build())
