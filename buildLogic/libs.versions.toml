@@ -12,7 +12,7 @@ arrow = "1.2.0"
 benasher44-uuid = "0.7.0"
 clikt = "4.2.0"
 # global https://github.com/JetBrains/compose-jb/releases
-compose = "1.5.0-dev1060"
+compose = "1.5.0"
 exposed = "0.43.0"
 gradle-versions-catalogUpdate = "0.8.0"
 gradle-versions-filter = "0.1.16"
@@ -25,17 +25,18 @@ jsoup = "1.16.1"
 junit-jupiter = "5.9.3"
 kermit = "2.0.0-RC4"
 kodein = "7.20.1"
-koin = "3.4.2"
-kointest = "3.4.1"
+koin = "3.4.3"
+kointest = "3.4.3"
 koodies = "1.9.7"
-kotest = "5.6.2"
-kotest-extensions-koin = "1.1.0"
+kotest = "5.7.0"
+kotest-extensions-koin = "1.2.0"
+kotest-plugin = "0.4.10"
 # global
 kotlin = "1.9.10"
 kotlin-logging = "3.0.5"
 kotlinpoet = "1.14.2"
 kotlinx-coroutines = "1.7.3"
-kotlinx-datetime = "0.4.0"
+kotlinx-datetime = "0.4.1"
 kotlinx-serialization-json = "1.6.0"
 kotlinx-serialization-kaml = "0.54.0"
 kotlinx-serialization-ktoml = "0.5.0"
@@ -86,6 +87,9 @@ koin = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 kointest = { module = "io.insert-koin:koin-test", version.ref = "kointest" }
 koodies = { module = "com.bkahlert.koodies:koodies", version.ref = "koodies" }
 kotest-extensions-koin = { module = "io.kotest.extensions:kotest-extensions-koin", version.ref = "kotest-extensions-koin" }
+kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
+kotest-framework-dataset = { module = "io.kotest:kotest-framework-datatest", version.ref = "kotest" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-logging = { module = "io.github.microutils:kotlin-logging", version.ref = "kotlin-logging" }
@@ -125,3 +129,6 @@ shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 versions-catalogupdate = { id = "nl.littlerobots.version-catalog-update", version.ref = "gradle-versions-catalogUpdate" }
 versions-filter = { id = "se.ascp.gradle.gradle-versions-filter", version.ref = "gradle-versions-filter" }
 versions-plugin = { id = "com.github.ben-manes.versions", version.ref = "gradle-versions-plugin" }
+
+[bundles]
+testJunitKotestKoin = ["kointest", "kotest-extensions-koin", "kotest-framework-engine", "kotest-framework-engine", "kotest-framework-dataset", "kotest-assertions-core"]

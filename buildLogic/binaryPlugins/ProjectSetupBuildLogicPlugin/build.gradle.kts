@@ -6,6 +6,7 @@ plugins {
 }
 
 dependencies {
+    // versions file: ROOT/buildLogic/libs.versions.toml
     // val libs and its values defined in ROOT/buildLogic/src/main/kotlin/VersionCatalogsExtensions.kt
     implementation(libs.kotlin.gradlePlugin)
 
@@ -29,6 +30,7 @@ gradlePlugin {
 }
 
 dependencies {
+    // versions file: ROOT/buildLogic/libs.versions.toml
 //    implementation(kotlin("stdlib"))
 //    implementation(gradleApi())
 //    implementation("org.gradle.kotlin:gradle-kotlin-dsl-plugins:4.0.15")

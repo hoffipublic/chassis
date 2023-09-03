@@ -14,11 +14,7 @@ import org.gradle.kotlin.dsl.KotlinClosure2
  */
 fun org.gradle.api.tasks.testing.Test.buildLogicJvmTestConfig() {
     // since gradle 8.x JunitPlatform is the default and must not be configured explicitly anymore
-    //useJUnitPlatform {
-    //    //includeEngines("junit-jupiter", "spek2")
-    //    // includeTags "fast"
-    //    // excludeTags "app", "integration", "messaging", "slow", "trivial"
-    //}
+    useJUnitPlatform() // but if missing this line, kotlin kotests won't be found and run TODO
     failFast = false
     buildLogicCommonTestConfig("JVM")
 }
@@ -61,11 +57,14 @@ fun AbstractTestTask.buildLogicCommonTestConfig(targetPlatform: String) {
             }
         }))
     }
+    //beforeTest(KotlinClosure1<TestDescriptor, Unit>({
+    //    print("before any test:")
+    //}))
     afterTest(KotlinClosure2({ desc: TestDescriptor, result: TestResult ->
         if (variant1) {
             println("${desc.displayName} = ${getColoredResultType(result.resultType)}")
         } else {
-            println("${desc.className} | ${desc.displayName} = ${getColoredResultType(result.resultType)}")
+            println("${desc.className?.substringAfterLast(".")} | ${desc.displayName} = ${getColoredResultType(result.resultType)}")
         }
     }))
     if (variant1) {

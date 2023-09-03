@@ -155,8 +155,8 @@ class DslImplOuterCrudBlock(val simpleName: String, val selfDslRef: IDslRef)
         return modelReffing.fakeOf(this, thisModelgroupSubElementRef)
     }
 
-    override fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): IDslRef {
-        return modelReffing.fakeOf(this, thisModelgroupSubElementSimpleName)
+    override fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): IDslRef {
+        return modelReffing.fakeOf(this, thisModelgroupsModelSimpleName)
     }
 
     override fun MODELREFENUM.inModelgroup(otherModelgroupSimpleName: String): OtherModelgroupSubelementWithSimpleNameDefault {
@@ -285,8 +285,8 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
         return modelReffing.fakeOf(this, thisModelgroupSubElementRef)
     }
 
-    override fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): IDslRef {
-        return modelReffing.fakeOf(this, thisModelgroupSubElementSimpleName)
+    override fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): IDslRef {
+        return modelReffing.fakeOf(this, thisModelgroupsModelSimpleName)
     }
 
     override fun MODELREFENUM.inModelgroup(otherModelgroupSimpleName: String): OtherModelgroupSubelementWithSimpleNameDefault {

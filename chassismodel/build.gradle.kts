@@ -12,11 +12,12 @@ val projectPackage: String by extra { "${rootPackage}.${project.name.lowercase()
 
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.versions.kotlinx.coroutines.get()}")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.get()}")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${libs.versions.kotlinx.serialization.json.get()}")
-    implementation("com.squareup.okio:okio:${libs.versions.okio.get()}")
-    implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.get()}")
+    // versions file: ROOT/buildLogic/libs.versions.toml
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.versions.kotlinx.coroutines.v()}")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.v()}")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${libs.versions.kotlinx.serialization.json.v()}")
+    implementation("com.squareup.okio:okio:${libs.versions.okio.v()}")
+    implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.v()}")
 }
 
 tasks {

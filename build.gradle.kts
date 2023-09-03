@@ -5,6 +5,7 @@ plugins {
     id("buildLogic.binaryPlugins.ProjectSetupBuildLogicPlugin")
     id("buildLogic.binaryPlugins.ProjectInfosBuildLogicPlugin")
     id("VersionsUpgradeBuildLogic")
+    //id("io.kotest") version libs.versions.kotest.plugin.get() apply false
 }
 
 group = "com.hoffi"
@@ -48,35 +49,18 @@ val build by tasks.existing {
     finalizedBy(versionsPrint)
 }
 
-allprojects {
-    //println("> root/build.gradle.kts allprojects: $project")
-    project.plugins.withId("org.jetbrains.kotlin.multiplatform") {
-        println("${project.name}: starting configure for kotlin MPP project ...")
-    }
-    project.plugins.withId("org.jetbrains.kotlin.jvm") {
-        println("${project.name}: starting configure for kotlin JVM project ...")
-    }
-}
-
-allprojects {
-    //println("> root/build.gradle.kts subprojects for: sub$project")
-    pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
-        println("root/build.gradle.kts subprojects { configuring sub$project as kotlin(\"jvm\") project }")
-        dependencies {
-            implementation(kotlin("reflect"))
-//            implementation("com.github.ajalt.clikt:clikt".depAndVersion())
-//            implementation("com.squareup:kotlinpoet".depAndVersion())
-//            runtimeOnly("ch.qos.logback:logback-classic".depAndVersion())
-//            implementation("org.slf4j:slf4j-api".depAndVersion())
-        }
-    }
-    pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
-        println("root/build.gradle.kts subprojects { configuring sub$project as kotlin(\"multiplatform\") project }")
-    }
-
-}
+//allprojects {
+//    //println("> root/build.gradle.kts allprojects: $project")
+//    project.plugins.withId("org.jetbrains.kotlin.multiplatform") {
+//        println("${project.name}: starting configure for kotlin MPP project ...")
+//    }
+//    project.plugins.withId("org.jetbrains.kotlin.jvm") {
+//        println("${project.name}: starting configure for kotlin JVM project ...")
+//    }
+//}
 
 dependencies {
+    // versions file: ROOT/buildLogic/libs.versions.toml
     implementation(kotlin("reflect"))
     implementation(project("chassismodel"))
 //    implementation("com.github.ajalt.clikt:clikt".depAndVersion())

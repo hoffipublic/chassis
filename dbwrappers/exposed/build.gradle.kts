@@ -20,10 +20,10 @@ dependencies {
     implementation(project(":chassismodel"))
     implementation(project(":dbwrappers:dbwrappers"))
     implementation(kotlin("reflect"))
-    implementation("com.github.ajalt.clikt:clikt:${libs.versions.clikt.get()}")
-    implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.get()}")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.get()}")
-    implementation("org.jetbrains.exposed:exposed-core:${libs.versions.exposed.get()}")
+    implementation("com.github.ajalt.clikt:clikt:${libs.versions.clikt.v()}")
+    implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.v()}")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.v()}")
+    implementation("org.jetbrains.exposed:exposed-core:${libs.versions.exposed.v()}")
 }
 
 tasks {

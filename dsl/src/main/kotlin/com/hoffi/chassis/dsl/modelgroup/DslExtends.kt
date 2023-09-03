@@ -264,8 +264,8 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         return modelReffing.fakeOf(this, thisModelgroupSubElementRef)
     }
 
-    override fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): IDslRef {
-        return modelReffing.fakeOf(this, thisModelgroupSubElementSimpleName)
+    override fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): IDslRef {
+        return modelReffing.fakeOf(this, thisModelgroupsModelSimpleName)
     }
 
     override fun MODELREFENUM.inModelgroup(otherModelgroupSimpleName: String): OtherModelgroupSubelementWithSimpleNameDefault {

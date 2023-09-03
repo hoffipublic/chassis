@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm")
+    id("kotlinJvmBuildLogic") // ROOT/buildLogic/src/kotlin/kotlinJvmBuildLogic.gradle.kts instead of kotlin("jvm")
     //id("com.github.johnrengelman.shadow")
     application
 }
@@ -17,16 +17,25 @@ application {
 
 
 dependencies {
+    // versions file: ROOT/buildLogic/libs.versions.toml
     implementation(project(":chassismodel"))
     implementation(project(":shared"))
     implementation(project(":dbwrappers:dbwrappers"))
     implementation(project(":dbwrappers:exposed"))
     implementation(kotlin("reflect"))
-    implementation("com.github.ajalt.clikt:clikt:${libs.versions.clikt.get()}")
-    implementation("com.squareup.okio:okio:${libs.versions.okio.get()}")
-    implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.get()}")
-    implementation("org.slf4j:slf4j-api:${libs.versions.slf4j.get()}")
-    implementation("ch.qos.logback:logback-classic:${libs.versions.logback.get()}")
+    implementation("com.github.ajalt.clikt:clikt:${libs.versions.clikt.v()}")
+    implementation("com.squareup.okio:okio:${libs.versions.okio.v()}")
+    implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.v()}")
+    implementation("org.slf4j:slf4j-api:${libs.versions.slf4j.v()}")
+    implementation("ch.qos.logback:logback-classic:${libs.versions.logback.v()}")
+
+    implementation("io.insert-koin:koin-core:${libs.versions.koin.v()}")
+    // test dependencies (bundle from ROOT/buildLogic/libs.versions.toml)
+    testImplementation(libs.bundles.testJunitKotestKoin)
+    // for running junit tests
+    testImplementation(kotlin("test"))
+    // for running kotest tests
+    testImplementation("io.kotest:kotest-runner-junit5:${libs.versions.kotest.v()}")
 }
 
 tasks {

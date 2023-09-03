@@ -14,6 +14,7 @@ plugins {
 }
 
 dependencies {
+    // versions file: ROOT/buildLogic/libs.versions.toml
     // val libs and its values defined in ROOT/buildLogic/src/main/kotlin/VersionCatalogsExtensions.kt
     implementation(libs.kotlin.gradlePlugin)
     implementation("com.github.ben-manes:gradle-versions-plugin:${libs.versions.gradle.versions.plugin.get()}")

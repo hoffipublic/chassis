@@ -184,8 +184,8 @@ class DslImplOuterFillerBlock(val simpleName: String, val selfDslRef: IDslRef)
         return modelReffing.fakeOf(this, thisModelgroupSubElementRef)
     }
 
-    override fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): IDslRef {
-        return modelReffing.fakeOf(this, thisModelgroupSubElementSimpleName)
+    override fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): IDslRef {
+        return modelReffing.fakeOf(this, thisModelgroupsModelSimpleName)
     }
 
     override fun MODELREFENUM.inModelgroup(otherModelgroupSimpleName: String): OtherModelgroupSubelementWithSimpleNameDefault {
@@ -402,8 +402,8 @@ class DslImplInnerFillerBlock(val businessName: String, val dslOuterFillerBlockI
         return modelReffing.fakeOf(this, thisModelgroupSubElementRef)
     }
 
-    override fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): IDslRef {
-        return modelReffing.fakeOf(this, thisModelgroupSubElementSimpleName)
+    override fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): IDslRef {
+        return modelReffing.fakeOf(this, thisModelgroupsModelSimpleName)
     }
 
     override fun MODELREFENUM.inModelgroup(otherModelgroupSimpleName: String): OtherModelgroupSubelementWithSimpleNameDefault {

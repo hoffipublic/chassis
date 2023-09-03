@@ -9,6 +9,13 @@ plugins {
 
 // you may configure stuff of plugins that you imported above
 
+// as io.insert-koin:koin-test imported older kotlin version test stuff
+configurations.all {
+    resolutionStrategy.capabilitiesResolution.withCapability("org.jetbrains.kotlin:kotlin-test-framework-impl") {
+        selectHighestVersion()
+    }
+}
+
 kotlin {
     jvmToolchain(BuildLogicGlobal.jdkVersion)
     tasks.withType<Test>().configureEach {
@@ -16,11 +23,9 @@ kotlin {
     }
 }
 afterEvaluate {
-    tasks {
-        named<JavaExec>("run") {
-            // needed if App wants to read from stdin
-            standardInput = System.`in`
-        }
+    tasks.withType<JavaExec>() {// e.g.: run
+        // needed if App wants to read from stdin
+        standardInput = System.`in`
     }
 }
 
@@ -29,5 +34,6 @@ afterEvaluate {
 //}
 
 dependencies {
+    // versions file: ROOT/buildLogic/libs.versions.toml
 
 }

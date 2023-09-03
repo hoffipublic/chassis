@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm")
+    id("kotlinJvmBuildLogic") // ROOT/buildLogic/src/kotlin/kotlinJvmBuildLogic.gradle.kts instead of kotlin("jvm")
     //id("com.github.johnrengelman.shadow")
 }
 
@@ -15,18 +15,20 @@ dependencies {
     implementation(project(":chassismodel"))
     implementation(project(":dbwrappers:dbwrappers"))
     implementation(project(":dbwrappers:exposed"))
-    implementation("io.arrow-kt:arrow-core:${libs.versions.arrow.get()}")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.get()}")
-    implementation("com.squareup.okio:okio:${libs.versions.okio.get()}")
+    implementation(kotlin("reflect"))
+    implementation("io.arrow-kt:arrow-core:${libs.versions.arrow.v()}")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:${libs.versions.kotlinx.datetime.v()}")
+    implementation("com.squareup.okio:okio:${libs.versions.okio.v()}")
     implementation("org.reflections:reflections:0.10.2")
-    implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.get()}")
+    implementation("com.squareup:kotlinpoet:${libs.versions.kotlinpoet.v()}")
 
-    testImplementation("io.kotest:kotest-framework-engine:${libs.versions.kotest.asProvider().get()}")
-    testImplementation("io.kotest:kotest-framework-datatest:${libs.versions.kotest.asProvider().get()}")
-    testImplementation("io.kotest:kotest-assertions-core:${libs.versions.kotest.asProvider().get()}")
-    testImplementation(kotlin("test-common"))
-    testImplementation(kotlin("test-annotations-common"))
-    testRuntimeOnly("io.kotest:kotest-runner-junit5:${libs.versions.kotest.asProvider().get()}")
+    implementation("io.insert-koin:koin-core:${libs.versions.koin.v()}")
+    // test dependencies (bundle from ROOT/buildLogic/libs.versions.toml)
+    testImplementation(libs.bundles.testJunitKotestKoin)
+    // for running junit tests
+    testImplementation(kotlin("test"))
+    // for running kotest tests
+    testImplementation("io.kotest:kotest-runner-junit5:${libs.versions.kotest.v()}")
 }
 
 tasks {

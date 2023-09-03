@@ -15,7 +15,7 @@ data class OtherModelgroupSubelementWithSimpleNameDefault(val modelrefEnumOfReff
 @ChassisDslMarker
 interface IDslApiModelReffing {
     infix fun MODELREFENUM.of(thisModelgroupSubElementRef: IDslRef): IDslRef
-    infix fun MODELREFENUM.of(thisModelgroupSubElementSimpleName: String): IDslRef // + for super class (referencing this@modelgroup's name of ModelSubElement MODELELEMENT.(DTO|TABLE)
+    infix fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): IDslRef // + for super class (referencing this@modelgroup's name of ModelSubElement MODELELEMENT.(DTO|TABLE)
     infix fun MODELREFENUM.inModelgroup(otherModelgroupSimpleName: String): OtherModelgroupSubelementWithSimpleNameDefault // + for super class
     infix fun OtherModelgroupSubelementWithSimpleNameDefault.withModelName(modelName: String): IDslRef
 }
