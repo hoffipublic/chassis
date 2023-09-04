@@ -33,8 +33,8 @@ abstract class AKotlinCrud(crudData: CrudData): ABaseForCrudAndFiller(crudData, 
             val targetGenModel = genCtx.genModel(crudData.targetDslRef)
             crudBasePath = targetGenModel.modelClassName.basePath
             crudPath =     targetGenModel.modelClassName.path
-            crudPoetType = targetGenModel.modelClassName.crudBasePoetTypeForAllCruds + currentCrudData.crud.toString()
-            //targetGenModel.crudBasePoetTypeForAllCruds + "${currentCrudData.crud}"
+            crudPoetType = targetGenModel.modelClassName.crudBasePoetTypeForAllCruds + currentCrudData.crud.simpleName
+            //targetGenModel.crudBasePoetTypeForAllCruds + "${currentCrudData.crud.simpleName}"
         }
     }
 

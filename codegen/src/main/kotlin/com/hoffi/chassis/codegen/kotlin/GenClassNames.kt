@@ -25,7 +25,6 @@ object GenClassNames {
         if (subelDslRef !is DslRef.ISubElementLevel) throw GenException("targetDslRef for propCrud($subelDslRef) always should be a (model) subelement (DTO, TABLE, ...)")
         val swappedDslRef = DslRef.table(C.DEFAULT, subelDslRef.parentDslRef)
         val swappedGenModel = genCtx.genModel(swappedDslRef)
-        return ClassName(swappedGenModel.poetType.packageName + ".sql", swappedGenModel.modelClassName.crudBasePoetTypeForAllCruds.simpleName + crud.toString())
+        return ClassName(swappedGenModel.poetType.packageName + ".sql", swappedGenModel.modelClassName.crudBasePoetTypeForAllCruds.simpleName + crud.simpleName)
     }
-
 }

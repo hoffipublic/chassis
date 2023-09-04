@@ -34,7 +34,7 @@ object PoetHelpers {
     fun TypeSpec.Builder.kdocGeneratedCrud(genCtx: GenCtx, crudData: CrudData): TypeSpec.Builder {
         val modelClassData = genCtx.genModel(crudData.targetDslRef)
         return this.addKdoc(
-            "CRUD ${crudData.crud} for %L model: %L\nwith dslRef: %L\ngenerated at %L on %L",
+            "CRUD ${crudData.crud.simpleName} for %L model: %L\nwith dslRef: %L\ngenerated at %L on %L",
             modelClassData.modelSubElRef.refList.last().functionName,
             modelClassData.modelOrTypeNameString,
             modelClassData.modelSubElRef,

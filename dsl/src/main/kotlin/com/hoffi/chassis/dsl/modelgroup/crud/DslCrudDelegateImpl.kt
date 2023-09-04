@@ -38,8 +38,8 @@ interface IDslApiCrudBlock
     enum class GREEDY { SHALLOW, DEEP }
     val STANDARD: String
         get() = "STANDARD"
-    val CRUD: String
-        get() = "CRUD"
+    val CRUDALL: String
+        get() = "CRUDALL"
     operator fun String.unaryPlus(): CrudData
     operator fun MODELREFENUM.unaryPlus(): List<CrudData>
     infix fun String.FOR(dslRef: IDslRef): List<CrudData>
@@ -243,10 +243,9 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
     }
 
     override fun String.FOR(modelrefenum: MODELREFENUM): List<CrudData> {
-        // TODO not implemented yet
         when (this) {
             STANDARD -> { }
-            CRUD -> {}
+            CRUDALL -> {}
         }
         val listOfCrudData: MutableList<CrudData> = mutableListOf()
         for (c in CrudData.CRUD.entries) {
@@ -259,15 +258,15 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
         val (_, selfElementRef, _) = DslRef.groupAndElementAndSubelementLevelDslRef(dslCrudDelegateImpl.selfDslRef)
         val crudData =  when (modelrefenum) {
             MODELREFENUM.MODEL -> throw DslException("crud on '${selfDslRef}' unaryPlus not allowed to a 'MODEL'")
-            MODELREFENUM.DTO ->   dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, DslRef.table(C.DEFAULT, selfElementRef), DslRef.dto(C.DEFAULT, selfElementRef), this)
-            MODELREFENUM.TABLE -> dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, DslRef.table(C.DEFAULT, selfElementRef), DslRef.dto(C.DEFAULT, selfElementRef), this)
+            MODELREFENUM.DTO ->   dslCrudDelegateImpl.getOrCreateCrudData(this@DslImplInnerCrudBlock.simpleName, businessName, DslRef.table(C.DEFAULT, selfElementRef), DslRef.dto(C.DEFAULT, selfElementRef), this)
+            MODELREFENUM.TABLE -> dslCrudDelegateImpl.getOrCreateCrudData(this@DslImplInnerCrudBlock.simpleName, businessName, DslRef.table(C.DEFAULT, selfElementRef), DslRef.dto(C.DEFAULT, selfElementRef), this)
         }
         return listOf(crudData)
     }
 
     override fun CrudData.CRUD.FOR(dslRef: IDslRef): List<CrudData> {
         val crudData = WhensDslRef.whenModelSubelement(dslRef,
-            isDtoRef = { dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, DslRef.table(simpleName, dslRef.parentDslRef), dslRef, this) },
+            isDtoRef = { dslCrudDelegateImpl.getOrCreateCrudData(this@DslImplInnerCrudBlock.simpleName, businessName, DslRef.table(this@DslImplInnerCrudBlock.simpleName, dslRef.parentDslRef), dslRef, this) },
             isTableRef = { throw DslException("on ${dslCrudDelegateImpl.selfDslRef} $this FOR $dslRef not allowed for table { }") }
         ) {
             DslException("unknonwn error for ${dslCrudDelegateImpl.selfDslRef} $this FOR $dslRef not allowed for table { }")

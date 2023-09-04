@@ -58,7 +58,7 @@ interface IDslRef {
             get() = mutableListOf(DslRef.DslRefAtom(C.NULLSTRING, C.NULLSTRING))
 
         override fun toString(last: Int) = C.NULLSTRING
-        override fun equals(other: Any?): Boolean = other?.equals(NULL) ?: false
+        override fun equals(other: Any?): Boolean = other === NULL
         override fun hashCode(): Int = refList.hashCode()
     }
     fun toString(last: Int): String

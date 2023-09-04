@@ -15,8 +15,9 @@ import com.hoffi.chassis.dsl.modelgroup.IDslApiConstructorVisibility.VISIBILITY.
 import com.hoffi.chassis.dsl.scratchdslEXAMPLES.COMMON__PERSISTENT_OPTIMISTIC
 import com.hoffi.chassis.shared.shared.COPYTYPE.IGNORE
 import com.hoffi.chassis.shared.shared.COPYTYPE.NEW
-import com.hoffi.chassis.shared.shared.CrudData.CRUD.CREATE
-import com.hoffi.chassis.shared.shared.CrudData.CRUD.READ
+import com.hoffi.chassis.shared.shared.CrudData.CRUD.Companion.CREATE
+import com.hoffi.chassis.shared.shared.CrudData.CRUD.Companion.READ
+import com.hoffi.chassis.shared.shared.CrudData.CRUD.Companion.READSELECT
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.*
@@ -115,9 +116,9 @@ fun entities() {
                 crud {
                     STANDARD FOR DTO
                     +DTO
-                    CRUD FOR DTO
+                    CRUDALL FOR DTO
                     prefixed("somePrefix") {
-                        (READ FOR DTO) deepRestrictions  {
+                        (READ.viaSelects FOR DTO) deepRestrictions  {
                             IGNORE propName "subentitys"
                             IGNORE("subentitys", "someModelObject")
                         }
@@ -126,7 +127,8 @@ fun entities() {
                             IGNORE("subentitys", "someModelObject")
                         }
                     }
-                    READ FOR (DTO of ENTITY__SUBENTITY)
+                    READSELECT FOR DTO
+                    READSELECT FOR (DTO of ENTITY__SUBENTITY)
                     prefixed("subentity") {
                         READ FOR (DTO of ENTITY__SUBENTITY) deepRestrictions {
                             IGNORE propName "subentitys"
@@ -141,7 +143,7 @@ fun entities() {
                         }
                     }
                     prefixed("woModels") {
-                        CRUD FOR (DTO inModelgroup ENTITYGROUP withModelName ENTITY__SOMEMODEL) deepRestrictions  {
+                        CRUDALL FOR (DTO inModelgroup ENTITYGROUP withModelName ENTITY__SOMEMODEL) deepRestrictions  {
                             NEW model (DTO of ENTITY__SUBENTITY)
                         }
                     }

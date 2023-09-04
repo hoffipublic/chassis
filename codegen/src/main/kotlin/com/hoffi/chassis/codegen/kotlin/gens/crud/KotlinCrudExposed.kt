@@ -34,6 +34,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         log.trace("build({})", currentCrudData)
         if (crudData.sourceDslRef.parentDslRef.simpleName != crudData.targetDslRef.parentDslRef.simpleName) {
             // CREATE from some other DTO than this CRUD's Table
+            log.warn("NOT creating CRUD because source-model and target-model differ: '$crudData'")
             return
         }
 
@@ -41,10 +42,10 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         // CrudData always(!) has targetDslRef Table
         // FillerData might have targetDslRef DTO <-- TABLE sourceDslRef
         when (currentCrudData.crud) {
-            CrudData.CRUD.CREATE -> genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.targetDslRef, currentCrudData.sourceDslRef, currentCrudData, via = "${this::class.simpleName} '$crudData'"))
-            CrudData.CRUD.READ ->   genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.sourceDslRef, currentCrudData.targetDslRef, currentCrudData, via = "${this::class.simpleName} '$crudData'"))
-            CrudData.CRUD.UPDATE -> genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.targetDslRef, currentCrudData.sourceDslRef, currentCrudData, via = "${this::class.simpleName} '$crudData'"))
-            CrudData.CRUD.DELETE -> genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.targetDslRef, currentCrudData.sourceDslRef, currentCrudData, via = "${this::class.simpleName} '$crudData'"))
+            is CrudData.CRUD.CREATE -> genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.targetDslRef, currentCrudData.sourceDslRef, currentCrudData, via = "${this::class.simpleName} '$crudData'"))
+            is CrudData.CRUD.READ ->   genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.sourceDslRef, currentCrudData.targetDslRef, currentCrudData, via = "${this::class.simpleName} '$crudData'"))
+            is CrudData.CRUD.UPDATE -> genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.targetDslRef, currentCrudData.sourceDslRef, currentCrudData, via = "${this::class.simpleName} '$crudData'"))
+            is CrudData.CRUD.DELETE -> genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.targetDslRef, currentCrudData.sourceDslRef, currentCrudData, via = "${this::class.simpleName} '$crudData'"))
         }
 
         val targetGenModel: GenModel = genCtx.genModel(crudData.targetDslRef)
@@ -71,13 +72,27 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             isTableRef = { "resultRow${intersectPropsData.targetVarNamePostfix}" },
         )
 
-        when (currentCrudData.crud) {
-            CrudData.CRUD.CREATE -> { insertDb(intersectPropsData) }
-            CrudData.CRUD.READ ->   { readDb(intersectPropsData) }
-            CrudData.CRUD.UPDATE -> { log.warn("KotlinCrudExposed for ${currentCrudData.crud} not implemented yet") ; return }
-            CrudData.CRUD.DELETE -> { log.warn("KotlinCrudExposed for ${currentCrudData.crud} not implemented yet") ; return }
+        when (val crud = currentCrudData.crud) {
+            is CrudData.CRUD.CREATE -> { insertDb(intersectPropsData) }
+            is CrudData.CRUD.READ ->   {
+                when (crud.variant) {
+                    CrudData.CRUD.READ.READVARIANT.ALLVARIANTS -> {
+                        readByJoinDb(intersectPropsData)
+                        readBySelect(intersectPropsData)
+                    }
+                    CrudData.CRUD.READ.READVARIANT.JOIN -> readByJoinDb(intersectPropsData)
+                    CrudData.CRUD.READ.READVARIANT.SELECT -> readBySelect(intersectPropsData)
+                }
+            }
+            is CrudData.CRUD.UPDATE -> { log.warn("KotlinCrudExposed for ${currentCrudData.crud} not implemented yet") ; return }
+            is CrudData.CRUD.DELETE -> { log.warn("KotlinCrudExposed for ${currentCrudData.crud} not implemented yet") ; return }
         }
         super.alreadyCreated = true
+    }
+
+    private fun readBySelect(i: IntersectPropertys.CommonPropData) {
+        // TODO("Not yet implemented")
+        readByJoinDb(i)
     }
 
     private fun insertDb(i: IntersectPropertys.CommonPropData) {
@@ -221,7 +236,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
 //                    }
 //                    bodyBuilder.addStatement(
 //                        "%T.%L(%L.%L%L, %L) /* , otherBackref1, otherBackref2) */",
-//                        propCrud(this.modelSubElementRef, CrudData.CRUD.CREATE),
+//                        propCrud(this.modelSubElementRef, CRUD.CREATE),
 //                        "batchInsertDb",
 //                        i.sourceVarName,
 //                        prop.name(),
@@ -284,7 +299,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
 //        return body
     }
 
-    private fun readDb(i: IntersectPropertys.CommonPropData) {
+    private fun readByJoinDb(i: IntersectPropertys.CommonPropData) {
         val tableClassModel: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
         val outgoingFKs = tableClassModel.outgoingFKs
         val incomingFKs = tableClassModel.incomingFKs
