@@ -90,11 +90,6 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         super.alreadyCreated = true
     }
 
-    private fun readBySelect(i: IntersectPropertys.CommonPropData) {
-        // TODO("Not yet implemented")
-        readByJoinDb(i)
-    }
-
     private fun insertDb(i: IntersectPropertys.CommonPropData) {
         val tableClassModel: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
         val outgoingFKs = tableClassModel.outgoingFKs
@@ -299,12 +294,84 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
 //        return body
     }
 
+    private fun readBySelect(i: IntersectPropertys.CommonPropData) {
+        val tableClassModel: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
+        val outgoingFKs = tableClassModel.outgoingFKs
+        val incomingFKs = tableClassModel.incomingFKs
+
+        // add needed syntheticCruds (if not specified in DSL), we'll also need the Fillers for them, too
+        for (propEither in i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }.map { it.eitherTypModelOrClass }) {
+            if (propEither is EitherTypOrModelOrPoetType.EitherModel) {
+                val propSubElRef = propEither.modelSubElementRef
+                genCtx.addSyntheticCrudData(SynthCrudData.create(DslRef.table(propSubElRef.simpleName, propSubElRef.parentDslRef), DslRef.dto(propSubElRef.simpleName, propSubElRef.parentDslRef), currentCrudData, "via insert"))
+            }
+        }
+
+        var funName: FunName
+        var funSpec: FunSpec.Builder
+        // ============================
+        // fun readBySelect
+        // ============================
+        funName = funNameExpanded("readBySelect", currentCrudData)
+        @OptIn(ExperimentalKotlinPoetApi::class)
+        funSpec = FunSpec.builder(funName.funName).contextReceivers(DB.TransactionClassName)
+            .addParameter("selectLambda", LambdaTypeName.get(receiver = DB.SqlExpressionBuilderClassName, parameters = emptyList(), returnType = DB.OpClassName.parameterizedBy(BOOLEAN)))
+            .returns(List::class.asTypeName().parameterizedBy(i.sourcePoetType))
+        funSpec
+            .addStatement("val query: %T = %L.%M(selectLambda)", DB.QueryClassName, i.targetPoetType, DB.selectMember)
+            .addComment("execute query against DB")
+            .addStatement("val resultRowList: %T = query.toList()", List::class.asTypeName().parameterizedBy(DB.ResultRowClassName))
+            .addStatement("val selected%L = mutableListOf<%T>()", i.sourcePoetType.simpleName, i.sourcePoetType)
+            .beginControlFlow("for (rr in resultRowList)")
+            .addStatement("val %L = %T.%L(rr)", i.sourceGenModel.asVarName, GenClassNames.fillerFor(i.sourceGenModel.modelSubElRef, MODELREFENUM.TABLE), i.sourceGenModel.asVarName)
+            .addComment("one2One models")
+            .readOne2OneModels(outgoingFKs, i, funName, tableClassModel)
+            .addComment("many2One models")
+            .readMany2OneModels(incomingFKs, i, funName, tableClassModel)
+            .addComment("add")
+            .addStatement("selected%L.add(%L)", i.sourcePoetType.simpleName, i.sourceGenModel.asVarName)
+            .endControlFlow()
+            .addStatement("return selected%L", i.sourcePoetType.simpleName)
+        builder.addFunction(funSpec.build())
+    }
+    private fun FunSpec.Builder.readOne2OneModels(outgoingFKs: MutableSet<FK>, i: IntersectPropertys.CommonPropData, funName: FunName, tableClassModel: KotlinClassModelTable): FunSpec.Builder {
+        var none = true
+        for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
+            none = false
+            beginControlFlow("val %L = %T.%L",
+                fk.toProp.name(),
+                GenClassNames.crudFor(fk.toTableRef, CrudData.CRUD.READ),
+                funName.funName
+            )
+            val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinClassModelTable
+            addStatement("%T.%L eq rr[%T.%L]", toPropKotlinClassModelTable.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME, tableClassModel.modelClassData.poetType, GenNaming.fkPropVarNameUUID(fk))
+            endControlFlow()
+            addStatement(".firstOrNull()")
+            addStatement("%L.%L = %L!!", i.sourceGenModel.asVarName, fk.toProp.name(), fk.toProp.name())
+        }
+        if (none) addComment("NONE")
+        return this
+    }
+    private fun FunSpec.Builder.readMany2OneModels(incomingFKs: MutableSet<FK>, i: IntersectPropertys.CommonPropData, funName: FunName, tableClassModel: KotlinClassModelTable): FunSpec.Builder {
+        var none = true
+        for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
+            none = false
+            beginControlFlow("val %L = %T.%L", fk.toProp.name(), GenClassNames.crudFor(fk.fromTableRef, CrudData.CRUD.READ), funName.funName)
+            val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
+            addStatement("%T.%L eq rr[%T.%L]", toPropKotlinClassModelTable.modelClassData.poetType, GenNaming.fkPropVarNameUUID(fk), tableClassModel.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME)
+            endControlFlow()
+            addStatement("%L.%L%L.addAll(%L)", i.sourceGenModel.asVarName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
+        }
+        if (none) addComment("NONE")
+        return this
+    }
+
     private fun readByJoinDb(i: IntersectPropertys.CommonPropData) {
         val tableClassModel: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
         val outgoingFKs = tableClassModel.outgoingFKs
         val incomingFKs = tableClassModel.incomingFKs
 
-        // add neede syntheticCruds (if not specified in DSL), we'll also need the Fillers for them, too
+        // add needed syntheticCruds (if not specified in DSL), we'll also need the Fillers for them, too
         for (propEither in i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }.map { it.eitherTypModelOrClass }) {
             if (propEither is EitherTypOrModelOrPoetType.EitherModel) {
                 val propSubElRef = propEither.modelSubElementRef

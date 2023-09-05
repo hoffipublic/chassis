@@ -24,6 +24,7 @@ object DB_EXPOSED : IDB_Wrapper {
     override val QueryClassName = ClassName("org.jetbrains.exposed.sql", "Query")
     override val ResultRowClassName = ClassName("org.jetbrains.exposed.sql", "ResultRow")
     override val SqlExpressionBuilderClassName = ClassName("org.jetbrains.exposed.sql", "SqlExpressionBuilder")
+    override val ISqlExpressionBuilderClassName = ClassName("org.jetbrains.exposed.sql", "ISqlExpressionBuilder")
     override val StdOutSqlLoggerClassName = ClassName("org.jetbrains.exposed.sql", "StdOutSqlLogger")
     override val TableClassName = ClassName("org.jetbrains.exposed.sql","Table")
     override val TablePrimaryKeyClassName = ClassName("org.jetbrains.exposed.sql","Table", "PrimaryKey")
@@ -38,6 +39,7 @@ object DB_EXPOSED : IDB_Wrapper {
     }
 
     override fun InsertStatementTypeName(): TypeName = InsertStatement::class.asTypeName().parameterizedBy(Number::class.asTypeName())
+    override val eqMember = MemberName(ISqlExpressionBuilderClassName, "eq")
     override val insertMember = MemberName("org.jetbrains.exposed.sql", "insert")
     override val batchInsertMember = MemberName("org.jetbrains.exposed.sql", "batchInsert")
     override val selectMember = MemberName("org.jetbrains.exposed.sql", "select")

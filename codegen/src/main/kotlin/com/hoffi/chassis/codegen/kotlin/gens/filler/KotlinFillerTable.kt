@@ -4,7 +4,6 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.Cap
 import com.hoffi.chassis.chassismodel.decap
 import com.hoffi.chassis.chassismodel.dsl.GenException
-import com.hoffi.chassis.codegen.kotlin.GenClassNames
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.codegen.kotlin.GenDslRefHelpers
 import com.hoffi.chassis.codegen.kotlin.IntersectPropertys
@@ -16,7 +15,6 @@ import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.SynthFillerData
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
-import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.hoffi.chassis.shared.whens.WhensDslRef
 import com.squareup.kotlinpoet.*
 
@@ -157,7 +155,8 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                 preNonCollection = { },
                 preCollection = { },
                 isModel = {
-                    funSpec.addStatement("%L.%L = %T.%L(%L)", i.targetVarName, prop.name(), GenClassNames.fillerFor(modelSubElementRef, MODELREFENUM.TABLE), prop.eitherTypModelOrClass.modelClassName.asVarName, i.sourceVarName)
+                    // will be done by CRUD READ select call
+                    //funSpec.addStatement("%L.%L = %T.%L(%L)", i.targetVarName, prop.name(), GenClassNames.fillerFor(modelSubElementRef, MODELREFENUM.TABLE), prop.eitherTypModelOrClass.modelClassName.asVarName, i.sourceVarName)
 
                     addSyntheticFillersForTableModelProp(this, this@KotlinFillerTable.currentFillerData, via = "TableFiller for prop: '$prop' from currentFillerData: ${currentFillerData}")
                 },

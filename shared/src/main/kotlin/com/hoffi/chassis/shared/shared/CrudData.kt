@@ -19,9 +19,9 @@ open class CrudData(businessName: String, targetDslRef: IDslRef, sourceDslRef: I
                 data object DEFAULT : CREATEVARIANT()
             }
         }
-        class READ(override val variant: READVARIANT = READVARIANT.JOIN) : CRUD() {
+        class READ(override val variant: READVARIANT = READVARIANT.ALLVARIANTS) : CRUD() {
             val viaJoins: READ
-                get() = READ
+                get() = READJOIN
             val viaSelects: READ
                 get() = READSELECT
             val viaAllVariants: READ
@@ -50,6 +50,7 @@ open class CrudData(businessName: String, targetDslRef: IDslRef, sourceDslRef: I
             val CREATE = CREATE()
             val READ = READ()
             val READALLVARIANTS = READ(CRUD.READ.READVARIANT.ALLVARIANTS)
+            val READJOIN = READ(CRUD.READ.READVARIANT.JOIN)
             val READSELECT = READ(CRUD.READ.READVARIANT.SELECT)
             val UPDATE = UPDATE()
             val DELETE = DELETE()

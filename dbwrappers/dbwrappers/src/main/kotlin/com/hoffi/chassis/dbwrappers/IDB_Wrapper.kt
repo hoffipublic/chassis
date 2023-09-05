@@ -18,6 +18,7 @@ interface IDB_Wrapper {
     val QueryClassName: ClassName
     val ResultRowClassName: ClassName
     val SqlExpressionBuilderClassName: ClassName
+    val ISqlExpressionBuilderClassName: ClassName
     val StdOutSqlLoggerClassName: ClassName
     val TableClassName: ClassName
     val TablePrimaryKeyClassName: ClassName
@@ -27,6 +28,7 @@ interface IDB_Wrapper {
     fun Column(columnTypeName: ClassName) : TypeName
     fun InsertStatementTypeName(): TypeName
     val batchInsertMember: MemberName
+    val eqMember: MemberName
     val insertMember: MemberName
     val selectMember: MemberName
     val transactionAddLoggerMember: MemberName
