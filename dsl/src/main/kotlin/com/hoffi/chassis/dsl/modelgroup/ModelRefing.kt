@@ -14,8 +14,8 @@ data class OtherModelgroupSubelementWithSimpleNameDefault(val modelrefEnumOfReff
 
 @ChassisDslMarker
 interface IDslApiModelReffing {
-    infix fun MODELREFENUM.of(thisModelgroupSubElementRef: IDslRef): IDslRef
-    infix fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): IDslRef // + for super class (referencing this@modelgroup's name of ModelSubElement MODELELEMENT.(DTO|TABLE)
+    infix fun MODELREFENUM.of(thisModelgroupSubElementRef: IDslRef): DslRef.IModelOrModelSubelement
+    infix fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): DslRef.IModelOrModelSubelement // + for super class (referencing this@modelgroup's name of ModelSubElement MODELELEMENT.(DTO|TABLE)
     infix fun MODELREFENUM.inModelgroup(otherModelgroupSimpleName: String): OtherModelgroupSubelementWithSimpleNameDefault // + for super class
     infix fun OtherModelgroupSubelementWithSimpleNameDefault.withModelName(modelName: String): IDslRef
 }
@@ -23,9 +23,9 @@ interface IDslApiModelReffing {
 /** delegate IDslApiModelReffing to this */
 class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelReffing {
 
-    fun fakeOf(modelelement: MODELREFENUM, thisModelgroupSubElementRef: IDslRef): IDslRef = modelelement of thisModelgroupSubElementRef
+    fun fakeOf(modelelement: MODELREFENUM, thisModelgroupSubElementRef: IDslRef): DslRef.IModelOrModelSubelement = modelelement of thisModelgroupSubElementRef
 
-    override infix fun MODELREFENUM.of(thisModelgroupSubElementRef: IDslRef): IDslRef {
+    override infix fun MODELREFENUM.of(thisModelgroupSubElementRef: IDslRef): DslRef.IModelOrModelSubelement {
         if (thisModelgroupSubElementRef !is DslRef.IModelSubelement) throw DslException("is no subelement level ref $thisModelgroupSubElementRef")
         val modelRef = DslRef.modelRefFrom(dslClass.selfDslRef)
         val dslRef: IDslRef = when (this) {
@@ -33,12 +33,12 @@ class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelRef
             MODELREFENUM.DTO ->   DslRef.dto(  C.DEFAULT, modelRef)
             MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, modelRef)
         }
-        return dslRef
+        return dslRef as DslRef.IModelOrModelSubelement
     }
 
-    fun fakeOf(modelelement: MODELREFENUM, thisModelgroupsModelSimpleName: String): IDslRef = modelelement of thisModelgroupsModelSimpleName
+    fun fakeOf(modelelement: MODELREFENUM, thisModelgroupsModelSimpleName: String): DslRef.IModelOrModelSubelement = modelelement of thisModelgroupsModelSimpleName
 
-    override infix fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): IDslRef {
+    override infix fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): DslRef.IModelOrModelSubelement {
         val groupRef = DslRef.groupRefFrom(dslClass.selfDslRef)
         val otherModelRef = DslRef.model(thisModelgroupsModelSimpleName, groupRef)
         val dslRef: IDslRef =  when (this) {
@@ -46,7 +46,7 @@ class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelRef
             MODELREFENUM.DTO ->   DslRef.dto(  C.DEFAULT, otherModelRef)
             MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, otherModelRef)
         }
-        return dslRef
+        return dslRef as DslRef.IModelOrModelSubelement
     }
 
 

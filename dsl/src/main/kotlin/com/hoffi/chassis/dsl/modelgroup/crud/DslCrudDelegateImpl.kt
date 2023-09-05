@@ -151,11 +151,11 @@ class DslImplOuterCrudBlock(val simpleName: String, val selfDslRef: IDslRef)
 
     val modelReffing = DslImplModelReffing(dslCrudDelegateImpl)
 
-    override fun MODELREFENUM.of(thisModelgroupSubElementRef: IDslRef): IDslRef {
+    override fun MODELREFENUM.of(thisModelgroupSubElementRef: IDslRef): DslRef.IModelOrModelSubelement {
         return modelReffing.fakeOf(this, thisModelgroupSubElementRef)
     }
 
-    override fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): IDslRef {
+    override fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): DslRef.IModelOrModelSubelement {
         return modelReffing.fakeOf(this, thisModelgroupsModelSimpleName)
     }
 
@@ -194,13 +194,13 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
 
     override fun <E : AHasCopyBoundrysData> List<E>.shallowRestrictions(dslApiCopyBoundryBlock: IDslApiCopyBoundry.() -> Unit) {
         for (hasCopyBoundryData in this) {
-            with(DslImplCopyBoundryOn(hasCopyBoundryData)) { this.apply(dslApiCopyBoundryBlock) }
+            with(DslImplCopyBoundryOn(false, hasCopyBoundryData)) { this.apply(dslApiCopyBoundryBlock) }
         }
     }
 
     override fun <E : AHasCopyBoundrysData> List<E>.deepRestrictions(dslApiCopyBoundryBlock: IDslApiCopyBoundry.() -> Unit) {
         for (hasCopyBoundryData in this) {
-            with(DslImplCopyBoundryOn(hasCopyBoundryData)) { this.apply(dslApiCopyBoundryBlock) }
+            with(DslImplCopyBoundryOn(true, hasCopyBoundryData)) { this.apply(dslApiCopyBoundryBlock) }
         }
     }
 
@@ -280,11 +280,11 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
 
     val modelReffing = DslImplModelReffing(dslCrudDelegateImpl)
 
-    override fun MODELREFENUM.of(thisModelgroupSubElementRef: IDslRef): IDslRef {
+    override fun MODELREFENUM.of(thisModelgroupSubElementRef: IDslRef): DslRef.IModelOrModelSubelement {
         return modelReffing.fakeOf(this, thisModelgroupSubElementRef)
     }
 
-    override fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): IDslRef {
+    override fun MODELREFENUM.of(thisModelgroupsModelSimpleName: String): DslRef.IModelOrModelSubelement {
         return modelReffing.fakeOf(this, thisModelgroupsModelSimpleName)
     }
 

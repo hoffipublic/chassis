@@ -4,8 +4,8 @@ import com.hoffi.chassis.shared.dsl.IDslRef
 
 open class FillerData(businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef)
     : AHasCopyBoundrysData(businessName, targetDslRef, sourceDslRef) {
-    override fun toString() = "Filler('$businessName', '${targetDslRef.toString(2)}' <-- '${sourceDslRef.toString(2)}', " +
-            theCopyBoundrys.values.joinToString("") { it.toString() }.ifBlank { "NONE" } + ")"
+    override fun toString() = "${this::class.simpleName}('$businessName', '${targetDslRef.toString(2)}' <-- '${sourceDslRef.toString(2)}', " +
+            "boundys:" + super.toString()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -23,16 +23,16 @@ open class FillerData(businessName: String, targetDslRef: IDslRef, sourceDslRef:
 }
 class SynthFillerData private constructor(businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef, val via: String)
     : FillerData(businessName, targetDslRef, sourceDslRef) {
-    override fun toString() = "Synth${super.toString()}->\"$via\""
+    override fun toString() = "${super.toString()} ==via==> \"$via\""
     companion object {
         fun create(targetDslRef: IDslRef, sourceDslRef: IDslRef, originalFiller: FillerData, via: String): SynthFillerData {
             val synthFillerData = SynthFillerData(originalFiller.businessName, targetDslRef, sourceDslRef, via)
-            synthFillerData.theCopyBoundrys.putAll(originalFiller.theCopyBoundrys)
+            synthFillerData.addAllFrom(originalFiller)
             return synthFillerData
         }
         fun create(targetDslRef: IDslRef, sourceDslRef: IDslRef, originalCrud: CrudData, via: String): SynthFillerData {
             val synthFillerData = SynthFillerData(originalCrud.businessName, targetDslRef, sourceDslRef, via)
-            synthFillerData.theCopyBoundrys.putAll(originalCrud.theCopyBoundrys)
+            synthFillerData.addAllFrom(originalCrud)
             return synthFillerData
         }
     }

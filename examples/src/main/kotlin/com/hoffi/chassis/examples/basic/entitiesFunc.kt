@@ -161,20 +161,19 @@ fun entities() {
                 //(DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) from DTO
                 prefixed("withoutModels") {
                     (DTO mutual TABLE) shallowRestrictions {
-                        copyBoundry(IGNORE, "subentitys", "someModelObject")
-                        IGNORE propName "subentitys"
-                        IGNORE model (DTO of ENTITY__SUBENTITY) onlyIf COLLECTIONTYP.COLLECTION
-                        IGNORE("subentitys", "someModelObject")
+                        IGNORE propName "someModelObject∆" // TODO XXX ∆ check if prop exists!!!
+                        IGNORE("someModelObject") // vararg
+                        copyBoundry(IGNORE, "someModelObject") // vararg extended form
                     }
                     (DTO mutual TABLE) deepRestrictions {
-                        copyBoundry(IGNORE, "subentitys", "someModelObject")
                         IGNORE propName "subentitys"
+                        IGNORE("subentitys") // vararg
+                        copyBoundry(IGNORE, "subentitys") // vararg extended form
                         IGNORE model (DTO of ENTITY__SUBENTITY) onlyIf COLLECTIONTYP.COLLECTION
-                        IGNORE("subentitys", "someModelObject")
                     }
                     FOR((TABLE from DTO), (DTO from TABLE)) deepRestrictions {
                         IGNORE propName "subentitys"
-                        IGNORE("subentitys", "someModelObject")
+                        IGNORE("subentitys") // vararg
                     }
                     +DTO deepRestrictions {
                     //FOR DTO {

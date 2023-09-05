@@ -158,7 +158,7 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                     // will be done by CRUD READ select call
                     //funSpec.addStatement("%L.%L = %T.%L(%L)", i.targetVarName, prop.name(), GenClassNames.fillerFor(modelSubElementRef, MODELREFENUM.TABLE), prop.eitherTypModelOrClass.modelClassName.asVarName, i.sourceVarName)
 
-                    addSyntheticFillersForTableModelProp(this, this@KotlinFillerTable.currentFillerData, via = "TableFiller for prop: '$prop' from currentFillerData: ${currentFillerData}")
+                    addSyntheticFillersForTableModelProp(this, this@KotlinFillerTable.currentFillerData, via = "TableFiller for prop: '$prop' from currentFillerData: $currentFillerData")
                 },
                 isPoetType = {
                     funSpec.addStatement("// not yet implemented ${prop.name()} PoetType of %T", prop.poetType)
