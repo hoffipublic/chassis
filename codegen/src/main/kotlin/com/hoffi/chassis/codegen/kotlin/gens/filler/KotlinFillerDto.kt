@@ -56,7 +56,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     Tag.PRIMARY !in it.tags && // just a copy, so do NOT copy the "identity" over
                     it.collectionType == COLLECTIONTYP.NONE
         }) {
-            funSpec.addStatement("%L.%L = %L.%L", i.targetVarName, nonModelProp.name(), i.sourceVarName, nonModelProp.name())
+            funSpec.addStatement("%L%L.%L = %L.%L", if (nonModelProp.immutable) "// " else "", i.targetVarName, nonModelProp.name(), i.sourceVarName, nonModelProp.name())
         }
         funSpec.addStatement("return %L", i.targetVarName)
         builder.addFunction(funSpec.build())
@@ -77,7 +77,7 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> {
                             funSpec.addComment("beware of recursive calls, if Type or some submodel of it has a reference to this")
-                            funSpec.addStatement("%L.%L = %T.%L()", i.targetVarName, prop.name(), prop.poetType, "createDeepWithNewEmptyModels")
+                            funSpec.addStatement("%L%L.%L = %T.%L()", if (prop.immutable) "// " else "", i.targetVarName, prop.name(), prop.poetType, "createDeepWithNewEmptyModels")
                         }
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
                             funSpec.addCode(clearCollection(i.targetVarName, prop))
@@ -121,15 +121,15 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                 is EitherTypOrModelOrPoetType.EitherModel -> {
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> {
-                            funSpec.addStatement("%L.%L = %L.%L", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
+                            funSpec.addStatement("%L%L.%L = %L.%L", if (prop.immutable) "// " else "", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
                         }
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name())
-                            funSpec.addStatement("// %L.%L.addAll(%L.%L)", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
+                            funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
+                            funSpec.addStatement("%L%L.%%LL.addAll(%L.%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name())
                         }
                         is COLLECTIONTYP.SET -> {
-                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name())
-                            funSpec.addStatement("// %L.%L.addAll(%L.%L.toList())", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
+                            funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
+                            funSpec.addStatement("%L%L.%L%L.addAll(%L.%L%L.toList()%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name(), if (prop.isNullable) "?" else "", if (prop.isNullable) " ?: emptyList()" else "")
                         }
                     }
                 }
@@ -137,12 +137,12 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> {}
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name())
-                            funSpec.addStatement("// %L.%L.addAll(%L.%L)", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
+                            funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
+                            funSpec.addStatement("%L%L.%L%L.addAll(%L.%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name())
                         }
                         is COLLECTIONTYP.SET -> {
-                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name())
-                            funSpec.addStatement("// %L.%L.addAll(%L.%L.toList())", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
+                            funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
+                            funSpec.addStatement("%L%L.%L%L.addAll(%L.%L%L.toList()%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name(), if (prop.isNullable) "?" else "", if (prop.isNullable) " ?: emptyList()" else "")
                         }
                     }
                 }
@@ -150,12 +150,12 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> { }
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name())
-                            funSpec.addStatement("// %L.%L.addAll(%L.%L)", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
+                            funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
+                            funSpec.addStatement("%L%L.%L%L.addAll(%L.%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name())
                         }
                         is COLLECTIONTYP.SET -> {
-                            funSpec.addStatement("// %L.%L.clear()", i.targetVarName, prop.name())
-                            funSpec.addStatement("// %L.%L.addAll(%L.%L.toList())", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
+                            funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
+                            funSpec.addStatement("%L%L.%L%L.addAll(%L.%L.toList())", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name())
                         }
                     }
                 }
@@ -202,14 +202,18 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                         val propEitherModelFillerClassName = propEither.modelClassName.fillerPoetType
                         when (prop.collectionType) {
                             is COLLECTIONTYP.NONE -> {
-                                funSpec.addCode(
-                                    """if (${i.sourceVarName}.${prop.name()} === %T.NULL)
-                                        |    ${i.targetVarName}.${prop.name()} = ${i.sourceVarName}.${prop.name()}
-                                        |else
-                                        |    %T.%L(${i.targetVarName}.${prop.name()}, ${i.sourceVarName}.${prop.name()})
-                                        |""".trimMargin(),
-                                    prop.poetType, propEitherModelFillerClassName, "copyDeepInto"
-                                )
+                                if (prop.immutable) {
+                                    funSpec.addComment("%L.%L is immutable", i.targetVarName, prop.name())
+                                } else {
+                                    funSpec.addCode(
+                                        """if (${i.sourceVarName}.${prop.name()} === %T.NULL)
+                                            |    ${i.targetVarName}.${prop.name()} = ${i.sourceVarName}.${prop.name()}
+                                            |else
+                                            |    %T.%L(${i.targetVarName}.${prop.name()}, ${i.sourceVarName}.${prop.name()})
+                                            |""".trimMargin(),
+                                        prop.poetType, propEitherModelFillerClassName, "copyDeepInto"
+                                    )
+                                }
                             }
                             is COLLECTIONTYP.SET, is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
                                 funSpec.addCode(clearCollection(i.targetVarName, prop))

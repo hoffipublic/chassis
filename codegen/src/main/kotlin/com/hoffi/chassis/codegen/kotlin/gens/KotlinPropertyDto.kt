@@ -59,7 +59,7 @@ class KotlinPropertyDto(property: Property, val genModel: KotlinClassModelDto) :
             },
             isModelList = {},
             isModelSet = {},
-            postNonCollection = { if (property.mutable.bool) initBuilder.mutable() /* val or var */ },
+            postNonCollection = { if (!property.immutable) initBuilder.mutable() /* val or var */ },
             isModelCollection = {},
             isModelIterable = {},
             isPoetTypeList = {},

@@ -15,7 +15,6 @@ import com.hoffi.chassis.shared.strategies.IVarNameStrategy
 import com.hoffi.chassis.shared.strategies.VarNameStrategy
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.TypeName
 
 class Property(
     val dslPropName: String,
@@ -44,6 +43,8 @@ class Property(
 
     // convenience methods
 
+    val immutable: Boolean
+        get() = !mutable.bool
     val isNullable: Boolean
         get() = Tag.NULLABLE in tags
     val isNullableGenerictype: Boolean

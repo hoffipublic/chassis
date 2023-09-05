@@ -155,9 +155,7 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                 preNonCollection = { },
                 preCollection = { },
                 isModel = {
-                    // will be done by CRUD READ select call
-                    //funSpec.addStatement("%L.%L = %T.%L(%L)", i.targetVarName, prop.name(), GenClassNames.fillerFor(modelSubElementRef, MODELREFENUM.TABLE), prop.eitherTypModelOrClass.modelClassName.asVarName, i.sourceVarName)
-
+                    funSpec.addComment("%L.%L dealt with in sql.CRUD...", i.targetVarName, prop.name())
                     addSyntheticFillersForTableModelProp(this, this@KotlinFillerTable.currentFillerData, via = "TableFiller for prop: '$prop' from currentFillerData: $currentFillerData")
                 },
                 isPoetType = {
@@ -166,16 +164,16 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                 isTyp = { funSpec.addStatement("%L.%L = %L[%T.%L]", i.targetVarName, prop.name(), i.sourceVarName, i.sourcePoetType, prop.name()) },
                 postNonCollection = { },
                 isModelList = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+                    funSpec.addComment("%L.%L LIST of %T dealt with in sql.CRUD...", i.targetVarName, prop.name(), prop.poetType)
                 },
                 isModelSet = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+                    funSpec.addComment("%L.%L SET of %T dealt with in sql.CRUD...", i.targetVarName, prop.name(), prop.poetType)
                 },
                 isModelCollection = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+                    funSpec.addComment("%L.%L COLLECTION of %T dealt with in sql.CRUD...", i.targetVarName, prop.name(), prop.poetType)
                 },
                 isModelIterable = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+                    funSpec.addComment("%L.%L ITERABLE of %T dealt with in sql.CRUD...", i.targetVarName, prop.name(), prop.poetType)
                 },
                 isPoetTypeList = {
                     funSpec.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
