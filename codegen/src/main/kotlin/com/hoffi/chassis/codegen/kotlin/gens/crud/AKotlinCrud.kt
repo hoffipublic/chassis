@@ -12,13 +12,11 @@ import com.hoffi.chassis.shared.shared.CrudData
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
 import com.squareup.kotlinpoet.*
 import okio.Path
-import org.slf4j.LoggerFactory
 
 context(GenCtxWrapper)
 abstract class AKotlinCrud(crudData: CrudData): ABaseForCrudAndFiller(crudData, MODELKIND.TABLEKIND) {
     var currentCrudData: CrudData = crudData // changes for every build() call, also helpfull for debugging
     override fun toString() = "${this::class.simpleName}(current${currentCrudData})"
-    protected val log = LoggerFactory.getLogger(this::class.java)
     val alreadyCreatedCruds: MutableSet<CrudData> = mutableSetOf()
     fun alreadyCreated(crudData: CrudData) = ! alreadyCreatedCruds.add(crudData)
 

@@ -160,32 +160,44 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         if (funNameInsertOrBatch.originalFunName.startsWith("batch")) {
             for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
                 none = false
-                addStatement("%T.%L(%L.flatMap { it.%L%L }, %L.flatMap { %L -> %L.%L%L.map { it.%L to %L.%L } }.toMap())",
-                    GenClassNames.crudFor((fk.toProp.eitherTypModelOrClass as EitherTypOrModelOrPoetType.EitherModel).modelSubElementRef, CrudData.CRUD.CREATE),
-                    funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertDb"),
-                    i.sourceVarName + "s",
-                    fk.toProp.name(), if (fk.toProp.isNullable) " ?: emptyList()" else "",
-                    i.sourceVarName + "s",
-                    i.sourceVarName, i.sourceVarName,
-                    fk.toProp.name(), if (fk.toProp.isNullable) "!!" else "",
-                    RuntimeDefaults.UUID_PROPNAME, i.sourceVarName, RuntimeDefaults.UUID_PROPNAME
+                propBoundry(fk.toProp,
+                    noPropBoundry = {
+                        addStatement("%T.%L(%L.flatMap { it.%L%L }, %L.flatMap { %L -> %L.%L%L.map { it.%L to %L.%L } }.toMap())",
+                            GenClassNames.crudFor((fk.toProp.eitherTypModelOrClass as EitherTypOrModelOrPoetType.EitherModel).modelSubElementRef, CrudData.CRUD.CREATE),
+                            funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertDb"),
+                            i.sourceVarName + "s",
+                            fk.toProp.name(), if (fk.toProp.isNullable) " ?: emptyList()" else "",
+                            i.sourceVarName + "s",
+                            i.sourceVarName, i.sourceVarName,
+                            fk.toProp.name(), if (fk.toProp.isNullable) "!!" else "",
+                            RuntimeDefaults.UUID_PROPNAME, i.sourceVarName, RuntimeDefaults.UUID_PROPNAME
+                        )
+                    },
+                    IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
+                    ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
                 )
             }
         } else {
             for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
                 none = false
-                addStatement("%T.%L(%L.%L%L, %L%L.%L%L%L.associate { it.%L to %L.%L } /* , otherBackref1, otherBackref2, ... */)",
-                    GenClassNames.crudFor(fk.fromTableRef, CrudData.CRUD.CREATE),
-                    funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertDb"),
-                    i.sourceVarName,
-                    fk.toProp.name(), if (fk.toProp.isNullable) " ?: emptyList()" else "",
-                    if (fk.toProp.isNullable) "(" else "",
-                    i.sourceVarName,
-                    fk.toProp.name(), if (fk.toProp.isNullable) " ?: emptyList()" else "",
-                    if (fk.toProp.isNullable) ")" else "",
-                    RuntimeDefaults.UUID_PROPNAME,
-                    i.sourceVarName,
-                    RuntimeDefaults.UUID_PROPNAME
+                propBoundry(fk.toProp,
+                    noPropBoundry = {
+                        addStatement("%T.%L(%L.%L%L, %L%L.%L%L%L.associate { it.%L to %L.%L } /* , otherBackref1, otherBackref2, ... */)",
+                            GenClassNames.crudFor(fk.fromTableRef, CrudData.CRUD.CREATE),
+                            funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertDb"),
+                            i.sourceVarName,
+                            fk.toProp.name(), if (fk.toProp.isNullable) " ?: emptyList()" else "",
+                            if (fk.toProp.isNullable) "(" else "",
+                            i.sourceVarName,
+                            fk.toProp.name(), if (fk.toProp.isNullable) " ?: emptyList()" else "",
+                            if (fk.toProp.isNullable) ")" else "",
+                            RuntimeDefaults.UUID_PROPNAME,
+                            i.sourceVarName,
+                            RuntimeDefaults.UUID_PROPNAME
+                        )
+                    },
+                    IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
+                    ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
                 )
             }
         }
@@ -323,7 +335,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             .addStatement("val resultRowList: %T = query.toList()", List::class.asTypeName().parameterizedBy(DB.ResultRowClassName))
             .addStatement("val selected%L = mutableListOf<%T>()", i.sourcePoetType.simpleName, i.sourcePoetType)
             .beginControlFlow("for (rr in resultRowList)")
-            .addStatement("val %L = %T.%L(rr)", i.sourceGenModel.asVarName, GenClassNames.fillerFor(i.sourceGenModel.modelSubElRef, MODELREFENUM.TABLE), i.sourceGenModel.asVarName)
+            .addStatement("val %L = %T.%L(rr)", i.sourceGenModel.asVarName, GenClassNames.fillerFor(i.sourceGenModel.modelSubElRef, MODELREFENUM.TABLE), GenNaming.createFromTableFunName(currentCrudData, i.sourceGenModel.modelClassName))
             .addComment("one2One models")
             .readOne2OneModels(outgoingFKs, i, funName, tableClassModel)
             .addComment("many2One models")
@@ -338,16 +350,22 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         var none = true
         for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
             none = false
-            beginControlFlow("val %L = %T.%L",
-                fk.toProp.name(),
-                GenClassNames.crudFor(fk.toTableRef, CrudData.CRUD.READ),
-                funName.funName
+            propBoundry(fk.toProp,
+                noPropBoundry = {
+                    beginControlFlow("val %L = %T.%L",
+                        fk.toProp.name(),
+                        GenClassNames.crudFor(fk.toTableRef, CrudData.CRUD.READ),
+                        funName.funName
+                    )
+                    val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinClassModelTable
+                    addStatement("%T.%L eq rr[%T.%L]", toPropKotlinClassModelTable.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME, tableClassModel.modelClassData.poetType, GenNaming.fkPropVarNameUUID(fk))
+                    endControlFlow()
+                    addStatement(".firstOrNull()")
+                    addStatement("%L.%L = %L!!", i.sourceGenModel.asVarName, fk.toProp.name(), fk.toProp.name())
+                },
+                IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
+                ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
             )
-            val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinClassModelTable
-            addStatement("%T.%L eq rr[%T.%L]", toPropKotlinClassModelTable.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME, tableClassModel.modelClassData.poetType, GenNaming.fkPropVarNameUUID(fk))
-            endControlFlow()
-            addStatement(".firstOrNull()")
-            addStatement("%L.%L = %L!!", i.sourceGenModel.asVarName, fk.toProp.name(), fk.toProp.name())
         }
         if (none) addComment("NONE")
         return this
@@ -356,11 +374,17 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         var none = true
         for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
             none = false
-            beginControlFlow("val %L = %T.%L", fk.toProp.name(), GenClassNames.crudFor(fk.fromTableRef, CrudData.CRUD.READ), funName.funName)
-            val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
-            addStatement("%T.%L eq rr[%T.%L]", toPropKotlinClassModelTable.modelClassData.poetType, GenNaming.fkPropVarNameUUID(fk), tableClassModel.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME)
-            endControlFlow()
-            addStatement("%L.%L%L.addAll(%L)", i.sourceGenModel.asVarName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
+            propBoundry(fk.toProp,
+                noPropBoundry = {
+                    beginControlFlow("val %L = %T.%L", fk.toProp.name(), GenClassNames.crudFor(fk.fromTableRef, CrudData.CRUD.READ), funName.funName)
+                    val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
+                    addStatement("%T.%L eq rr[%T.%L]", toPropKotlinClassModelTable.modelClassData.poetType, GenNaming.fkPropVarNameUUID(fk), tableClassModel.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME)
+                    endControlFlow()
+                    addStatement("%L.%L%L.addAll(%L)", i.sourceGenModel.asVarName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
+                },
+                IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
+                ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
+            )
         }
         if (none) addComment("NONE")
         return this
@@ -381,7 +405,10 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
 
         var funName: FunName
         var funSpec: FunSpec.Builder
-        if (incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }.size + outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }.size > 0) {
+        //if (incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }.size + outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }.size > 0) {
+        val joinProps = incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE } + outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }
+        val ignoredJoinProps = joinProps.flatMap { propHasBoundry(it.toProp) }.filter { it.copyType == COPYTYPE.IGNORE }
+        if (joinProps.size > ignoredJoinProps.size) {
             // ============================
             // fun simpleEntityTableJoin
             // ============================
@@ -417,7 +444,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
                 .addParameter("selectLambda", LambdaTypeName.get(receiver = DB.SqlExpressionBuilderClassName, parameters = emptyList(), returnType = DB.OpClassName.parameterizedBy(BOOLEAN)))
                 .returns(List::class.asTypeName().parameterizedBy(i.sourcePoetType))
             funSpec
-                .addStatement("val resultRowList: List<%T> = %L(selectLambda)", DB.ResultRowClassName, "execToDb")
+                .addStatement("val resultRowList: List<%T> = %L(selectLambda)", DB.ResultRowClassName, funName.swapOutOriginalFunNameWith("execToDb"))
                 .addComment("unmarshalling _within_ transaction scope")
                 .addStatement("val selected%L = %L(resultRowList)", i.sourcePoetType.simpleName, funName.swapOutOriginalFunNameWith("unmarshall${i.sourcePoetType.simpleName}s"))
                 .addStatement("return selected%L", i.sourcePoetType.simpleName)
@@ -466,8 +493,13 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         var none = true
         for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
             none = false
-            //var currentSimpleSubentityDto: SimpleSubentityDto = SimpleSubentityDto.NULL
-            addStatement("var current%L = %T.NULL", fk.toProp.name(), fk.toProp.poetType)
+            propBoundry(fk.toProp,
+                noPropBoundry = {
+                    addStatement("var current%L = %T.NULL", fk.toProp.name(), fk.toProp.poetType)
+                },
+                IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
+                ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
+            )
         }
         if (none) addComment("NONE")
         return this
@@ -479,13 +511,19 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         // if (rr[SimpleEntityTable.uuid] != currentSimpleEntityDto.uuid) {
         beginControlFlow("if (rr[%T.%L] != current%L.%L)", i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, i.sourceGenModel.poetTypeSimpleName, RuntimeDefaults.UUID_PROPNAME)
         this.addComment("base model")
-        this.addStatement("current%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, GenClassNames.fillerFor(i.sourceGenModel.modelSubElRef, MODELREFENUM.TABLE), i.sourceGenModel.asVarName)
+        this.addStatement("current%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, GenClassNames.fillerFor(i.sourceGenModel.modelSubElRef, MODELREFENUM.TABLE), GenNaming.createFromTableFunName(currentCrudData, i.sourceGenModel.modelClassName))
             .addStatement("read%Ls.add(current%L)", i.sourceGenModel.poetTypeSimpleName, i.sourceGenModel.poetTypeSimpleName)
         this.addComment("one2One models")
         var none = true
         for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
             none = false
-            this.addStatement("current%L.%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), GenClassNames.fillerFor(fk.toTableRef, MODELREFENUM.TABLE), fk.toProp.eitherTypModelOrClass.modelClassName.asVarName)
+            propBoundry(fk.toProp,
+                noPropBoundry = {
+                    this.addStatement("current%L.%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), GenClassNames.fillerFor(fk.toTableRef, MODELREFENUM.TABLE), GenNaming.createFromTableFunName(currentCrudData, fk.toProp.eitherTypModelOrClass.modelClassName))
+                },
+                IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
+                ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
+            )
         }
         if (none) this.addComment("NONE")
         endControlFlow()
@@ -493,12 +531,18 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         none = true
         for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
             none = false
-            val toPropTableGenModel = genCtx.genModel(fk.fromTableRef)
-            //val toPropDtoGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
-            beginControlFlow("if (rr[%T.%L] != current%L.%L)", toPropTableGenModel.poetType, RuntimeDefaults.UUID_PROPNAME, fk.toProp.name(), RuntimeDefaults.UUID_PROPNAME)
-            addStatement("current%L = %T.%L(rr)", fk.toProp.name(), GenClassNames.fillerFor(fk.fromTableRef, MODELREFENUM.TABLE), fk.toProp.eitherTypModelOrClass.modelClassName.asVarName)
-            addStatement("current%L.%L%L.add(current%L)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
-            endControlFlow()
+            propBoundry(fk.toProp,
+                noPropBoundry = {
+                    val toPropTableGenModel = genCtx.genModel(fk.fromTableRef)
+                    //val toPropDtoGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
+                    beginControlFlow("if (rr[%T.%L] != current%L.%L)", toPropTableGenModel.poetType, RuntimeDefaults.UUID_PROPNAME, fk.toProp.name(), RuntimeDefaults.UUID_PROPNAME)
+                    addStatement("current%L = %T.%L(rr)", fk.toProp.name(), GenClassNames.fillerFor(fk.fromTableRef, MODELREFENUM.TABLE), GenNaming.createFromTableFunName(currentCrudData, fk.toProp.eitherTypModelOrClass.modelClassName))
+                    addStatement("current%L.%L%L.add(current%L)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
+                    endControlFlow()
+                },
+                IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
+                ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
+            )
         }
         if (none) this.addComment("NONE")
         endControlFlow() // of if/while
@@ -510,10 +554,16 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         var none = true
         for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
             none = false
-            val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinClassModelTable
-            //val toPropTableGenModel = genCtx.genModel(fk.toTableRef)
-            //val toPropDtoGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
-            addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassData.poetType, DB.JoinTypeClassName, i.targetPoetType, GenNaming.fkPropVarNameUUID(fk), toPropKotlinClassModelTable.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME)
+            propBoundry(fk.toProp,
+                noPropBoundry = {
+                    val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinClassModelTable
+                    //val toPropTableGenModel = genCtx.genModel(fk.toTableRef)
+                    //val toPropDtoGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
+                    addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassData.poetType, DB.JoinTypeClassName, i.targetPoetType, GenNaming.fkPropVarNameUUID(fk), toPropKotlinClassModelTable.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME)
+                },
+                IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
+                ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
+            )
         }
         if (none) addComment("NONE")
         return this
@@ -523,8 +573,14 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         var none = true
         for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
             none = false
-            val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
-            addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassData.poetType, DB.JoinTypeClassName, i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, toPropKotlinClassModelTable.modelClassData.poetType, GenNaming.fkPropVarNameUUID(fk))
+            propBoundry(fk.toProp,
+                noPropBoundry = {
+                    val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
+                    addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassData.poetType, DB.JoinTypeClassName, i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, toPropKotlinClassModelTable.modelClassData.poetType, GenNaming.fkPropVarNameUUID(fk))
+                },
+                IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
+                ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
+            )
         }
         if (none) addComment("NONE")
         return this

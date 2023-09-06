@@ -14,13 +14,16 @@ import com.hoffi.chassis.codegen.kotlin.gens.filler.KotlinFillerTablePoetStateme
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
+import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.*
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import org.slf4j.LoggerFactory
 
 context(GenCtxWrapper)
 abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyBoundrysData, val modelkind: MODELKIND) {
+    protected val log = LoggerFactory.getLogger(this::class.java)
     var alreadyCreated: Boolean = false
     var currentAHasCopyBoundryData = originalAHasCopyBoundrysData
 
@@ -265,6 +268,57 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
         add(postfixCodeBlock)
         add("\n")
         return this
+    }
+
+    /** if prop has (any) boundry it will be the one and only element contained in returned list</br>
+     * if prop has no boundry at all, returned list will be empty */
+    protected fun propHasBoundry(prop: Property): List<CopyBoundry> {
+        val resultList = mutableListOf<CopyBoundry>()
+        propBoundry(prop,
+            ELSE = { copyBoundry -> resultList.add(copyBoundry) }
+        ) { }
+        return resultList
+    }
+    /** if the given prop has a boundry, the corresponding lambda will be called,</br>
+     * if the corresponding lambda is not given/null then the ELSE lambda will be called (if given).</br>
+     * if the given pop has no boundry at all, the noPropBoundry lambda will be called */
+    protected fun propBoundry(
+        prop: Property,
+        IGNORE:   ((CopyBoundry) -> Unit)? = null,
+        INSTANCE: ((CopyBoundry) -> Unit)? = null,
+        NEW:      ((CopyBoundry) -> Unit)? = null,
+        DEEP:     ((CopyBoundry) -> Unit)? = null,
+        DEEPNEW:  ((CopyBoundry) -> Unit)? = null,
+        ELSE:     ((CopyBoundry) -> Unit)? = null,
+        noPropBoundry: () -> Unit
+    ) {
+        val pName = prop.name()
+        val copyBoundrysForProp: MutableList<CopyBoundry> = mutableListOf()
+        var propCopyBoundry = currentAHasCopyBoundryData.propNameCopyBoundrys[prop.name()]
+        if (propCopyBoundry != null) copyBoundrysForProp.add(propCopyBoundry)
+        propCopyBoundry = currentAHasCopyBoundryData.propRefCopyBoundrys[prop.propRef]
+        if (propCopyBoundry != null) copyBoundrysForProp.add(propCopyBoundry)
+        propCopyBoundry = currentAHasCopyBoundryData.modelRefCopyBoundrys[prop.containedInSubelementRef]
+        if (propCopyBoundry == null) { propCopyBoundry = currentAHasCopyBoundryData.modelRefCopyBoundrys[prop.containedInSubelementRef.parentDslRef] }
+        if (propCopyBoundry != null) copyBoundrysForProp.add(propCopyBoundry)
+        propCopyBoundry = currentAHasCopyBoundryData.classNameCopyBoundrys[prop.poetType]
+        if (propCopyBoundry != null) copyBoundrysForProp.add(propCopyBoundry)
+        if (copyBoundrysForProp.isEmpty()) {
+            noPropBoundry()
+            return
+        }
+        if (copyBoundrysForProp.size > 1) {
+            log.warn("more than one copyBoundrysForProp {} of {} : {}", prop, prop.containedInSubelementRef, copyBoundrysForProp.joinToString("', '", "'", "'"))
+        }
+
+        val copyBoundry = copyBoundrysForProp.first()
+        when (copyBoundry.copyType) {
+            COPYTYPE.IGNORE ->   if (IGNORE != null)   IGNORE(copyBoundry)   else if (ELSE != null) ELSE(copyBoundry)
+            COPYTYPE.INSTANCE -> if (INSTANCE != null) INSTANCE(copyBoundry) else if (ELSE != null) ELSE(copyBoundry)
+            COPYTYPE.NEW ->      if (NEW != null)      NEW(copyBoundry)      else if (ELSE != null) ELSE(copyBoundry)
+            COPYTYPE.DEEP ->     if (DEEP != null)     DEEP(copyBoundry)     else if (ELSE != null) ELSE(copyBoundry)
+            COPYTYPE.DEEPNEW ->  if (DEEPNEW != null)  DEEPNEW(copyBoundry)  else if (ELSE != null) ELSE(copyBoundry)
+        }
     }
 
     protected fun addSyntheticFillersForTableModelProp(propEitherModel: EitherTypOrModelOrPoetType.EitherModel, currentFillerData: FillerData, via: String) {

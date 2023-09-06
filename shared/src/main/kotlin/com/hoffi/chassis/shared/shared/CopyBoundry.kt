@@ -5,7 +5,9 @@ import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.squareup.kotlinpoet.ClassName
 
-data class CopyBoundry(val copyType: COPYTYPE, val shallowFalseDeepTrue: Boolean)
+data class CopyBoundry(val copyType: COPYTYPE, val shallowFalseDeepTrue: Boolean, val boundryType: BOUNDRYTYPE) {
+    enum class BOUNDRYTYPE { propName, propRef, modelRef, className }
+}
 
 abstract class AHasCopyBoundrysData(var businessName: String, val targetDslRef: IDslRef, val sourceDslRef: IDslRef) {
     val propNameCopyBoundrys = mutableMapOf<String, CopyBoundry>()
@@ -22,7 +24,7 @@ abstract class AHasCopyBoundrysData(var businessName: String, val targetDslRef: 
 
     fun addPropNameCopyBoundry(copyType: COPYTYPE, shallowFalseDeepTrue: Boolean, vararg propName: String): AHasCopyBoundrysData {
         for (it in propName) {
-            val newCopyBoundry = CopyBoundry(copyType, shallowFalseDeepTrue)
+            val newCopyBoundry = CopyBoundry(copyType, shallowFalseDeepTrue, CopyBoundry.BOUNDRYTYPE.propName)
             val copyBoundryExisted = propNameCopyBoundrys.putIfAbsent(it, newCopyBoundry)
             if (copyBoundryExisted != null && copyBoundryExisted != newCopyBoundry) {
                 // it already had a different CopyBoundry
@@ -33,7 +35,7 @@ abstract class AHasCopyBoundrysData(var businessName: String, val targetDslRef: 
     }
     fun addPropRefCopyBoundry(copyType: COPYTYPE, shallowFalseDeepTrue: Boolean, vararg propRef: DslRef.prop): AHasCopyBoundrysData {
         for (it in propRef) {
-            val newCopyBoundry = CopyBoundry(copyType, shallowFalseDeepTrue)
+            val newCopyBoundry = CopyBoundry(copyType, shallowFalseDeepTrue, CopyBoundry.BOUNDRYTYPE.propRef)
             val copyBoundryExisted = propRefCopyBoundrys.putIfAbsent(it, newCopyBoundry)
             if (copyBoundryExisted != null && copyBoundryExisted != newCopyBoundry) {
                 // it already had a different CopyBoundry
@@ -44,7 +46,7 @@ abstract class AHasCopyBoundrysData(var businessName: String, val targetDslRef: 
     }
     fun addModelRefCopyBoundry(copyType: COPYTYPE, shallowFalseDeepTrue: Boolean, vararg modelRef: DslRef.IModelOrModelSubelement): AHasCopyBoundrysData {
         for (it in modelRef) {
-            val newCopyBoundry = CopyBoundry(copyType, shallowFalseDeepTrue)
+            val newCopyBoundry = CopyBoundry(copyType, shallowFalseDeepTrue, CopyBoundry.BOUNDRYTYPE.modelRef)
             val copyBoundryExisted = modelRefCopyBoundrys.putIfAbsent(it, newCopyBoundry)
             if (copyBoundryExisted != null && copyBoundryExisted != newCopyBoundry) {
                 // it already had a different CopyBoundry
@@ -55,7 +57,7 @@ abstract class AHasCopyBoundrysData(var businessName: String, val targetDslRef: 
     }
     fun addClassNameCopyBoundry(copyType: COPYTYPE, shallowFalseDeepTrue: Boolean, vararg className: ClassName): AHasCopyBoundrysData {
         for (it in className) {
-            val newCopyBoundry = CopyBoundry(copyType, shallowFalseDeepTrue)
+            val newCopyBoundry = CopyBoundry(copyType, shallowFalseDeepTrue, CopyBoundry.BOUNDRYTYPE.className)
             val copyBoundryExisted = classNameCopyBoundrys.putIfAbsent(it, newCopyBoundry)
             if (copyBoundryExisted != null && copyBoundryExisted != newCopyBoundry) {
                 // it already had a different CopyBoundry
@@ -86,12 +88,13 @@ abstract class AHasCopyBoundrysData(var businessName: String, val targetDslRef: 
                 COPYTYPE.DEEPNEW ->  DN.add(if (e.value.shallowFalseDeepTrue) "d'${e.key}'" else "s'${e.key}'")
             }
         }
-        val result: StringBuilder =  StringBuilder(
-            if (IG.isNotEmpty()) "IG:${IG.joinToString(",", postfix = "|")}" else "" +
-            if (IN.isNotEmpty()) "IN:${IN.joinToString(",", postfix = "|")}" else "" +
-            if (NE.isNotEmpty()) "NE:${NE.joinToString(",", postfix = "|")}" else "" +
-            if (DE.isNotEmpty()) "DE:${DE.joinToString(",", postfix = "|")}" else "" +
-            if (DN.isNotEmpty()) "DN:${DN.joinToString(",", postfix = "|")}" else "")
-        return if (result.endsWith('|')) result.substring(0, result.length-1) else result.toString()
+        var none = true
+        val result: StringBuilder =  StringBuilder()
+        if (IG.isNotEmpty()) { none = false ; result.append("IG:${IG.joinToString(",", postfix = "|")}") }
+        if (IN.isNotEmpty()) { none = false ; result.append("IN:${IN.joinToString(",", postfix = "|")}") }
+        if (NE.isNotEmpty()) { none = false ; result.append("NE:${NE.joinToString(",", postfix = "|")}") }
+        if (DE.isNotEmpty()) { none = false ; result.append("DE:${DE.joinToString(",", postfix = "|")}") }
+        if (DN.isNotEmpty()) { none = false ; result.append("DN:${DN.joinToString(",", postfix = "|")}") }
+        return if (result.isBlank()) "NONE" else if (result.endsWith('|')) result.substring(0, result.length-1) else result.toString()
     }
 }

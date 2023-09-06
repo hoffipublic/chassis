@@ -1,8 +1,12 @@
 package com.hoffi.chassis.codegen.kotlin
 
+import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.Cap
 import com.hoffi.chassis.chassismodel.RuntimeDefaults
+import com.hoffi.chassis.chassismodel.decap
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
+import com.hoffi.chassis.shared.parsedata.nameandwhereto.ModelClassName
+import com.hoffi.chassis.shared.shared.AHasCopyBoundrysData
 import com.hoffi.chassis.shared.shared.FK
 
 object GenNaming {
@@ -42,4 +46,9 @@ object GenNaming {
                 toTableKotlinClassTable.modelClassData.modelClassName.tableNameStrategy.nameOf(toTableKotlinClassTable.modelClassData.tableName, postfix = fk.toProp.columnName())
             }
         }
+    fun createFromTableFunName(aHasCopyBoundrysData: AHasCopyBoundrysData, modelClassName: ModelClassName) =
+        if (aHasCopyBoundrysData.businessName == C.DEFAULT)
+            modelClassName.asVarName
+        else
+            aHasCopyBoundrysData.businessName.decap() + modelClassName.asVarName.Cap()
 }

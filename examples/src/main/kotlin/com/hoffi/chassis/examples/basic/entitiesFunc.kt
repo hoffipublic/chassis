@@ -17,7 +17,6 @@ import com.hoffi.chassis.shared.shared.COPYTYPE.IGNORE
 import com.hoffi.chassis.shared.shared.COPYTYPE.NEW
 import com.hoffi.chassis.shared.shared.CrudData.CRUD.Companion.CREATE
 import com.hoffi.chassis.shared.shared.CrudData.CRUD.Companion.READ
-import com.hoffi.chassis.shared.shared.CrudData.CRUD.Companion.READSELECT
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.*
@@ -118,17 +117,17 @@ fun entities() {
                     +DTO
                     CRUDALL FOR DTO
                     prefixed("somePrefix") {
-                        (READ.viaSelects FOR DTO) deepRestrictions  {
-                            IGNORE propName "subentitys"
-                            IGNORE("subentitys", "someModelObject")
+                        (READ.viaAllVariants FOR DTO) deepRestrictions  {
+                            IGNORE propName "someModelObject"
+                            IGNORE("someModelObject", "prefix1")
                         }
                         (CREATE FOR DTO) deepRestrictions  {
                             IGNORE propName "subentitys"
-                            IGNORE("subentitys", "someModelObject")
+                            IGNORE("subentitys", "someModelObject", "prefix2")
                         }
                     }
-                    READSELECT FOR DTO
-                    READSELECT FOR (DTO of ENTITY__SUBENTITY)
+                    //READSELECT FOR DTO
+                    //READSELECT FOR (DTO of ENTITY__SUBENTITY)
                     prefixed("subentity") {
                         READ FOR (DTO of ENTITY__SUBENTITY) deepRestrictions {
                             IGNORE propName "subentitys"
@@ -139,7 +138,7 @@ fun entities() {
                     prefixed("withoutModels") {
                         +DTO deepRestrictions  {
                             IGNORE propName "subentitys"
-                            IGNORE("subentitys", "someModelObject")
+                            IGNORE("subentitys", "someModelObject", "withoutModels1")
                         }
                     }
                     prefixed("woModels") {
@@ -162,6 +161,7 @@ fun entities() {
                 prefixed("withoutModels") {
                     (DTO mutual TABLE) shallowRestrictions {
                         IGNORE propName "someModelObject∆" // TODO XXX ∆ check if prop exists!!!
+                        IGNORE("dtoSpecificProp", "someObject", "aLocalDateTime")
                         IGNORE("someModelObject") // vararg
                         copyBoundry(IGNORE, "someModelObject") // vararg extended form
                     }

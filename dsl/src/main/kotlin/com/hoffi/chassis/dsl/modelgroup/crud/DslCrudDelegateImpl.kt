@@ -65,7 +65,7 @@ class DslCrudDelegateImpl(simpleNameOfDelegator: String, delegateRef: IDslRef)
     : ADslDelegateClass(simpleNameOfDelegator, delegateRef)
     , IDslApiCrudDelegate
 {
-    override fun toString() = "${this::class.simpleName}(${theCrudBlocks.size})"
+    override fun toString() = "${this::class.simpleName}(size[${theCrudDatas[C.DEFAULT]?.flatMap { it.value }?.size}]\n${theCrudDatas[C.DEFAULT]?.flatMap { it.value }?.joinToString(",\n")})"
     val log = LoggerFactory.getLogger(javaClass)
     override val selfDslRef = DslRef.crud(simpleNameOfDelegator, delegateRef)
 
@@ -97,6 +97,7 @@ class DslCrudDelegateImpl(simpleNameOfDelegator: String, delegateRef: IDslRef)
                 if (!setOfCrudData.add(crudData)) log.error("FIRST CRUD WON -> $selfDslRef crud '$crudData' for ${crudData.businessName} there already was a crud from/to $crudData")
             }
         }
+        log.debug("finished CrudDatas for {} {}", selfDslRef.toString(3), this)
         return resultMap
     }
 
@@ -219,10 +220,10 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
                 val tableRef = DslRef.table(C.DEFAULT, elementRef)
                 val dtoRef = DslRef.dto(C.DEFAULT, elementRef)
                 listOf(
-                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.CREATE),
-                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.READ),
-                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.UPDATE),
-                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.DELETE),
+                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, tableRef, dtoRef, CrudData.CRUD.CREATE),
+                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, tableRef, dtoRef, CrudData.CRUD.READ),
+                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, tableRef, dtoRef, CrudData.CRUD.UPDATE),
+                    dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, tableRef, dtoRef, CrudData.CRUD.DELETE),
                 )
             }
             MODELREFENUM.TABLE -> throw DslException("crudData on '${selfDslRef}' unaryPlus not allowed to a 'TABLE'")
@@ -235,10 +236,10 @@ class DslImplInnerCrudBlock(val businessName: String, val dslOuterCrudBlockImpl:
         val tableRef = DslRef.table(C.DEFAULT, elementRef)
         val dtoRef = dslRef as DslRef.IModelOrModelSubelement
         return listOf(
-            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.CREATE),
-            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.READ),
-            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.UPDATE),
-            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, C.DEFAULT, tableRef, dtoRef, CrudData.CRUD.DELETE),
+            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, tableRef, dtoRef, CrudData.CRUD.CREATE),
+            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, tableRef, dtoRef, CrudData.CRUD.READ),
+            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, tableRef, dtoRef, CrudData.CRUD.UPDATE),
+            dslCrudDelegateImpl.getOrCreateCrudData(simpleName, businessName, tableRef, dtoRef, CrudData.CRUD.DELETE),
         )
     }
 

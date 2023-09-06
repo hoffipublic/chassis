@@ -72,9 +72,9 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
             val kcmTable = KotlinClassModelTable(model)
             kcmTable.build()
         }
-        println("============================================================")
-        println("===  generate (Many21) FKs and set otherEnd of FKs    =====")
-        println("============================================================")
+        println("=============================================================")
+        println("===  generate (Many2One) FKs and set otherEnd of FKs    =====")
+        println("=============================================================")
         for(fk in kotlinGenCtx.allFKs()) {
             // set "otherEnd" FKs into kotlinGenClasses that yet did not know they are reffed:
             // set outgoingFKs into XTo1 kotlinGenClasses and incomingFKs into reffed 1To1 kotlinGenClasses
@@ -162,7 +162,7 @@ for (fillerData in genCtx.fillerDatas[C.DEFAULT]?.flatMap { it.value }?.filter {
         println("==================================")
 println("all CRUDs (${genCtx.crudDatas[C.DEFAULT]?.flatMap { it.value }?.size ?: 0}):")
 println("\"normal\" CRUDs (${genCtx.crudDatas[C.DEFAULT]?.flatMap { it.value }?.size ?: 0}):")
-for (crudData in genCtx.crudDatas[C.DEFAULT]?.flatMap { it.value } ?: mutableSetOf()) {
+for (crudData in genCtx.crudDatas[C.DEFAULT]?.flatMap { it.value }?.sortedWith(compareBy<CrudData> { it.businessName }.thenBy { it.targetDslRef.toString() }) ?: mutableSetOf()) {
     println("   $crudData")
 }
         val buildCrudExposedFun: (CrudData) -> Unit = { crudData: CrudData ->
@@ -178,7 +178,7 @@ for (crudData in genCtx.crudDatas[C.DEFAULT]?.flatMap { it.value } ?: mutableSet
         println("===  generate synthetic CRUDs       ========")
         println("==================================")
     println("\"synthetic\" CRUDs (${genCtx.allSyntheticCrudDatas().size}")
-    for (crudData in genCtx.allSyntheticCrudDatas()) {
+    for (crudData in genCtx.allSyntheticCrudDatas().sortedWith(compareBy<CrudData> { it.businessName }.thenBy { it.targetDslRef.toString() })) {
         println("   $crudData")
     }
         while (genCtx.allSyntheticCrudDatas().isNotEmpty()) {

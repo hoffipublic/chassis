@@ -16,14 +16,12 @@ import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
 import com.squareup.kotlinpoet.*
 import okio.Path
-import org.slf4j.LoggerFactory
 
 context(GenCtxWrapper)
 abstract class AKotlinFiller(fillerData: FillerData, modelkind: MODELKIND): ABaseForCrudAndFiller(fillerData, modelkind) {
     private val fillerDataTargetDslRef = fillerData.targetDslRef
     var currentFillerData: FillerData = fillerData // changes for every build() call, also helpfull for debugging
     override fun toString() = "${this::class.simpleName}(current${currentFillerData})"
-    protected val log = LoggerFactory.getLogger(this::class.java)
     /** fillerName -> source(!) DslRef (as each targetDslRef has its own KotlinFiller Instance */
     val alreadyCreatedCruds: MutableSet<AHasCopyBoundrysData> = mutableSetOf()
     fun alreadyCreated(fillerData: FillerData) = ! alreadyCreatedCruds.add(fillerData)

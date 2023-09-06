@@ -1,11 +1,9 @@
 package com.hoffi.chassis.codegen.kotlin.gens.filler
 
-import com.hoffi.chassis.chassismodel.C
-import com.hoffi.chassis.chassismodel.Cap
-import com.hoffi.chassis.chassismodel.decap
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.codegen.kotlin.GenDslRefHelpers
+import com.hoffi.chassis.codegen.kotlin.GenNaming
 import com.hoffi.chassis.codegen.kotlin.IntersectPropertys
 import com.hoffi.chassis.codegen.kotlin.whens.WhensGen
 import com.hoffi.chassis.shared.db.DB
@@ -110,11 +108,23 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                 isModel = { },
                 isPoetType = {
                     none = false
-                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} PoetType of %T", prop.poetType)
+                    propBoundry(prop,
+                        noPropBoundry = {
+                            bodyBuilder.addStatement("// TODO %L ${prop.propTypeSimpleNameCap} of %T", prop.name(), prop.poetType)
+                        },
+                        IGNORE = { copyBoundry -> bodyBuilder.addStatement("// ${prop.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                        ELSE = { copyBoundry -> bodyBuilder.addStatement("// TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                    )
                 },
                 isTyp = {
                     none = false
-                    KotlinFillerTablePoetStatements.fillTablePropTypOrPoetType(bodyBuilder, funNameInsertOrBatch, i.targetPoetType, i.sourceVarName, prop)
+                    propBoundry(prop,
+                        noPropBoundry = {
+                            KotlinFillerTablePoetStatements.fillTablePropTypOrPoetType(bodyBuilder, funNameInsertOrBatch, i.targetPoetType, i.sourceVarName, prop)
+                        },
+                        IGNORE = { copyBoundry -> bodyBuilder.addStatement("// copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                        ELSE = { copyBoundry -> bodyBuilder.addStatement("// TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                    )
                 },
                 postNonCollection = { },
                 isModelList = { },
@@ -139,10 +149,7 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
 
     /** special case e.g. DTO <-- TABLE */
     private fun createFromTable(i: IntersectPropertys.CommonPropData) {
-        val funName = if (currentFillerData.businessName == C.DEFAULT)
-            i.targetGenModel.asVarName
-        else
-            currentFillerData.businessName.decap() + i.targetGenModel.asVarName.Cap()
+        val funName = GenNaming.createFromTableFunName(currentFillerData, i.targetGenModel.modelClassName)
         log.trace("create(Dto)FromTable: -> {} from {}", funName, currentFillerData)
         val funSpec = FunSpec.builder(funName)
             .addParameter(i.sourceVarName, DB.ResultRowClassName)
@@ -159,9 +166,17 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                     addSyntheticFillersForTableModelProp(this, this@KotlinFillerTable.currentFillerData, via = "TableFiller for prop: '$prop' from currentFillerData: $currentFillerData")
                 },
                 isPoetType = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} PoetType of %T", prop.poetType)
+                    funSpec.addStatement("// TODO ${prop.name()} ${prop.propTypeSimpleNameCap} of %T", prop.poetType)
                 },
-                isTyp = { funSpec.addStatement("%L.%L = %L[%T.%L]", i.targetVarName, prop.name(), i.sourceVarName, i.sourcePoetType, prop.name()) },
+                isTyp = {
+                    propBoundry(prop,
+                        noPropBoundry = {
+                            funSpec.addStatement("%L.%L = %L[%T.%L]", i.targetVarName, prop.name(), i.sourceVarName, i.sourcePoetType, prop.name())
+                        },
+                        IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                        ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                    )
+                },
                 postNonCollection = { },
                 isModelList = {
                     funSpec.addComment("%L.%L LIST of %T dealt with in sql.CRUD...", i.targetVarName, prop.name(), prop.poetType)

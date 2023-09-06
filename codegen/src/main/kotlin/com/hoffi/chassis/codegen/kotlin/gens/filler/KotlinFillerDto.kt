@@ -51,12 +51,18 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
             .addParameter(i.sourceVarName, i.sourceGenModel.poetType)
             .returns(i.targetGenModel.poetType)
         nullSentinel(funSpec, i.targetVarName, i.targetGenModel)
-        for (nonModelProp in i.allIntersectPropSet.filter {
+        for (prop in i.allIntersectPropSet.filter {
             it.eitherTypModelOrClass !is EitherTypOrModelOrPoetType.EitherModel &&
                     Tag.PRIMARY !in it.tags && // just a copy, so do NOT copy the "identity" over
                     it.collectionType == COLLECTIONTYP.NONE
         }) {
-            funSpec.addStatement("%L%L.%L = %L.%L", if (nonModelProp.immutable) "// " else "", i.targetVarName, nonModelProp.name(), i.sourceVarName, nonModelProp.name())
+            propBoundry(prop,
+                noPropBoundry = {
+                    funSpec.addStatement("%L%L.%L = %L.%L", if (prop.immutable) "// " else "", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
+                },
+                IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+            )
         }
         funSpec.addStatement("return %L", i.targetVarName)
         builder.addFunction(funSpec.build())
@@ -76,11 +82,23 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                 is EitherTypOrModelOrPoetType.EitherModel -> {
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> {
-                            funSpec.addComment("beware of recursive calls, if Type or some submodel of it has a reference to this")
-                            funSpec.addStatement("%L%L.%L = %T.%L()", if (prop.immutable) "// " else "", i.targetVarName, prop.name(), prop.poetType, "createDeepWithNewEmptyModels")
+                            propBoundry(prop,
+                                noPropBoundry = {
+                                    funSpec.addComment("beware of recursive calls, if Type or some submodel of it has a reference to this")
+                                    funSpec.addStatement("%L%L.%L = %T.%L()", if (prop.immutable) "// " else "", i.targetVarName, prop.name(), prop.poetType, "createDeepWithNewEmptyModels")
+                                },
+                                IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                            )
                         }
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                            funSpec.addCode(clearCollection(i.targetVarName, prop))
+                            propBoundry(prop,
+                                noPropBoundry = {
+                                    funSpec.addCode(clearCollection(i.targetVarName, prop))
+                                },
+                                IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                            )
                         }
                     }
                 }
@@ -88,7 +106,13 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> {}
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                            funSpec.addCode(clearCollection(i.targetVarName, prop))
+                            propBoundry(prop,
+                                noPropBoundry = {
+                                    funSpec.addCode(clearCollection(i.targetVarName, prop))
+                                },
+                                IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                            )
                         }
                     }
                 }
@@ -96,7 +120,13 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> { }
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                            funSpec.addCode(clearCollection(i.targetVarName, prop))
+                            propBoundry(prop,
+                                noPropBoundry = {
+                                    funSpec.addCode(clearCollection(i.targetVarName, prop))
+                                },
+                                IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                            )
                         }
                     }
                 }
@@ -121,15 +151,33 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                 is EitherTypOrModelOrPoetType.EitherModel -> {
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> {
-                            funSpec.addStatement("%L%L.%L = %L.%L", if (prop.immutable) "// " else "", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
+                            propBoundry(prop,
+                                noPropBoundry = {
+                                    funSpec.addStatement("%L%L.%L = %L.%L", if (prop.immutable) "// " else "", i.targetVarName, prop.name(), i.sourceVarName, prop.name())
+                                },
+                                IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                            )
                         }
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                            funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
-                            funSpec.addStatement("%L%L.%%LL.addAll(%L.%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name())
+                            propBoundry(prop,
+                                noPropBoundry = {
+                                    funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
+                                    funSpec.addStatement("%L%L.%%LL.addAll(%L.%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name())
+                                },
+                                IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                            )
                         }
                         is COLLECTIONTYP.SET -> {
-                            funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
-                            funSpec.addStatement("%L%L.%L%L.addAll(%L.%L%L.toList()%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name(), if (prop.isNullable) "?" else "", if (prop.isNullable) " ?: emptyList()" else "")
+                            propBoundry(prop,
+                                noPropBoundry = {
+                                    funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
+                                    funSpec.addStatement("%L%L.%L%L.addAll(%L.%L%L.toList()%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name(), if (prop.isNullable) "?" else "", if (prop.isNullable) " ?: emptyList()" else "")
+                                },
+                                IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                            )
                         }
                     }
                 }
@@ -137,12 +185,24 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> {}
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                            funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
-                            funSpec.addStatement("%L%L.%L%L.addAll(%L.%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name())
+                            propBoundry(prop,
+                                noPropBoundry = {
+                                    funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
+                                    funSpec.addStatement("%L%L.%L%L.addAll(%L.%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name())
+                                },
+                                IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                            )
                         }
                         is COLLECTIONTYP.SET -> {
-                            funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
-                            funSpec.addStatement("%L%L.%L%L.addAll(%L.%L%L.toList()%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name(), if (prop.isNullable) "?" else "", if (prop.isNullable) " ?: emptyList()" else "")
+                            propBoundry(prop,
+                                noPropBoundry = {
+                                    funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
+                                    funSpec.addStatement("%L%L.%L%L.addAll(%L.%L%L.toList()%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name(), if (prop.isNullable) "?" else "", if (prop.isNullable) " ?: emptyList()" else "")
+                                },
+                                IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                            )
                         }
                     }
                 }
@@ -150,12 +210,24 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                     when (prop.collectionType) {
                         is COLLECTIONTYP.NONE -> { }
                         is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                            funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
-                            funSpec.addStatement("%L%L.%L%L.addAll(%L.%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name())
+                            propBoundry(prop,
+                                noPropBoundry = {
+                                    funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
+                                    funSpec.addStatement("%L%L.%L%L.addAll(%L.%L)", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name())
+                                },
+                                IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                            )
                         }
                         is COLLECTIONTYP.SET -> {
-                            funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
-                            funSpec.addStatement("%L%L.%L%L.addAll(%L.%L.toList())", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name())
+                            propBoundry(prop,
+                                noPropBoundry = {
+                                    funSpec.addStatement("%L%L.%L%L.clear()", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "")
+                                    funSpec.addStatement("%L%L.%L%L.addAll(%L.%L.toList())", if (Tag.COLLECTION_IMMUTABLE in prop.tags) "// " else "", i.targetVarName, prop.name(), if (prop.isNullable) "?" else "", i.sourceVarName, prop.name())
+                                },
+                                IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                            )
                         }
                     }
                 }
@@ -205,23 +277,35 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                                 if (prop.immutable) {
                                     funSpec.addComment("%L.%L is immutable", i.targetVarName, prop.name())
                                 } else {
-                                    funSpec.addCode(
-                                        """if (${i.sourceVarName}.${prop.name()} === %T.NULL)
-                                            |    ${i.targetVarName}.${prop.name()} = ${i.sourceVarName}.${prop.name()}
-                                            |else
-                                            |    %T.%L(${i.targetVarName}.${prop.name()}, ${i.sourceVarName}.${prop.name()})
-                                            |""".trimMargin(),
-                                        prop.poetType, propEitherModelFillerClassName, "copyDeepInto"
+                                    propBoundry(prop,
+                                        noPropBoundry = {
+                                            funSpec.addCode(
+                                                """if (${i.sourceVarName}.${prop.name()} === %T.NULL)
+                                                    |    ${i.targetVarName}.${prop.name()} = ${i.sourceVarName}.${prop.name()}
+                                                    |else
+                                                    |    %T.%L(${i.targetVarName}.${prop.name()}, ${i.sourceVarName}.${prop.name()})
+                                                    |""".trimMargin(),
+                                                prop.poetType, propEitherModelFillerClassName, "copyDeepInto"
+                                            )
+                                        },
+                                        IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                        ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
                                     )
                                 }
                             }
                             is COLLECTIONTYP.SET, is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                                funSpec.addCode(clearCollection(i.targetVarName, prop))
-                                if (theFunName == "cloneDeep") {
-                                    funSpec.addCode(addAllMapped(i.targetVarName, prop, i.sourceVarName, propEitherModelFillerClassName, funName.funName))
-                                } else {
-                                    funSpec.addCode(addAll(i.targetVarName, prop, i.sourceVarName))
-                                }
+                                propBoundry(prop,
+                                    noPropBoundry = {
+                                        funSpec.addCode(clearCollection(i.targetVarName, prop))
+                                        if (theFunName == "cloneDeep") {
+                                            funSpec.addCode(addAllMapped(i.targetVarName, prop, i.sourceVarName, propEitherModelFillerClassName, funName.funName))
+                                        } else {
+                                            funSpec.addCode(addAll(i.targetVarName, prop, i.sourceVarName))
+                                        }
+                                    },
+                                    IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                    ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                                )
                             }
                         }
                     }
@@ -229,8 +313,14 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                         when (prop.collectionType) {
                             is COLLECTIONTYP.NONE -> {}
                             is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                                funSpec.addCode(clearCollection(i.targetVarName, prop))
-                                funSpec.addCode(addAll(i.targetVarName, prop, i.sourceVarName))
+                                propBoundry(prop,
+                                    noPropBoundry = {
+                                        funSpec.addCode(clearCollection(i.targetVarName, prop))
+                                        funSpec.addCode(addAll(i.targetVarName, prop, i.sourceVarName))
+                                    },
+                                    IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                    ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                                )
                             }
                         }
                     }
@@ -238,8 +328,14 @@ class KotlinFillerDto(fillerData: FillerData): AKotlinFiller(fillerData, MODELKI
                         when (prop.collectionType) {
                             is COLLECTIONTYP.NONE -> {}
                             is COLLECTIONTYP.SET, is COLLECTIONTYP.LIST, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
-                                funSpec.addCode(clearCollection(i.targetVarName, prop))
-                                funSpec.addCode(addAll(i.targetVarName, prop, i.sourceVarName))
+                                propBoundry(prop,
+                                    noPropBoundry = {
+                                        funSpec.addCode(clearCollection(i.targetVarName, prop))
+                                        funSpec.addCode(addAll(i.targetVarName, prop, i.sourceVarName))
+                                    },
+                                    IGNORE = { copyBoundry -> funSpec.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                                    ELSE = { copyBoundry -> funSpec.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                                )
                             }
                         }
                     }

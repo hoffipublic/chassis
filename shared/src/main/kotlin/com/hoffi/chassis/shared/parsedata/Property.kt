@@ -28,6 +28,8 @@ class Property(
     val collectionType: COLLECTIONTYP = COLLECTIONTYP.NONE
 ) {
     override fun toString() = "${"%-38s".format("${this::class.simpleName} ${if (tags.contains(Tag.CONSTRUCTOR)) "C " else "  "}${if (mutable.bool) "var " else "val "}${if (collectionType != COLLECTIONTYP.NONE) "$collectionType " else ""}$dslPropName")} : ${eitherTypModelOrClass}${if (tags.isNotEmpty()) ", tags:[$tags" else ""}] of $propRef"
+    val propTypeSimpleNameCap: String?
+        get() = eitherTypModelOrClass::class.simpleName?.replace("Either", "")?.uppercase()
     var varNameStrategy = VarNameStrategy.get(IVarNameStrategy.STRATEGY.DEFAULT)
     var columnNameStrategy = VarNameStrategy.get(IVarNameStrategy.STRATEGY.LOWERSNAKECASE)
 
