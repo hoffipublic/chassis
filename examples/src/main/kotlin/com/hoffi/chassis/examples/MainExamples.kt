@@ -7,7 +7,7 @@ import com.hoffi.chassis.examples.basic.baseModelsPersistent
 import com.hoffi.chassis.examples.basic.entities
 import com.hoffi.chassis.shared.codegen.GenRun
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
-import com.hoffi.chassis.shared.dsl.DslRef.model.Companion.MODELPROTO
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 
 object MainExamples {
     @JvmStatic
@@ -51,7 +51,7 @@ object MainExamples {
 
         examplesCodegenRun.start {
             println("examples/${examplesCodegenRun.runIdentifier}".boxed(postfix = "\n"))
-            KotlinCodeGen(examplesCodegenRun).codeGen(MODELPROTO)
+            KotlinCodeGen(examplesCodegenRun).codeGen(MODELREFENUM.MODEL) // MODEL = all gen Subelements
         }
     }
 }

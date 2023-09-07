@@ -6,21 +6,20 @@ import com.hoffi.chassis.codegen.kotlin.gens.KotlinClassModelDto
 import com.hoffi.chassis.codegen.kotlin.gens.KotlinClassModelTable
 import com.hoffi.chassis.shared.codegen.GenRun
 import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.shared.CrudData
 import com.hoffi.chassis.shared.shared.FK
 import com.hoffi.chassis.shared.shared.FillerData
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
-import com.hoffi.chassis.shared.whens.WhensDslRef
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import org.slf4j.LoggerFactory
 
 class KotlinCodeGen constructor(val codegenRun: GenRun) {
     val log = LoggerFactory.getLogger(javaClass)
     private val genCtxWrapper = GenCtxWrapper(codegenRun.genCtx)
 
-    fun codeGen(dslRefProto: IDslRef) {
-        codeGenSpecificOrAll(dslRefProto)
+    fun codeGen(modelrefenum: MODELREFENUM) {
+        codeGenSpecificOrAll(modelrefenum)
         with(genCtxWrapper) {
             codeGenCruds()
             writeCruds()
@@ -28,19 +27,19 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
             writeFillers()
         }
     }
-    fun codeGenSpecificOrAll(dslRefProto: IDslRef) {
+    fun codeGenSpecificOrAll(modelrefenum: MODELREFENUM) {
         with(genCtxWrapper) {
             println("========================================================================================")
-            println("     KotlinCodeGen(${genCtx.genRun.runIdentifier}).codeGen(${dslRefProto.dslBlockName})")
+            println("     KotlinCodeGen(${genCtx.genRun.runIdentifier}).codeGen(${modelrefenum})")
             println("========================================================================================")
-            WhensDslRef.whenModelOrModelSubelement(dslRefProto,
-                isModelRef = {
-                    codeGenSpecificOrAll(DslRef.dto.DTOPROTO)
-                    codeGenSpecificOrAll(DslRef.table.TABLEPROTO)
-                },
-                isDtoRef = { codeGenDto() ; writeDtos() },
-                isTableRef = { codeGenTable() ; writeTables() }
-            )
+            when (modelrefenum) {
+                MODELREFENUM.MODEL -> {
+                    codeGenSpecificOrAll(MODELREFENUM.DTO)
+                    codeGenSpecificOrAll(MODELREFENUM.TABLE)
+                }
+                MODELREFENUM.DTO ->   { codeGenDto() ;   writeDtos() }
+                MODELREFENUM.TABLE -> { codeGenTable() ; writeTables() }
+            }
         }
     }
 

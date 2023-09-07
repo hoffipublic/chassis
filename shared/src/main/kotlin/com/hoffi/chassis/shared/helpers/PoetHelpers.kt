@@ -13,7 +13,7 @@ object PoetHelpers {
     fun TypeSpec.Builder.kdocGenerated(modelClassDataFromDsl: ModelClassDataFromDsl): TypeSpec.Builder {
         return this.addKdoc(
             "%L model: %L\nwith dslRef: %L\ngenerated at %L on %L",
-            modelClassDataFromDsl.modelSubElRef.refList.last().functionName,
+            modelClassDataFromDsl.modelSubElRef.refList.last().dslRefName,
             modelClassDataFromDsl.modelOrTypeNameString,
             modelClassDataFromDsl.modelSubElRef,
             ENV.generationLocalDateTime,
@@ -24,7 +24,7 @@ object PoetHelpers {
         val modelClassData = genCtx.genModel(fillerData.targetDslRef)
         return this.addKdoc(
             "Filler for %L model: %L\nwith dslRef: %L\ngenerated at %L on %L",
-            modelClassData.modelSubElRef.refList.last().functionName,
+            modelClassData.modelSubElRef.refList.last().dslRefName,
             modelClassData.modelOrTypeNameString,
             modelClassData.modelSubElRef,
             ENV.generationLocalDateTime,
@@ -35,7 +35,7 @@ object PoetHelpers {
         val modelClassData = genCtx.genModel(crudData.targetDslRef)
         return this.addKdoc(
             "CRUD ${crudData.crud.simpleName} for %L model: %L\nwith dslRef: %L\ngenerated at %L on %L",
-            modelClassData.modelSubElRef.refList.last().functionName,
+            modelClassData.modelSubElRef.refList.last().dslRefName,
             modelClassData.modelOrTypeNameString,
             modelClassData.modelSubElRef,
             ENV.generationLocalDateTime,

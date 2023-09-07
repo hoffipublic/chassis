@@ -3,7 +3,6 @@ package com.hoffi.chassis.shared.dsl
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.chassismodel.dsl.DslRefException
-import com.hoffi.chassis.shared.dsl.DslRef.Companion.genericInstance
 import com.hoffi.chassis.shared.dsl.DslRefString.REF
 import com.hoffi.chassis.shared.shared.reffing.MODELKIND
 import org.reflections.Reflections
@@ -34,14 +33,14 @@ interface IDslRef {
     val dslBlockName: String
         get() {
             if (this == NULL) { throw DslException("trying to get IDslRef.dslBlockName on IDslRef.NULL") }
-            val funcname = refList.lastOrNull()?.functionName
-            if (funcname == null) {
+            val dslRefName = refList.lastOrNull()?.dslRefName
+            if (dslRefName == null) {
                 throw DslException("refList never should be empty on getting IDslRef.dslBlockName")
             } else {
-                if (funcname == C.NULLSTRING) throw DslException("a trailing ref Atom never should have C.NULLSTRING as funcname")
-                return funcname
+                if (dslRefName == C.NULLSTRING) throw DslException("a trailing ref Atom never should have C.NULLSTRING as dslRefName")
+                return dslRefName
             }
-            //refList.lastOrNull()?.functionName ?: C.NULLSTRING // TODO simplify
+            //refList.lastOrNull()?.dslRefName ?: C.NULLSTRING // TODO simplify
         }
     object NULL : IDslRef {
         override var level: Int
@@ -73,14 +72,14 @@ abstract class ADslRef(
     override val refList: MutableList<DslRef.DslRefAtom> = mutableListOf()
 ) : IDslRef {
     override fun toString() = "disc:${disc}${DslRef.REFSEP}${DslRef.refListJoin(refList)}"
-    private val log = LoggerFactory.getLogger(javaClass)
+    protected val log = LoggerFactory.getLogger(javaClass)
     fun refListJoin() = DslRef.refListJoin(refList)
-    fun createRefList(forLevelOrMinusOne: Int, parentDslRef: IDslRef, funcname: String, simpleName: String) {
-        if (forLevelOrMinusOne != -1 && parentDslRef.refList.size > parentDslRef.level && parentDslRef.refList[0].simpleName != C.NULLSTRING) {
-            log.warn("parent refList '{}' is longer than its level '{}' while creating ref for '{}'", refListJoin(), parentDslRef.level, this)
+    protected fun refListCloneAndAdd(levelOrMinusOne: Int, parentDslRef: IDslRef, dslRefName: String, simpleName: String) {
+        if (levelOrMinusOne != -1 && parentDslRef.refList.size > parentDslRef.level && parentDslRef.refList[0].simpleName != C.NULLSTRING) {
+            log.error("parent refList '{}' is longer than its level '{}' while creating ref for '{}'", refListJoin(), parentDslRef.level, this)
         }
         refList.addAll(parentDslRef.refList) //.take(parentDslRef.level))
-        refList.add(DslRef.DslRefAtom(funcname, simpleName))
+        refList.add(DslRef.DslRefAtom(dslRefName, simpleName))
     }
 
     override fun toString(last: Int) = refList.takeLast(last).joinToString(DslRef.ATOMSEP)
@@ -94,131 +93,105 @@ abstract class ADslRef(
 }
 //endregion AdslRef ...
 
+abstract class ADslRefCompanion { val dslRefName: String = this::class.java.declaringClass.simpleName }
+
 sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRef(level, simpleName, parentRef, parentRef.disc) {
     //region class DslRef refs ...
-    private val log = LoggerFactory.getLogger(javaClass)
-
     sealed interface IGroupLevel      : IDslRef, ICrosscuttingNameAndWhereto
     sealed interface IElementLevel    : IDslRef, ICrosscuttingNameAndWhereto
     sealed interface ISubElementLevel : IDslRef
     sealed interface ICrosscutting    : IDslRef  { companion object { val NULL: ICrosscutting = propertiesOf(C.NULLSTRING, IDslRef.NULL)}}
 
     class modelgroup(simpleName: String, disc: DslDiscriminator)         : DslRef(1, simpleName, IDslRef.NULL)
-        , IGroupLevel, ICrosscuttingPropertiesOf {
-            companion object { val funcname: String = modelgroup::class.simpleName!! ; val MODELGROUPPROTO = modelgroup("PROTO", DslDiscriminator.NULL) }
-            init { this.disc = disc ; refList.add(DslRefAtom(funcname, simpleName)) } }
+            , IGroupLevel, ICrosscuttingPropertiesOf {
+                companion object companion : ADslRefCompanion()
+                init { this.disc = disc ; refList.add(DslRefAtom(dslRefName, simpleName)) } }
     class apigroup(  simpleName: String, disc: DslDiscriminator)         : DslRef(1, simpleName, IDslRef.NULL)
-        , IGroupLevel {
-            companion object { val funcname: String = apigroup::class.simpleName!! ; val APIGROUPPROTO = apigroup("PROTO", DslDiscriminator.NULL) }
-            init { this.disc = disc ; refList.add(DslRefAtom(funcname, simpleName)) } }
+            , IGroupLevel {
+                companion object companion : ADslRefCompanion()
+                init { this.disc = disc ; refList.add(DslRefAtom(dslRefName, simpleName)) } }
 
     interface IModelgroupElement : IElementLevel, ICrosscuttingClassModifiers
     interface IModelOrModelSubelement : ICrosscuttingPropertiesOf
     interface IModel: IModelgroupElement, ICrosscuttingPropertiesOf
     class     model(    simpleName: String, parentDslRef: IDslRef)       : DslRef(2, simpleName, parentDslRef)
-            , IModel, IModelgroupElement, IModelOrModelSubelement {
-                companion object { val funcname: String = model::class.simpleName!! ; val MODELPROTO = model("PROTO", NULL) }
-                init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
+                , IModel, IModelgroupElement, IModelOrModelSubelement { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
     interface Ifiller : IModelgroupElement
     class     filler(   simpleName: String, parentDslRef: IDslRef)       : DslRef(2, simpleName, parentDslRef)
-            , Ifiller {
-                companion object { val funcname: String = filler::class.simpleName!! ; val FILLERPROTO = filler("PROTO", NULL) }
-                init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
+                , Ifiller { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
     interface IallModels: IModelgroupElement
     class     allModels(simpleName: String, parentDslRef: IDslRef)       : DslRef(2, simpleName, parentDslRef)
-            , IallModels {
-                companion object { val funcname: String = allModels::class.simpleName!! ; val ALLMODELSPROTO = allModels("PROTO", NULL) }
-                init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
-    interface IModelSubelement : ISubElementLevel, IModelOrModelSubelement, ICrosscuttingNameAndWhereto, ICrosscuttingPropertiesOf, ICrosscuttingClassModifiers {
-    }
+                , IallModels { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
+
+    interface IModelSubelement : ISubElementLevel, IModelOrModelSubelement, ICrosscuttingNameAndWhereto, ICrosscuttingPropertiesOf, ICrosscuttingClassModifiers
     class         dto(  simpleName: String, parentDslRef: IDslRef)       : DslRef(3, simpleName, parentDslRef)
-                , IModelSubelement {
-                    companion object { val funcname: String = dto::class.simpleName!! ; val DTOPROTO = dto("PROTO", NULL) }
-                    init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
+                    , IModelSubelement { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
     class         table(simpleName: String, parentDslRef: IDslRef)       : DslRef(3, simpleName, parentDslRef)
-                , IModelSubelement {
-                    companion object { val funcname: String = table::class.simpleName!! ; val TABLEPROTO = table("PROTO", NULL) }
-                    init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
-    class         crud(simpleName: String, parentDslRef: IDslRef)     : DslRef(4, simpleName, parentDslRef) {
-                    companion object { val funcname: String = crud::class.simpleName!! }
-                    init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
-    class             crudBlock(simpleName: String, parentDslRef: IDslRef)     : DslRef(5, simpleName, parentDslRef) {
-                        companion object { val funcname: String = crudBlock::class.simpleName!! }
-                        init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
-    class                 crudSubBlock(simpleName: String, parentDslRef: IDslRef)     : DslRef(6, simpleName, parentDslRef) {
-                            companion object { val funcname: String = crudSubBlock::class.simpleName!! }
-                            init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
+                    , IModelSubelement { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
+
+    class           crud(simpleName: String, parentDslRef: IDslRef)     : DslRef(4, simpleName, parentDslRef) {
+                        companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
+
+    class               crudBlock(simpleName: String, parentDslRef: IDslRef)     : DslRef(5, simpleName, parentDslRef) {
+                            companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
+
+    class                   crudSubBlock(simpleName: String, parentDslRef: IDslRef)     : DslRef(6, simpleName, parentDslRef) {
+                                companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
 
     class copyBoundry(simpleName: String, parentDslRef: IDslRef) : DslRef(-1, simpleName, parentDslRef)
-            , ICrosscutting {
-                companion object { val funcname: String = copyBoundry::class.simpleName!! }
-                init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
+            , ICrosscutting { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
 
     interface IApigroupElement : IElementLevel
     interface Iapi: IApigroupElement
     class     api(    simpleName: String, parentDslRef: IDslRef)         : DslRef(2, simpleName, parentDslRef)
-            , Iapi { companion object { val funcname: String = api::class.simpleName!! ; val APIPROTO = api("PROTO", NULL) }
-                init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
+                , Iapi { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
     interface IApiSubElement : ISubElementLevel, ICrosscuttingNameAndWhereto
-    interface Iapifun: IApiSubElement {
-    }
+    interface Iapifun: IApiSubElement
     class         apifun(    simpleName: String, parentDslRef: IDslRef)  : DslRef(3, simpleName, parentDslRef)
-                , Iapifun {
-                    companion object { val funcname: String = apifun::class.simpleName!! ; val APIFUNPROTO = apifun("PROTO", NULL) }
-                    init { this.disc = parentDslRef.disc ; createRefList(level, parentDslRef, funcname, simpleName) } }
+                    , Iapifun { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
 
     interface ICrosscuttingProp : ICrosscutting
     interface Iprop : ICrosscuttingProp
     class prop(simpleName: String, parentDslRef: IDslRef)      : DslRef(-1, simpleName, parentDslRef)
-        , Iprop
-    { companion object { val funcname: String = prop::class.simpleName!! ; val PROPPROTO = prop("PROTO", NULL) }
-        init { this.disc = parentDslRef.disc ; createRefList(-1, parentDslRef, funcname, simpleName) } }
+            , Iprop { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
     interface ICrosscuttingProperties : ICrosscutting
     interface Iproperties : ICrosscuttingProperties
     class properties(simpleName: String, parentDslRef: IDslRef)      : DslRef(-1, simpleName, parentDslRef)
-        , Iproperties
-    { companion object { val funcname: String = prop::class.simpleName!! ; val PROPERTIESPROTO = properties("PROTO", NULL) }
-        init { this.disc = parentDslRef.disc ; createRefList(-1, parentDslRef, funcname, simpleName) } }
+            , Iproperties { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
 
 
     interface IDslRun : ICrosscuttingNameAndWhereto
     class dslRun(simpleName: String) : DslRef(1, simpleName, IDslRef.NULL)
-        , IDslRun
-            { companion object { val funcname: String = dslRun::class.simpleName!! ; val DSLRUNPROTO = dslRun("PROTO") }
-                init { this.disc = DslDiscriminator(dslRun::class.simpleName!!) ; refList.add(DslRefAtom(funcname, simpleName)) } }
+            , IDslRun {
+                companion object companion : ADslRefCompanion()
+                init { this.disc = DslDiscriminator(dslRun::class.simpleName!!) ; refList.add(DslRefAtom(dslRefName, simpleName)) } }
 
     interface ICrosscuttingNameAndWhereto : ICrosscutting
     interface InameAndWhereto : ICrosscuttingNameAndWhereto
     class nameAndWhereto(simpleName: String, parentDslRef: IDslRef)      : DslRef(-1, simpleName, parentDslRef)
-        , InameAndWhereto
-            { companion object { val funcname: String = nameAndWhereto::class.simpleName!! ; val NAMEANDWHERETOPROTO = nameAndWhereto("PROTO", NULL) } init { this.disc = parentDslRef.disc ; createRefList(-1, parentDslRef, funcname, simpleName) } }
+            , InameAndWhereto { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
 
     interface ICrosscuttingPropertiesOf : ICrosscutting
     // unused atm, as DslGatherPropertiesImpl atm only gets its parentRef
     interface  IpropertiesOf : ICrosscuttingPropertiesOf
     class propertiesOf(simpleName: String, parentDslRef: IDslRef) :   DslRef(-1, simpleName, parentDslRef)
-        , IpropertiesOf
-            { companion object { val funcname: String = propertiesOf::class.simpleName!! ; val PROPERTIESOFPROTO = propertiesOf("PROTO", NULL) } init { this.disc = parentDslRef.disc ; createRefList(-1, parentDslRef, funcname, simpleName) } }
+            , IpropertiesOf { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
 
     interface ICrosscuttingClassModifiers : ICrosscutting
-
     interface ICrosscuttingClassMods : ICrosscutting
     interface IclassMods : ICrosscuttingClassMods
     class classMods(simpleName: String, parentDslRef: IDslRef) : DslRef(-1, simpleName, parentDslRef)
-        , IclassMods
-            { companion object { val funcname: String = classMods::class.simpleName!! ; val CLASSMODSPROTO = classMods("PROTO", NULL)} init { this.disc = parentDslRef.disc ; createRefList(-1, parentDslRef, funcname, simpleName) } }
+            , IclassMods { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
 
     interface ICrosscuttingExtends : ICrosscutting
     interface Iextends : ICrosscuttingExtends
     class extends(simpleName: String, parentDslRef: IDslRef) : DslRef(-1, simpleName, parentDslRef)
-        , Iextends
-            { companion object { val funcname: String = extends::class.simpleName!! ; val EXTENDSPROTO = extends("PROTO", NULL)} init { this.disc = parentDslRef.disc ; createRefList(-1, parentDslRef, funcname, simpleName) } }
+            , Iextends { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
 
     interface ICrosscuttingShowcase : ICrosscutting
     interface Ishowcase : ICrosscuttingShowcase
     class showcase(simpleName: String, parentDslRef: IDslRef) : DslRef(-1, simpleName, parentDslRef)
-        , Ishowcase
-            { companion object { val funcname: String = showcase::class.simpleName!! ; val SHOWCASEPROTO = showcase("PROTO", NULL)} init { this.disc = parentDslRef.disc ; createRefList(-1, parentDslRef, funcname, simpleName) } }
+            , Ishowcase { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
     //endregion class DslRef refs
 
     //region reffing ...
@@ -228,17 +201,15 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
     fun <T: DslRef> subelementRef(): T = parentRef(3)
     fun <T: DslRef> subsubelementRef(): T = parentRef(4)
     fun <T: DslRef> parentRef(level: Int): T {
-        val log = LoggerFactory.getLogger("debugLogger")
         if (level == 0) throw DslRefException("invalid argument 0")
-        val absLevel = if (level < 0) this.refList.size + level else level
+        val absLevel = if (level < 0) this.refList.size + level else level // negative level means relative from the end
         if (this.refList.size <= absLevel || absLevel <= 0) throw DslRefException("parentRef($level) deeper/equal this DslRef (${this.refList.size}) $this")
         val refAtom = this.refList[absLevel-1]
-        val refClass = DslRef::class.sealedSubclasses.first { it.simpleName == refAtom.functionName }
+        val refClass = DslRef::class.sealedSubclasses.first { it.simpleName == refAtom.dslRefName }
         val constr = refClass.primaryConstructor
-        if (constr?.parameters?.size != 2) throw DslRefException("sealed subclass DslRef.${refAtom.functionName} does not have a 2-arg primary constructor")
-        if (constr.parameters[0].type.classifier != String::class || constr.parameters[0].type.isMarkedNullable) throw DslRefException("sealed subclass DslRef.${refAtom.functionName} first constructor arg is not non-nullable String")
-        if (constr.parameters[1].type.isMarkedNullable) throw DslRefException("sealed subclass DslRef.${refAtom.functionName} 2nd constructor arg must not be nullable")
-        log.debug("DslRef.{}.constr({}, parentRef|DslDisc) in DslRef.xxx()", refAtom.functionName, refAtom.simpleName)
+        if (constr?.parameters?.size != 2) throw DslRefException("sealed subclass DslRef.${refAtom.dslRefName} does not have a 2-arg primary constructor")
+        if (constr.parameters[0].type.classifier != String::class || constr.parameters[0].type.isMarkedNullable) throw DslRefException("sealed subclass DslRef.${refAtom.dslRefName} first constructor arg is not non-nullable String")
+        if (constr.parameters[1].type.isMarkedNullable) throw DslRefException("sealed subclass DslRef.${refAtom.dslRefName} 2nd constructor arg must not be nullable")
         val theObj: T = when (constr.parameters[1].type.classifier) {
             DslDiscriminator::class -> {
                 @Suppress("UNCHECKED_CAST")
@@ -248,7 +219,7 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
                 @Suppress("UNCHECKED_CAST")
                 constr.call(refAtom.simpleName, REF(this.refList.take(absLevel-1), this.disc)) as T
             }
-            else -> throw DslRefException("sealed subclass DslRef.${refAtom.functionName} not a valid constructor")
+            else -> throw DslRefException("sealed subclass DslRef.${refAtom.dslRefName} not a valid constructor")
         }
         log.debug("ok.")
         return theObj
@@ -262,7 +233,7 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
         val REFSEP  = "|"
         val COUNTSEP = "/"
         fun refListJoin(refList: List<DslRefAtom>) = refList.joinToString(REFSEP)
-        fun refAtomsListFull(refString: String, dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEFAULT)) = refString.split(REFSEP).map { DslRefAtom.from(it) }.toMutableList().also {if (it.isNotEmpty() && it.first().functionName != "disc") it.add(0, DslRefAtom("disc", dslDiscriminator.dslDiscriminator))}
+        fun refAtomsListFull(refString: String, dslDiscriminator: DslDiscriminator = DslDiscriminator(C.DEFAULT)) = refString.split(REFSEP).map { DslRefAtom.from(it) }.toMutableList().also {if (it.isNotEmpty() && it.first().dslRefName != "disc") it.add(0, DslRefAtom("disc", dslDiscriminator.dslDiscriminator))}
         fun groupAndElementAndSubelementLevelDslRef(dslRef: IDslRef): Triple<IDslRef, IDslRef, IDslRef?> {
             if (dslRef.refList.size < 2) throw DslRefException("DslRef not at least ElementLevel depth $dslRef")
             if (dslRef.refList.size == 3) return Triple(dslRef.parentDslRef.parentDslRef, dslRef.parentDslRef, dslRef)
@@ -286,10 +257,9 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
                 MODELKIND.TABLEKIND -> DslRef.tableRefFrom(dslRef, simpleName, swappedModelSimpleName)
             }
         }
-        fun genericInstance(): DslRef = modelgroup(C.NULLSTRING, DslDiscriminator(C.NULLSTRING))
-        fun <T : IDslRef> funcname(dslRefClass: KClass<T>): String {
-            val companion = dslRefClass.companionObjectInstance ?: return "$dslRefClass has no companion object with val funcname"
-            val companionProp = companion::class.memberProperties.first { it.name == "funcname" /* companion object { val funcname = "xxx" } */ }
+        fun <T : IDslRef> dslRefName(dslRefClass: KClass<T>): String {
+            val companion = dslRefClass.companionObjectInstance ?: return "$dslRefClass has no companion object with val dslRefName"
+            val companionProp = companion::class.memberProperties.first { it.name == "dslRefName" /* companion object { val dslRefName = "xxx" } */ }
             //companionProp.isAccessible = true
             return companionProp.getter.call(companion).toString()
         }
@@ -300,19 +270,19 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
 //            val funcnamesList = classesImplementingInterface.map { DslRef.funcname(it.kotlin) }
 //            return funcnamesList
 //        }
-        inline fun <reified T: IDslRef> getDslRefFuncname(dslRefIfcClass: KClass<T>, refAtomsInclDiscriminator: List<DslRefAtom>, level: Int): Pair<DslRefAtom, KClass<out T>> {
-            //val funcNameOfRefString = DslRefString.refAtomsList(refString)
+        inline fun <reified T: IDslRef> getDslRefName(dslRefIfcClass: KClass<T>, refAtomsInclDiscriminator: List<DslRefAtom>, level: Int): Pair<DslRefAtom, KClass<out T>> {
+            //val dslRefNameOfRefString = DslRefString.refAtomsList(refString)
             val refAtomOfLevel = refAtomsInclDiscriminator[level]
             var funcClass: KClass<out T>? = null
 
-            // making sure we only test DslRef.funcName's
+            // making sure we only test DslRef.dslRefName's
             // that are (or inherited somewhere up in the hierarchy) on an implementing class of the given interface::class
             // which then should have singleton objects that implement that sealed(!) interface
             // which then are returned by this function
             val classesImplementingInterface = classesImplementingInterface(dslRefIfcClass)
             for (javaClass: Class<out T> in classesImplementingInterface) {
-                when (funcname(javaClass.kotlin)) {
-                    refAtomOfLevel.functionName -> { funcClass = javaClass.kotlin; break }
+                when (dslRefName(javaClass.kotlin)) {
+                    refAtomOfLevel.dslRefName -> { funcClass = javaClass.kotlin; break }
                 }
             }
             if (funcClass == null) throw Exception("unknown ${level}. part func '$refAtomOfLevel' in DslRef '${refAtomsInclDiscriminator.joinToString(REFSEP)}'")
@@ -334,9 +304,9 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
     //endregion companion
 
     //region DslRefAtom
-    data class DslRefAtom(val functionName: String, val simpleName: String = C.DEFAULT) {
-        override fun toString() = "$functionName${ if (simpleName == C.DEFAULT) "" else ":$simpleName"}"
-        fun debugToString() = "$functionName:$simpleName"
+    data class DslRefAtom(val dslRefName: String, val simpleName: String = C.DEFAULT) {
+        override fun toString() = "$dslRefName${ if (simpleName == C.DEFAULT) "" else ":$simpleName"}"
+        fun debugToString() = "$dslRefName:$simpleName"
         companion object {
             fun from(refString: String) = refString.split(DslRef.ATOMSEP).let { if(it.size == 2) DslRefAtom(it[0], it[1]) else DslRefAtom(it[0]) }
         }
@@ -345,113 +315,45 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
 }
 
 object DslRefString {
-    //region DslRefString { ...
-//    fun groupRef(refString: String, dslDiscriminator: DslDiscriminator) : DslRef.IGroupLevel = groupRef(DslRef.refAtomsListFull(refString), dslDiscriminator)
-//    private fun groupRef(refAtomsList: List<DslRef.DslRefAtom>, dslDiscriminator: DslDiscriminator) : DslRef.IGroupLevel {
-//        if(refAtomsList.size < 2) {// first element is DslDiscriminator
-//            throw DslException("cannot extract groupRef from '${DslRef.refListJoin(refAtomsList)}' as it has less than 2 elements ")
-//        }
-//        // sentinel exhaustive when to get a compile error here, when DSL adds/removes on grouplevel
-//        WhensDslRef.whenGroup(IDslRef.NULL, isApigroup = {}, isModelgroup = {})
-//        val (groupLevelRefAtom, _) = DslRef.getDslRefFuncname(DslRef.IGroupLevel::class, refAtomsList, 1)
-//        val dslGroupRef = when (groupLevelRefAtom.functionName) {
-//            DslRef.modelgroup.funcname -> { DslRef.modelgroup(groupLevelRefAtom.simpleName, dslDiscriminator) }
-//            DslRef.apigroup.funcname ->   { DslRef.apigroup(groupLevelRefAtom.simpleName, dslDiscriminator) }
-//            else -> { throw DslException("Forgot to add groupLevel when case here for group '${groupLevelRefAtom.functionName}' ???") }
-//        }
-//        return dslGroupRef
-//    }
-//    fun modelgroupRef(refString: String, dslDiscriminator: DslDiscriminator) : DslRef.modelgroup {
-//        val groupRef = groupRef(refString, dslDiscriminator)
-//        if (groupRef !is DslRef.modelgroup) throw DslException("DslRef '$refString' does not point to a modelgroup")
-//        return groupRef
-//    }
-//    fun elementRef(refString: String, dslDiscriminator: DslDiscriminator) : DslRef.IElementLevel {
-//        val refAtomsList = DslRef.refAtomsListFull(refString)
-//        if(refAtomsList.size < 3) {// first element is DslDiscriminator
-//            throw DslException("cannot extract elementRef from '${DslRef.refListJoin(refAtomsList)}' as it has less than 3 elements ")
-//        }
-//        // sentinel exhaustive when to get a compile error here, when DSL adds/removes on grouplevel
-//        WhensDslRef.whenApigroupElement(IDslRef.NULL, isApiRef = {})
-//        WhensDslRef.whenModelgroupElement(IDslRef.NULL, isModelRef = {}, isFillerRef = {}, isAllmodelsRef = {})
-//        val groupRef = groupRef(refAtomsList, dslDiscriminator)
-//        val (elementLevelRefAtom, _) = DslRef.getDslRefFuncname(DslRef.IElementLevel::class, refAtomsList, 2)
-//        val elementRef = when (groupRef) {
-//            //DslRef.IGroupLevel.NULL -> { throw DslException("trying to get elementRef on NULL") }
-//            is DslRef.apigroup -> {
-//                when (elementLevelRefAtom.functionName) {
-//                    DslRef.api.funcname -> { DslRef.api(elementLevelRefAtom.simpleName, groupRef)}
-//                    else -> { throw DslException("unknown Iapigroup.funcname '${elementLevelRefAtom}'") }
-//                }
-//            }
-//            is DslRef.modelgroup -> {
-//                when (elementLevelRefAtom.functionName) {
-//                    DslRef.model.funcname -> { DslRef.model(elementLevelRefAtom.simpleName, groupRef) }
-//                    DslRef.filler.funcname -> { DslRef.filler(elementLevelRefAtom.simpleName, groupRef) }
-//                    DslRef.allModels.funcname -> { DslRef.allModels(elementLevelRefAtom.simpleName, groupRef) }
-//                    else -> { throw DslException("unknown Imodelgroup.funcname '${elementLevelRefAtom}'") }
-//                }
-//            }
-//        }
-//        return elementRef
-//    }
-//    fun modelElementRef(refString: String, dslDiscriminator: DslDiscriminator) : DslRef.model {
-//        val elementRef = elementRef(refString, dslDiscriminator)
-//        if (elementRef !is DslRef.model) throw DslException("DslRef '$refString' does not point to a model")
-//        return elementRef
-//    }
-
+    fun genericInstance(): DslRef = DslRef.modelgroup(C.NULLSTRING, DslDiscriminator(C.NULLSTRING))
     fun REF(dslRefAtomList: List<DslRef.DslRefAtom>, dslDiscriminator: DslDiscriminator): DslRef = REF("disc${DslRef.ATOMSEP}$dslDiscriminator${DslRef.REFSEP}${DslRef.refListJoin(dslRefAtomList)}")
     fun REF(dslRef: DslRef): DslRef = REF(dslRef.toString())
     fun REF(dslRefString: String): DslRef {
         // iterate through atoms
-        // get by reflection the DslRef to instantiate via funcname
+        // get by reflection the DslRef to instantiate via dslRefName
         val refAtomsListFull = DslRef.refAtomsListFull(dslRefString)
         val dslDiscriminator: DslDiscriminator = DslDiscriminator(refAtomsListFull.first().simpleName)
+
         // sentinel for ALL DslRef's
+        // IF ONE IS MISSING, YOU ALSO HAVE TO ADD IT BELOW
         when (genericInstance()) {
-            is DslRef.dslRun -> {}
-            is DslRef.allModels -> {}
-            is DslRef.api -> {}
-            is DslRef.apifun -> {}
-            is DslRef.apigroup -> {}
-            is DslRef.classMods -> {}
-            is DslRef.dto -> {}
-            is DslRef.extends -> {}
-            is DslRef.filler -> {}
-            is DslRef.model -> {}
-            is DslRef.modelgroup -> {}
-            is DslRef.nameAndWhereto -> {}
-            is DslRef.properties -> {}
-            is DslRef.prop -> {}
-            is DslRef.propertiesOf -> {}
-            is DslRef.showcase -> {}
-            is DslRef.table -> {}
-            is DslRef.crud -> {}
-            is DslRef.crudBlock -> {}
-            is DslRef.crudSubBlock -> {}
-            is DslRef.copyBoundry -> {}
+            is DslRef.dslRun, is DslRef.apigroup, is DslRef.modelgroup, is DslRef.allModels, is DslRef.api, is DslRef.apifun, is DslRef.classMods, is DslRef.dto, is DslRef.extends, is DslRef.filler, is DslRef.model, is DslRef.nameAndWhereto, is DslRef.properties, is DslRef.prop, is DslRef.propertiesOf, is DslRef.showcase, is DslRef.table, is DslRef.crud, is DslRef.crudBlock, is DslRef.crudSubBlock, is DslRef.copyBoundry -> {}
         }
         var currentDslRef: DslRef = DslRef.modelgroup("DUMMY", DslDiscriminator(C.NULLSTRING)) // dummy
         for ((i, refAtom) in refAtomsListFull.withIndex()) {
             if (i == 0) continue // DslDiscriminator
-            when (refAtom.functionName) {
-                DslRef.apigroup.funcname -> { currentDslRef = DslRef.apigroup(refAtom.simpleName, dslDiscriminator)}
-                DslRef.modelgroup.funcname -> { currentDslRef = DslRef.modelgroup(refAtom.simpleName, dslDiscriminator)}
-                DslRef.dslRun.funcname -> DslRef.dslRun(refAtom.simpleName)
-                DslRef.allModels.funcname -> { currentDslRef = DslRef.allModels(refAtom.simpleName, currentDslRef) }
-                DslRef.api.funcname -> { currentDslRef = DslRef.api(refAtom.simpleName, currentDslRef)}
-                DslRef.apifun.funcname -> { currentDslRef = DslRef.apifun(refAtom.simpleName, currentDslRef)}
-                DslRef.classMods.funcname -> { currentDslRef = DslRef.classMods(refAtom.simpleName, currentDslRef)}
-                DslRef.dto.funcname -> { currentDslRef = DslRef.dto(refAtom.simpleName, currentDslRef)}
-                DslRef.extends.funcname -> { currentDslRef = DslRef.extends(refAtom.simpleName, currentDslRef)}
-                DslRef.filler.funcname -> { currentDslRef = DslRef.filler(refAtom.simpleName, currentDslRef)}
-                DslRef.model.funcname -> { currentDslRef = DslRef.model(refAtom.simpleName, currentDslRef)}
-                DslRef.nameAndWhereto.funcname -> { currentDslRef = DslRef.nameAndWhereto(refAtom.simpleName, currentDslRef)}
-                DslRef.prop.funcname -> { currentDslRef = DslRef.prop(refAtom.simpleName, currentDslRef)}
-                DslRef.propertiesOf.funcname -> { currentDslRef = DslRef.propertiesOf(refAtom.simpleName, currentDslRef)}
-                DslRef.showcase.funcname -> { currentDslRef = DslRef.showcase(refAtom.simpleName, currentDslRef)}
-                DslRef.table.funcname -> { currentDslRef = DslRef.table(refAtom.simpleName, currentDslRef)}
+            when (refAtom.dslRefName) {
+                DslRef.dslRun.dslRefName -> DslRef.dslRun(refAtom.simpleName)
+                DslRef.apigroup.dslRefName -> { currentDslRef = DslRef.apigroup(refAtom.simpleName, dslDiscriminator)}
+                DslRef.modelgroup.dslRefName -> { currentDslRef = DslRef.modelgroup(refAtom.simpleName, dslDiscriminator)}
+                DslRef.allModels.dslRefName -> { currentDslRef = DslRef.allModels(refAtom.simpleName, currentDslRef) }
+                DslRef.api.dslRefName -> { currentDslRef = DslRef.api(refAtom.simpleName, currentDslRef)}
+                DslRef.apifun.dslRefName -> { currentDslRef = DslRef.apifun(refAtom.simpleName, currentDslRef)}
+                DslRef.classMods.dslRefName -> { currentDslRef = DslRef.classMods(refAtom.simpleName, currentDslRef)}
+                DslRef.dto.dslRefName -> { currentDslRef = DslRef.dto(refAtom.simpleName, currentDslRef)}
+                DslRef.extends.dslRefName -> { currentDslRef = DslRef.extends(refAtom.simpleName, currentDslRef)}
+                DslRef.filler.dslRefName -> { currentDslRef = DslRef.filler(refAtom.simpleName, currentDslRef)}
+                DslRef.model.dslRefName -> { currentDslRef = DslRef.model(refAtom.simpleName, currentDslRef)}
+                DslRef.nameAndWhereto.dslRefName -> { currentDslRef = DslRef.nameAndWhereto(refAtom.simpleName, currentDslRef)}
+                DslRef.properties.dslRefName -> { currentDslRef = DslRef.properties(refAtom.simpleName, currentDslRef)}
+                DslRef.prop.dslRefName -> { currentDslRef = DslRef.prop(refAtom.simpleName, currentDslRef)}
+                DslRef.propertiesOf.dslRefName -> { currentDslRef = DslRef.propertiesOf(refAtom.simpleName, currentDslRef)}
+                DslRef.showcase.dslRefName -> { currentDslRef = DslRef.showcase(refAtom.simpleName, currentDslRef)}
+                DslRef.table.dslRefName -> { currentDslRef = DslRef.table(refAtom.simpleName, currentDslRef)}
+                DslRef.crud.dslRefName -> { currentDslRef = DslRef.crud(refAtom.simpleName, currentDslRef)}
+                DslRef.crudBlock.dslRefName -> { currentDslRef = DslRef.crudBlock(refAtom.simpleName, currentDslRef)}
+                DslRef.crudSubBlock.dslRefName -> { currentDslRef = DslRef.crudSubBlock(refAtom.simpleName, currentDslRef)}
+                DslRef.copyBoundry.dslRefName -> { currentDslRef = DslRef.copyBoundry(refAtom.simpleName, currentDslRef)}
             }
         }
         return currentDslRef
@@ -464,9 +366,5 @@ object DslRefString {
             return dslRef
         }
     }
-    //endregion DslRefString
 }
-
-//context(IDslClass, DslDiscriminatorWrapper)
-//fun String.ref() = DslRefString.fromSelf(selfDslRef, this)
 
