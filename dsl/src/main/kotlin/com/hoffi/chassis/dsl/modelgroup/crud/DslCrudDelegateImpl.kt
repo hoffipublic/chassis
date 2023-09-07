@@ -81,6 +81,7 @@ class DslCrudDelegateImpl(simpleNameOfDelegator: String, delegateRef: IDslRef)
         val allForBusinessName = allForSimpleName.getOrPut(businessName) { mutableSetOf() }
         val existingCrudData: CrudData? = allForBusinessName.firstOrNull{it == crudData}
         return if (existingCrudData != null) {
+            log.warn("reusing already existing CrudData: $crudData")
             return existingCrudData
         } else {
             allForBusinessName.add(crudData) ; crudData

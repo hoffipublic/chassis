@@ -36,6 +36,8 @@ dependencies {
     testImplementation(kotlin("test"))
     // for running kotest tests
     testImplementation("io.kotest:kotest-runner-junit5:${libs.versions.kotest.v()}")
+
+    testImplementation(testFixtures(project(":shared")))
 }
 
 tasks {

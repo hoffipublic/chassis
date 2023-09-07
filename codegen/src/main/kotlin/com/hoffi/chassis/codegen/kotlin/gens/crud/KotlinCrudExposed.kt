@@ -201,7 +201,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
                 )
             }
         }
-        if (none) addStatement("// NONE")
+        if (none) addComment("NONE")
         return this
 //        // allProps as a) Table's always gatherProps from superclasses and b) alle table columns have to be filled
 //        for (prop in i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }) {
@@ -215,7 +215,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
 //                postNonCollection = { },
 //                isModelList = {
 //                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+//                    bodyBuilder.addComment("not yet implemented ${prop.name()} LIST of %T", prop.poetType)
 //
 //                    addSyntheticCrud(this, this@KotlinCrudExposed.currentCrudData, via = "KotlinCrud for prop: '$prop' from currentFillerData: ${currentCrudData}")
 //                },
@@ -256,52 +256,52 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
 //                },
 //                isModelCollection = {
 //                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+//                    bodyBuilder.addComment("not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
 //
 //                    addSyntheticCrud(this, this@KotlinCrudExposed.currentCrudData, via = "KotlinCrud for prop: '$prop' from currentFillerData: ${currentCrudData}")
 //                },
 //                isModelIterable = {
 //                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+//                    bodyBuilder.addComment("not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
 //
 //                    addSyntheticCrud(this, this@KotlinCrudExposed.currentCrudData, via = "KotlinCrud for prop: '$prop' from currentFillerData: ${currentCrudData}")
 //                },
 //                isPoetTypeList = {
 //                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+//                    bodyBuilder.addComment("not yet implemented ${prop.name()} LIST of %T", prop.poetType)
 //                },
 //                isPoetTypeSet = {
 //                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+//                    bodyBuilder.addComment("not yet implemented ${prop.name()} SET of %T", prop.poetType)
 //                },
 //                isPoetTypeCollection = {
 //                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+//                    bodyBuilder.addComment("not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
 //                },
 //                isPoetTypeIterable = {
 //                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+//                    bodyBuilder.addComment("not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
 //                },
 //                isTypList = {
 //                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+//                    bodyBuilder.addComment("not yet implemented ${prop.name()} LIST of %T", prop.poetType)
 //                },
 //                isTypSet = {
 //                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+//                    bodyBuilder.addComment("not yet implemented ${prop.name()} SET of %T", prop.poetType)
 //                },
 //                isTypCollection = {
 //                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+//                    bodyBuilder.addComment("not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
 //                },
 //                isTypIterable = {
 //                    none = false
-//                    bodyBuilder.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+//                    bodyBuilder.addComment("not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
 //                },
 //                postCollection = { },
 //            )
 //        }
-//        if (none) bodyBuilder.addStatement("// NONE")
+//        if (none) bodyBuilder.addComment("NONE")
 //        var body = bodyBuilder.build()
 //        return body
     }

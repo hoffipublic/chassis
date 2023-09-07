@@ -1,6 +1,7 @@
 plugins {
     id("kotlinJvmBuildLogic") // ROOT/buildLogic/src/kotlin/kotlinJvmBuildLogic.gradle.kts instead of kotlin("jvm")
     //id("com.github.johnrengelman.shadow")
+    `java-test-fixtures`
 }
 
 group = "${rootProject.group}"
@@ -29,6 +30,8 @@ dependencies {
     testImplementation(kotlin("test"))
     // for running kotest tests
     testImplementation("io.kotest:kotest-runner-junit5:${libs.versions.kotest.v()}")
+
+    testFixturesImplementation(libs.bundles.testJunitKotestKoin)
 }
 
 tasks {

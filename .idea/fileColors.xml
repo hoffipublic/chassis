@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SharedFileColors">
+    <fileColor scope="srcTest" color="325430" />
+    <fileColor scope="Tests" color="Green" />
     <fileColor scope="buildfiles" color="Orange" />
     <fileColor scope="00__" color="2e98b6" />
-    <fileColor scope="src" color="Gray" />
+    <fileColor scope="srcMain" color="Orange" />
     <fileColor scope="READMEs" color="Orange" />
   </component>
 </project>

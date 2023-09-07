@@ -49,15 +49,19 @@ val build by tasks.existing {
     finalizedBy(versionsPrint)
 }
 
-//allprojects {
+subprojects {
 //    //println("> root/build.gradle.kts allprojects: $project")
 //    project.plugins.withId("org.jetbrains.kotlin.multiplatform") {
 //        println("${project.name}: starting configure for kotlin MPP project ...")
 //    }
-//    project.plugins.withId("org.jetbrains.kotlin.jvm") {
-//        println("${project.name}: starting configure for kotlin JVM project ...")
-//    }
-//}
+    project.plugins.withId("org.jetbrains.kotlin.jvm") {
+        //println("${project.name}: starting configure for kotlin JVM project ...")
+        afterEvaluate {
+            sourceSets.main { kotlin.srcDir("src/main/_srcMain_${project.name.uppercase()}") }
+            sourceSets.test { kotlin.srcDir("src/test/_srcTest_${project.name.uppercase()}") }
+        }
+    }
+}
 
 dependencies {
     // versions file: ROOT/buildLogic/libs.versions.toml

@@ -1,5 +1,6 @@
 package com.hoffi.chassis.codegen.kotlin.gens.filler
 
+import com.hoffi.chassis.chassismodel.PoetHelpers.addComment
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.codegen.kotlin.GenDslRefHelpers
@@ -110,10 +111,10 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                     none = false
                     propBoundry(prop,
                         noPropBoundry = {
-                            bodyBuilder.addStatement("// TODO %L ${prop.propTypeSimpleNameCap} of %T", prop.name(), prop.poetType)
+                            bodyBuilder.addComment("TODO %L ${prop.propTypeSimpleNameCap} of %T", prop.name(), prop.poetType)
                         },
-                        IGNORE = { copyBoundry -> bodyBuilder.addStatement("// ${prop.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
-                        ELSE = { copyBoundry -> bodyBuilder.addStatement("// TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                        IGNORE = { copyBoundry -> bodyBuilder.addComment("${prop.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                        ELSE = { copyBoundry -> bodyBuilder.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
                     )
                 },
                 isTyp = {
@@ -122,8 +123,8 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                         noPropBoundry = {
                             KotlinFillerTablePoetStatements.fillTablePropTypOrPoetType(bodyBuilder, funNameInsertOrBatch, i.targetPoetType, i.sourceVarName, prop)
                         },
-                        IGNORE = { copyBoundry -> bodyBuilder.addStatement("// copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
-                        ELSE = { copyBoundry -> bodyBuilder.addStatement("// TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
+                        IGNORE = { copyBoundry -> bodyBuilder.addComment("copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${prop.name()}") },
+                        ELSE = { copyBoundry -> bodyBuilder.addComment("TODO ${copyBoundry.copyType} ${prop.name()} ${prop.propTypeSimpleNameCap} of ${prop.poetType}") },
                     )
                 },
                 postNonCollection = { },
@@ -142,7 +143,7 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                 postCollection = { },
             )
         }
-        if (none) bodyBuilder.addStatement("// NONE")
+        if (none) bodyBuilder.addComment("NONE")
         var body = bodyBuilder.endControlFlow().build()
         return body
     }
@@ -166,7 +167,7 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                     addSyntheticFillersForTableModelProp(this, this@KotlinFillerTable.currentFillerData, via = "TableFiller for prop: '$prop' from currentFillerData: $currentFillerData")
                 },
                 isPoetType = {
-                    funSpec.addStatement("// TODO ${prop.name()} ${prop.propTypeSimpleNameCap} of %T", prop.poetType)
+                    funSpec.addComment("TODO ${prop.name()} ${prop.propTypeSimpleNameCap} of %T", prop.poetType)
                 },
                 isTyp = {
                     propBoundry(prop,
@@ -191,33 +192,33 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
                     funSpec.addComment("%L.%L ITERABLE of %T dealt with in sql.CRUD...", i.targetVarName, prop.name(), prop.poetType)
                 },
                 isPoetTypeList = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+                    funSpec.addComment("not yet implemented ${prop.name()} LIST of %T", prop.poetType)
                 },
                 isPoetTypeSet = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+                    funSpec.addComment("not yet implemented ${prop.name()} SET of %T", prop.poetType)
                 },
                 isPoetTypeCollection = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+                    funSpec.addComment("not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
                 },
                 isPoetTypeIterable = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+                    funSpec.addComment("not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
                 },
                 isTypList = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} LIST of %T", prop.poetType)
+                    funSpec.addComment("not yet implemented ${prop.name()} LIST of %T", prop.poetType)
                 },
                 isTypSet = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} SET of %T", prop.poetType)
+                    funSpec.addComment("not yet implemented ${prop.name()} SET of %T", prop.poetType)
                 },
                 isTypCollection = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
+                    funSpec.addComment("not yet implemented ${prop.name()} COLLECTION of %T", prop.poetType)
                 },
                 isTypIterable = {
-                    funSpec.addStatement("// not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
+                    funSpec.addComment("not yet implemented ${prop.name()} ITERABLE of %T", prop.poetType)
                 },
                 postCollection = { },
             )
         }
-        if (i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }.isEmpty()) funSpec.addStatement("// NONE")
+        if (i.allIntersectPropSet.filter { Tag.TRANSIENT !in it.tags }.isEmpty()) funSpec.addComment("NONE")
         funSpec.addStatement("return %L", i.targetVarName)
         builder.addFunction(funSpec.build())
     }

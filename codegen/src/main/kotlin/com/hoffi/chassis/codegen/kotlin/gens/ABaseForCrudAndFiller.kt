@@ -2,6 +2,7 @@ package com.hoffi.chassis.codegen.kotlin.gens
 
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.Cap
+import com.hoffi.chassis.chassismodel.PoetHelpers.addComment
 import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.decap
 import com.hoffi.chassis.chassismodel.dsl.GenException
@@ -189,7 +190,7 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
                 addStatement("%T.%L(%L.%L)", GenClassNames.crudFor(fk.toTableRef, CrudData.CRUD.CREATE), funNameInsertOrBatch.swapOutOriginalFunNameWith("insertDb"), i.sourceVarName, fk.toProp.name())
             }
         }
-        if (none) addStatement("// NONE")
+        if (none) addComment("NONE")
         return this
     }
     protected fun FunSpec.Builder.addOutgoingFKProps(outgoingFKs: MutableSet<FK>, funNameInsertOrBatch: FunName, i: IntersectPropertys.CommonPropData): FunSpec.Builder {
@@ -250,7 +251,7 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
                 }
             }
         }
-        if (none) addStatement("// NONE")
+        if (none) addComment("NONE")
         return this
     }
     /** helper for multiple analogous params from a lambda */

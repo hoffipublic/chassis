@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="srcMain" pattern="file:_srcMain*/||file:ZZsrcMain*" />
+</component>
