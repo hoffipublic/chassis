@@ -8,7 +8,7 @@ import com.hoffi.chassis.dsl.modelgroup.DslModelgroup
 import com.hoffi.chassis.dsl.modelgroup.DslTable
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
-import com.hoffi.chassis.shared.helpers.ifNotBlank
+import com.hoffi.chassis.shared.helpers.joinPackage
 import com.hoffi.chassis.shared.helpers.pathSepRE
 import com.hoffi.chassis.shared.helpers.pathSepREFirst
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.IDslApiSharedNameAndWheretoProps
@@ -123,11 +123,11 @@ open class DslNameAndWheretoPropsImpl(
     var basePackageAbsolute: String = NameAndWheretoDefaults.basePackage
     override fun basePackageAbsolute(absolute: String) { basePackageAbsolute = absolute }
     var basePackageAddendum: String = NameAndWheretoDefaults.packageName
-    override fun basePackage(concat: String) { basePackageAddendum = "${basePackageAddendum.ifNotBlank{"$basePackageAddendum."}}${concat.replace(pathSepRE, ".")}" }
+    override fun basePackage(concat: String) { basePackageAddendum = joinPackage(basePackageAddendum, concat.replace(pathSepRE, ".")) }
     var packageNameAbsolute: String = NameAndWheretoDefaults.packageName
     override fun packageNameAbsolute(absolute: String) { packageNameAbsolute = absolute }
     var packageNameAddendum: String = NameAndWheretoDefaults.packageName
-    override fun packageName(concat: String) { packageNameAddendum = "${packageNameAddendum.ifNotBlank{"$packageNameAddendum."}}${concat.replace(pathSepRE, ".")}" }
+    override fun packageName(concat: String) { packageNameAddendum = joinPackage(packageNameAddendum, concat.replace(pathSepRE, ".")) }
 }
 
 context(DslCtxWrapper)

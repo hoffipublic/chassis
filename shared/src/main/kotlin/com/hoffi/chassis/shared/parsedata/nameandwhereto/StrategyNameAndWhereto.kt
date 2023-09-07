@@ -4,7 +4,7 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
-import com.hoffi.chassis.shared.helpers.ifNotBlank
+import com.hoffi.chassis.shared.helpers.joinPackage
 import com.hoffi.chassis.shared.helpers.pathSepRE
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.hoffi.chassis.shared.strategies.ClassNameStrategy
@@ -209,12 +209,8 @@ object StrategyNameAndWhereto {
         eventualModelClassName.tableNameStrategy = TableNameStrategy.get(eventualSharedNameAndWhereto.strategyTableName)
         eventualModelClassName.basePath = eventualSharedNameAndWhereto.baseDirAbsolute / eventualSharedNameAndWhereto.baseDirAddendum
         eventualModelClassName.path = eventualSharedNameAndWhereto.pathAbsolute / eventualSharedNameAndWhereto.pathAddendum
-        eventualModelClassName.basePackage = eventualSharedNameAndWhereto.basePackageAbsolute +
-                if (eventualSharedNameAndWhereto.basePackageAbsolute.isNotBlank()) { "." } else { "" } +
-                eventualSharedNameAndWhereto.basePackageAddendum
-        eventualModelClassName.packageName = eventualSharedNameAndWhereto.packageNameAbsolute +
-                if (eventualSharedNameAndWhereto.packageNameAbsolute.isNotBlank()) { "." } else { "" } +
-                        eventualSharedNameAndWhereto.packageNameAddendum
+        eventualModelClassName.basePackage = joinPackage(eventualSharedNameAndWhereto.basePackageAbsolute, eventualSharedNameAndWhereto.basePackageAddendum)
+        eventualModelClassName.packageName = joinPackage(eventualSharedNameAndWhereto.packageNameAbsolute, eventualSharedNameAndWhereto.packageNameAddendum)
         eventualModelClassName.classPrefix = eventualSharedNameAndWhereto.classPrefixAbsolute + eventualSharedNameAndWhereto.classPrefixAddendum
         eventualModelClassName.classPostfix = eventualSharedNameAndWhereto.classPostfixAbsolute + eventualSharedNameAndWhereto.classPostfixAddendum
 
@@ -295,7 +291,7 @@ object StrategyNameAndWhereto {
         //    eventualSharedNameAndWhereto.basePackageAddendum = eventualSharedNameAndWhereto.basePackageAddendum.ifNotBlank { "${eventualSharedNameAndWhereto.basePackageAddendum}." } + sharedNameAndWhereto.basePackageAddendum.replace(pathSepRE, ".")
         //}
         if ( (sharedNameAndWhereto.basePackageAddendum != NameAndWheretoDefaults.packageName) ) {
-            eventualSharedNameAndWhereto.basePackageAddendum = eventualSharedNameAndWhereto.basePackageAddendum.ifNotBlank { "${eventualSharedNameAndWhereto.basePackageAddendum}." } + sharedNameAndWhereto.basePackageAddendum.replace(pathSepRE, ".")
+            eventualSharedNameAndWhereto.basePackageAddendum = joinPackage(eventualSharedNameAndWhereto.basePackageAddendum, sharedNameAndWhereto.basePackageAddendum.replace(pathSepRE, "."))
         }
         if (absolute) eventualSharedNameAndWhereto.basePackageAbsoluteBool = true
         absolute = false
@@ -309,7 +305,7 @@ object StrategyNameAndWhereto {
         //    eventualSharedNameAndWhereto.packageNameAddendum = eventualSharedNameAndWhereto.packageNameAddendum.ifNotBlank { "${eventualSharedNameAndWhereto.packageNameAddendum}." } + sharedNameAndWhereto.packageNameAddendum.replace(pathSepRE, ".")
         //}
         if ( (sharedNameAndWhereto.packageNameAddendum != NameAndWheretoDefaults.packageName) ) {
-            eventualSharedNameAndWhereto.packageNameAddendum = eventualSharedNameAndWhereto.packageNameAddendum.ifNotBlank { "${eventualSharedNameAndWhereto.packageNameAddendum}." } + sharedNameAndWhereto.packageNameAddendum.replace(pathSepRE, ".")
+            eventualSharedNameAndWhereto.packageNameAddendum = joinPackage(eventualSharedNameAndWhereto.packageNameAddendum, sharedNameAndWhereto.packageNameAddendum.replace(pathSepRE, "."))
         }
     }
 }
