@@ -2,7 +2,7 @@ package com.hoffi.chassis.shared.helpers
 
 import com.hoffi.chassis.chassismodel.ENV
 import com.hoffi.chassis.shared.codegen.GenCtx
-import com.hoffi.chassis.shared.parsedata.ModelClassData
+import com.hoffi.chassis.shared.parsedata.ModelClassDataFromDsl
 import com.hoffi.chassis.shared.shared.CrudData
 import com.hoffi.chassis.shared.shared.FillerData
 import com.squareup.kotlinpoet.ClassName
@@ -10,12 +10,12 @@ import com.squareup.kotlinpoet.TypeSpec
 
 object PoetHelpers {
     operator fun ClassName.plus(postfix: String) = ClassName(this.packageName, this.simpleName + postfix)
-    fun TypeSpec.Builder.kdocGenerated(modelClassData: ModelClassData): TypeSpec.Builder {
+    fun TypeSpec.Builder.kdocGenerated(modelClassDataFromDsl: ModelClassDataFromDsl): TypeSpec.Builder {
         return this.addKdoc(
             "%L model: %L\nwith dslRef: %L\ngenerated at %L on %L",
-            modelClassData.modelSubElRef.refList.last().functionName,
-            modelClassData.modelOrTypeNameString,
-            modelClassData.modelSubElRef,
+            modelClassDataFromDsl.modelSubElRef.refList.last().functionName,
+            modelClassDataFromDsl.modelOrTypeNameString,
+            modelClassDataFromDsl.modelSubElRef,
             ENV.generationLocalDateTime,
             ENV.hostname
         )

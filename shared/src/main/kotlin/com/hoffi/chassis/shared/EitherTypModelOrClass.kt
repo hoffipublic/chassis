@@ -43,7 +43,7 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
         override fun toString() = "${this::class.simpleName!!.removePrefix("Either")}($modelSubElementRef)"
         // modelClassName (with poetType) init'ed in finish of modelSubelement
         /** invalid to use before modelsubelement finish'ed */
-        override val isInterface: Boolean by lazy { modelClassName.modelClassData.isInterface }
+        override val isInterface: Boolean by lazy { modelClassName.modelClassDataFromDsl.isInterface }
         override fun finish(replaceAppendOrModify: ReplaceAppendOrModify, formatAddendum: String, argsAddendum: MutableList<Any>): EitherTypOrModelOrPoetType {
             return EitherModel(modelSubElementRefOriginal, Initializer.of(initializer.originalFormat, initializer.originalArgs, replaceAppendOrModify, formatAddendum, argsAddendum))
         }

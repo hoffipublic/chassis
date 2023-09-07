@@ -4,37 +4,37 @@ import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.shared.helpers.PoetHelpers.kdocGenerated
-import com.hoffi.chassis.shared.parsedata.ModelClassData
+import com.hoffi.chassis.shared.parsedata.ModelClassDataFromDsl
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import org.slf4j.LoggerFactory
 
-abstract class AHasPropertys(val modelClassData: ModelClassData)
+abstract class AHasPropertys(val modelClassDataFromDsl: ModelClassDataFromDsl)
 
 context(GenCtxWrapper)
-abstract class AKotlinClass(modelClassData: ModelClassData) : AHasPropertys(modelClassData) {
-    override fun toString() = "${this::class.simpleName}(${modelClassData})"
+abstract class AKotlinClass(modelClassDataFromDsl: ModelClassDataFromDsl) : AHasPropertys(modelClassDataFromDsl) {
+    override fun toString() = "${this::class.simpleName}(${modelClassDataFromDsl})"
     private val log = LoggerFactory.getLogger(javaClass)
 
     init {
-        kotlinGenCtx.putKotlinGenClass(modelClassData.modelSubElRef, this)
+        kotlinGenCtx.putKotlinGenClass(modelClassDataFromDsl.modelSubElRef, this)
     }
 
-    var builder = when (modelClassData.kind) {
+    var builder = when (modelClassDataFromDsl.kind) {
         TypeSpec.Kind.OBJECT -> {
-            TypeSpec.objectBuilder(modelClassData.poetType)
+            TypeSpec.objectBuilder(modelClassDataFromDsl.poetType)
         }
         TypeSpec.Kind.INTERFACE -> {
-            TypeSpec.interfaceBuilder(modelClassData.poetType)
+            TypeSpec.interfaceBuilder(modelClassDataFromDsl.poetType)
         }
         else -> {
-            TypeSpec.classBuilder(modelClassData.poetType)
+            TypeSpec.classBuilder(modelClassDataFromDsl.poetType)
         }
     }.apply {
-        kdocGenerated(modelClassData)
+        kdocGenerated(modelClassDataFromDsl)
         addSuperinterface(RuntimeDefaults.WAS_GENERATED_INTERFACE_ClassName)
-        if (modelClassData.kind != TypeSpec.Kind.OBJECT && modelClassData.kind != TypeSpec.Kind.INTERFACE) {
+        if (modelClassDataFromDsl.kind != TypeSpec.Kind.OBJECT && modelClassDataFromDsl.kind != TypeSpec.Kind.INTERFACE) {
             //addNullCompanion() // TODO("addNullCompanion()")
         }
     }
@@ -44,15 +44,15 @@ abstract class AKotlinClass(modelClassData: ModelClassData) : AHasPropertys(mode
     fun getOrCreateCompanion(): TypeSpec.Builder = companionBuilder ?: TypeSpec.companionObjectBuilder().also { companionBuilder = it }
 
     fun generate(out: Appendable? = null): TypeSpec {
-        val fileSpecBuilder = FileSpec.builder(modelClassData.modelClassName.poetType)
+        val fileSpecBuilder = FileSpec.builder(modelClassDataFromDsl.modelClassName.poetType)
         val typeSpec = builder.build()
         val fileSpec = fileSpecBuilder.addType(typeSpec).build()
         if (out != null) {
             fileSpec.writeTo(out)
         } else {
             try {
-                val targetPathWithoutPackageAndFile = (modelClassData.modelClassName.basePath/modelClassData.modelClassName.path).toNioPath()
-                log.info("writing: $targetPathWithoutPackageAndFile/${modelClassData.modelClassName.poetType.toString().replace('.', '/')}.kt")
+                val targetPathWithoutPackageAndFile = (modelClassDataFromDsl.modelClassName.basePath/modelClassDataFromDsl.modelClassName.path).toNioPath()
+                log.info("writing: $targetPathWithoutPackageAndFile/${modelClassDataFromDsl.modelClassName.poetType.toString().replace('.', '/')}.kt")
                 fileSpec.writeTo(targetPathWithoutPackageAndFile)
             } catch (e: Exception) {
                 throw GenException(e.message ?: "unknown error", e)

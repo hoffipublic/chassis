@@ -16,7 +16,7 @@ object GenNaming {
             is COLLECTIONTYP.NONE -> fk.toProp.name(postfix = RuntimeDefaults.UUID_PROPNAME)
             is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
                 val toTableKotlinClassTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef)
-                "${toTableKotlinClassTable.modelClassData.asVarNameWithoutPostfix}${fk.toProp.name(postfix = RuntimeDefaults.UUID_PROPNAME).Cap()}"
+                "${toTableKotlinClassTable.modelClassDataFromDsl.asVarNameWithoutPostfix}${fk.toProp.name(postfix = RuntimeDefaults.UUID_PROPNAME).Cap()}"
             }
         }
     context(GenCtxWrapper)
@@ -25,7 +25,7 @@ object GenNaming {
             is COLLECTIONTYP.NONE -> fk.toProp.name(postfix = RuntimeDefaults.UUID_PROPNAME)
             is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
                 val toTableKotlinClassTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef)
-                toTableKotlinClassTable.modelClassData.modelClassName.tableNameStrategy.nameOf(toTableKotlinClassTable.modelClassData.tableName, postfix = fk.toProp.columnName())
+                toTableKotlinClassTable.modelClassDataFromDsl.modelClassName.tableNameStrategy.nameOf(toTableKotlinClassTable.modelClassDataFromDsl.tableName, postfix = fk.toProp.columnName())
             }
         }
     context(GenCtxWrapper)
@@ -34,7 +34,7 @@ object GenNaming {
             is COLLECTIONTYP.NONE -> fk.toProp.name(postfix = RuntimeDefaults.UUID_PROPNAME)
             is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
                 val toTableKotlinClassTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef)
-                "${fk.toProp.name()}${toTableKotlinClassTable.modelClassData.asVarNameWithoutPostfix.Cap()}"
+                "${fk.toProp.name()}${toTableKotlinClassTable.modelClassDataFromDsl.asVarNameWithoutPostfix.Cap()}"
             }
         }
     context(GenCtxWrapper)
@@ -43,7 +43,7 @@ object GenNaming {
             is COLLECTIONTYP.NONE -> fk.toProp.name(postfix = RuntimeDefaults.UUID_PROPNAME)
             is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET, is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE -> {
                 val toTableKotlinClassTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef)
-                toTableKotlinClassTable.modelClassData.modelClassName.tableNameStrategy.nameOf(toTableKotlinClassTable.modelClassData.tableName, postfix = fk.toProp.columnName())
+                toTableKotlinClassTable.modelClassDataFromDsl.modelClassName.tableNameStrategy.nameOf(toTableKotlinClassTable.modelClassDataFromDsl.tableName, postfix = fk.toProp.columnName())
             }
         }
     fun createFromTableFunName(aHasCopyBoundrysData: AHasCopyBoundrysData, modelClassName: ModelClassName) =

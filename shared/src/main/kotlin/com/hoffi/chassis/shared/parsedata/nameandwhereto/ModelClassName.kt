@@ -3,7 +3,7 @@ package com.hoffi.chassis.shared.parsedata.nameandwhereto
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.helpers.Validate.failIfIdentifierInvalid
 import com.hoffi.chassis.shared.helpers.joinPackage
-import com.hoffi.chassis.shared.parsedata.ModelClassData
+import com.hoffi.chassis.shared.parsedata.ModelClassDataFromDsl
 import com.hoffi.chassis.shared.strategies.*
 import com.squareup.kotlinpoet.ClassName
 import okio.Path
@@ -27,7 +27,7 @@ class ModelClassName(
     val log = LoggerFactory.getLogger(javaClass)
     override fun toString() = "${poetType.simpleNames.joinToString(".")} in ${poetType.packageName}"
 
-    lateinit var modelClassData: ModelClassData
+    lateinit var modelClassDataFromDsl: ModelClassDataFromDsl
     var classNameStrategy = ClassNameStrategy.get(IClassNameStrategy.STRATEGY.DEFAULT)
     var tableNameStrategy = TableNameStrategy.get(ITableNameStrategy.STRATEGY.DEFAULT)
     var basePath: Path = NameAndWheretoDefaults.basePath
@@ -45,7 +45,7 @@ class ModelClassName(
         set(value) { poetTypeDirect = value }
     override val poetTypeSimpleName: String
         get() = poetType.simpleName
-    private val poetTypeDslModel: ClassName by lazy { classNameStrategy.poetType(modelClassData, modelOrTypeNameString, joinPackage(basePackage, packageName), classPrefix, classPostfix) as ClassName }
+    private val poetTypeDslModel: ClassName by lazy { classNameStrategy.poetType(modelClassDataFromDsl, modelOrTypeNameString, joinPackage(basePackage, packageName), classPrefix, classPostfix) as ClassName }
     override val asVarName: String by lazy { classNameStrategy.asVarname(modelOrTypeNameString, classPrefix, classPostfix) }
     override val asVarNameWithoutPostfix: String by lazy { classNameStrategy.asVarname(modelOrTypeNameString, classPrefix) }
     override val tableName: String by lazy { tableNameStrategy.tableName(modelOrTypeNameString, prefix =  classPrefix) } // no postfix Dto|Table etc.

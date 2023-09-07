@@ -50,7 +50,7 @@ class KotlinClassModelTable(val tableModel: GenModel.TableModel)
     }
 
     private fun buildExtends() {
-        val isUuidTable = modelClassData.propsInclSuperclassPropsMap.values.filter { Tag.Companion.PRIMARY in it.tags }
+        val isUuidTable = modelClassDataFromDsl.propsInclSuperclassPropsMap.values.filter { Tag.Companion.PRIMARY in it.tags }
         if (isUuidTable.size == 1 && isUuidTable.first().dslPropName == UUID_PROPNAME) {
             builder.superclass(UUIDTABLE_CLASSNAME)
             tableModel.isUuidPrimary = true
@@ -58,7 +58,7 @@ class KotlinClassModelTable(val tableModel: GenModel.TableModel)
             builder.superclass(DB.TableClassName)
         }
         builder.addSuperclassConstructorParameter("%S", tableModel.modelClassName.tableName)
-        val extends = modelClassData.extends["default"]
+        val extends = modelClassDataFromDsl.extends["default"]
         for (superinterface in extends?.superInterfaces ?: mutableSetOf()) {
             builder.addSuperinterface(superinterface.modelClassName.poetType)
         }
@@ -79,7 +79,7 @@ class KotlinClassModelTable(val tableModel: GenModel.TableModel)
         if (dtoModel != null) {
             builder.addAnnotation(
                 AnnotationSpec.builder(RuntimeDefaults.ANNOTATION_DTO_CLASSNAME)
-                    .addMember("%T::class", modelClassData.poetType)
+                    .addMember("%T::class", modelClassDataFromDsl.poetType)
                     .addMember("targetDto = %T::class", dtoModel.modelClassName.poetType)
                     .build()
             )
@@ -93,11 +93,11 @@ class KotlinClassModelTable(val tableModel: GenModel.TableModel)
         val fkPropColName = GenNaming.fkPropColumnNameUUID(fk)
         val toKotlinClassmodelTable: AKotlinClass = kotlinGenCtx.kotlinGenClass(fk.toTableRef)
         val propSpecBuilder = PropertySpec.builder(fkPropVarName, DB.ColumnClassName.parameterizedBy(RuntimeDefaults.classNameUUID), fk.toProp.modifiers)
-        //propSpecBuilder.initializer("uuid(%S$nullQM).uniqueIndex().references(%T.%L)$nullFunc", columnName, toTable.modelClassData.poetType, toProp.name)
-        propSpecBuilder.initializer("uuid(%S).references(%T.%L)", fkPropColName, toKotlinClassmodelTable.modelClassData.poetType, "uuid") // toProp's class uuid
+        //propSpecBuilder.initializer("uuid(%S$nullQM).uniqueIndex().references(%T.%L)$nullFunc", columnName, toTable.modelClassDataFromDsl.poetType, toProp.name)
+        propSpecBuilder.initializer("uuid(%S).references(%T.%L)", fkPropColName, toKotlinClassmodelTable.modelClassDataFromDsl.poetType, "uuid") // toProp's class uuid
         propSpecBuilder.addAnnotation(
             AnnotationSpec.builder(RuntimeDefaults.ANNOTATION_FKFROM_CLASSNAME)
-                .addMember("%T::class", GenDslRefHelpers.dtoClassName(toKotlinClassmodelTable.modelClassData))
+                .addMember("%T::class", GenDslRefHelpers.dtoClassName(toKotlinClassmodelTable.modelClassDataFromDsl))
                 .build()
         )
         //fromKotlinClassModelTable.builder.addProperty(propSpecBuilder.build())

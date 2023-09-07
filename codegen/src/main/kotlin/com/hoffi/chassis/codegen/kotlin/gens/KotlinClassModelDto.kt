@@ -37,14 +37,14 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
         buildAnnotations()
         buildFeatures()
         buildCompanion()
-        if (companionBuilder != null && modelClassData.kind == TypeSpec.Kind.CLASS) {
+        if (companionBuilder != null && modelClassDataFromDsl.kind == TypeSpec.Kind.CLASS) {
             builder.addType(companionBuilder!!.build())
         }
         return builder
     }
 
     fun buildExtends() {
-        val extends = modelClassData.extends["default"]
+        val extends = modelClassDataFromDsl.extends["default"]
         if (extends != null && extends.typeClassOrDslRef != EitherTypOrModelOrPoetType.NOTHING) {
             builder.superclass(extends.typeClassOrDslRef.modelClassName.poetType)
             when (extends.typeClassOrDslRef) {
@@ -67,7 +67,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
         for (superinterface in extends?.superInterfaces ?: mutableSetOf()) {
             builder.addSuperinterface(superinterface.modelClassName.poetType)
         }
-        val isUuidDto = modelClassData.propsInclSuperclassPropsMap.values.filter { Tag.Companion.PRIMARY in it.tags }
+        val isUuidDto = modelClassDataFromDsl.propsInclSuperclassPropsMap.values.filter { Tag.Companion.PRIMARY in it.tags }
         if (isUuidDto.size == 1 && isUuidDto.first().dslPropName == UUID_PROPNAME) {
             builder.addSuperinterface(RuntimeDefaults.UUIDDTO_INTERFACE_CLASSNAME)
             dtoModel.isUuidPrimary = true
@@ -172,10 +172,10 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
     }
 
     private fun buildToStringFunction() {
-        if (KModifier.ABSTRACT in modelClassData.classModifiers || modelClassData.kind in listOf(TypeSpec.Kind.OBJECT, TypeSpec.Kind.INTERFACE)) return
-        val toStringMembers = modelClassData.propsInclSuperclassPropsMap.values.filter { prop -> Tag.PRIMARY in prop.tags }.toMutableSet() // primaries first
-        toStringMembers.addAll(modelClassData.propsInclSuperclassPropsMap.values.filter { prop -> Tag.TO_STRING_MEMBER in prop.tags || prop.dslPropName in modelClassData.additionalToStringMemberProps }.toMutableSet())
-        toStringMembers.removeIf { prop -> prop.dslPropName in modelClassData.removeToStringMemberProps }
+        if (KModifier.ABSTRACT in modelClassDataFromDsl.classModifiers || modelClassDataFromDsl.kind in listOf(TypeSpec.Kind.OBJECT, TypeSpec.Kind.INTERFACE)) return
+        val toStringMembers = modelClassDataFromDsl.propsInclSuperclassPropsMap.values.filter { prop -> Tag.PRIMARY in prop.tags }.toMutableSet() // primaries first
+        toStringMembers.addAll(modelClassDataFromDsl.propsInclSuperclassPropsMap.values.filter { prop -> Tag.TO_STRING_MEMBER in prop.tags || prop.dslPropName in modelClassDataFromDsl.additionalToStringMemberProps }.toMutableSet())
+        toStringMembers.removeIf { prop -> prop.dslPropName in modelClassDataFromDsl.removeToStringMemberProps }
         if (toStringMembers.isNotEmpty()) {
             val funSpecBuilder =
                 FunSpec.builder("toString").returns(String::class.asTypeName()).addModifiers(KModifier.OVERRIDE)
@@ -185,16 +185,16 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
             }
             funSpecBuilder.addStatement(
                 "return %P",
-                "${modelClassData.poetType.simpleName}(${toStringPropsFormatList.joinToString()})"
+                "${modelClassDataFromDsl.poetType.simpleName}(${toStringPropsFormatList.joinToString()})"
             )
             builder.addFunction(funSpecBuilder.build())
         }
     }
 
     private fun buildEqualsAndHashCodeFunction() {
-        if (KModifier.ABSTRACT in modelClassData.classModifiers || modelClassData.kind in listOf(TypeSpec.Kind.OBJECT, TypeSpec.Kind.INTERFACE)) return
-        val equalsAndHashCodeMembers = modelClassData.propsInclSuperclassPropsMap.values.filter { Tag.PRIMARY in it.tags   }.toMutableList()
-        if (equalsAndHashCodeMembers.isEmpty()) { equalsAndHashCodeMembers.addAll(modelClassData.propsInclSuperclassPropsMap.values.filter { Tag.HASH_MEMBER in it.tags }) }
+        if (KModifier.ABSTRACT in modelClassDataFromDsl.classModifiers || modelClassDataFromDsl.kind in listOf(TypeSpec.Kind.OBJECT, TypeSpec.Kind.INTERFACE)) return
+        val equalsAndHashCodeMembers = modelClassDataFromDsl.propsInclSuperclassPropsMap.values.filter { Tag.PRIMARY in it.tags   }.toMutableList()
+        if (equalsAndHashCodeMembers.isEmpty()) { equalsAndHashCodeMembers.addAll(modelClassDataFromDsl.propsInclSuperclassPropsMap.values.filter { Tag.HASH_MEMBER in it.tags }) }
         if (equalsAndHashCodeMembers.isNotEmpty()) {
             var funName = "equals"
             var funBuilder = FunSpec.builder(funName)
@@ -203,7 +203,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                 .addParameter("other", ANY.copy(nullable = true))
             funBuilder
                 .addStatement("%L", "if (this === other) return true")
-                .addStatement("if (other !is %T) return false", modelClassData.poetType)
+                .addStatement("if (other !is %T) return false", modelClassDataFromDsl.poetType)
             for (p in equalsAndHashCodeMembers) {
                 val primaryComment = if (p.dslPropName == UUID_PROPNAME) " /* PRIMARY */" else ""
                 val codeBlock = CodeBlock.builder().addStatement("if (%L != other.%L) return false%L", p.name(), p.name(), primaryComment)
@@ -242,7 +242,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
         if (tableModel != null) {
             builder.addAnnotation(
                 AnnotationSpec.builder(ANNOTATION_TABLE_CLASSNAME)
-                    .addMember("%T::class", modelClassData.poetType)
+                    .addMember("%T::class", modelClassDataFromDsl.poetType)
                     .addMember("targetTable = %T::class", tableModel.modelClassName.poetType)
                     .build()
             )
@@ -250,36 +250,36 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
     }
 
     fun buildCompanion() {
-        if (KModifier.ABSTRACT in modelClassData.classModifiers || modelClassData.kind in listOf(TypeSpec.Kind.OBJECT, TypeSpec.Kind.INTERFACE)) return
+        if (KModifier.ABSTRACT in modelClassDataFromDsl.classModifiers || modelClassDataFromDsl.kind in listOf(TypeSpec.Kind.OBJECT, TypeSpec.Kind.INTERFACE)) return
         val companionBuilder = getOrCreateCompanion()
         val nullCodeBlocks = mutableListOf<CodeBlock>()
         for (constrParam in constrParamsWithInitializersForCompanionCreate) {
             nullCodeBlocks.add(constrParam.nullInitializer.codeBlockFull())
         }
-        val nullInitializerBlock = CodeBlock.of("%T(%L)", modelClassData.poetType, nullCodeBlocks.joinToCode(", "))
+        val nullInitializerBlock = CodeBlock.of("%T(%L)", modelClassDataFromDsl.poetType, nullCodeBlocks.joinToCode(", "))
         val defaultCodeBlocks = mutableListOf<CodeBlock>()
         for (constrParam in constrParamsWithInitializersForCompanionCreate) {
             defaultCodeBlocks.add(constrParam.defaultInitializer.codeBlockFull())
         }
-        val defaultInitializerBlock = CodeBlock.of("return %T(%L)", modelClassData.poetType, defaultCodeBlocks.joinToCode(", "))
+        val defaultInitializerBlock = CodeBlock.of("return %T(%L)", modelClassDataFromDsl.poetType, defaultCodeBlocks.joinToCode(", "))
         companionBuilder
-            .addProperty(PropertySpec.builder("NULL", modelClassData.poetType)
+            .addProperty(PropertySpec.builder("NULL", modelClassDataFromDsl.poetType)
                 .initializer(nullInitializerBlock)
                 .build())
 
         //@JvmStatic /public fun _internal_create(): SimpleEntityDto = SimpleEntityDto(DEFAULT_STRING, DEFAULT_STRING, DEFAULT_STRING, mutableListOf(), mutableSetOf())
             .addFunction(FunSpec.builder("_internal_create")
-                .returns(modelClassData.poetType)
+                .returns(modelClassDataFromDsl.poetType)
                 .addAnnotation(JvmStatic::class)
                 .addCode(defaultInitializerBlock)
                 .build())
 
         //@JvmStatic public fun _internal_createWithUuid(): SimpleEntityDto = _internal_create().apply { uuid = Uuid.randomUUID() }
-        if ( modelClassData.isUuidPrimary) {
+        if ( modelClassDataFromDsl.isUuidPrimary) {
             buildCodeBlock { add(".apply { %L = %T.%M() }", UUID_PROPNAME, classNameUUID, classNameUUID_randomUUID) }
             companionBuilder
                 .addFunction(FunSpec.builder("_internal_createWithUuid")
-                    .returns(modelClassData.poetType)
+                    .returns(modelClassDataFromDsl.poetType)
                     .addAnnotation(JvmStatic::class)
                     .addCode("return _internal_create().apply { %L = %T.%M() }", UUID_PROPNAME, classNameUUID, classNameUUID_randomUUID)
                     .build())
@@ -287,48 +287,48 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
 
         //@JvmStatic public fun createShallowWithNewEmptyModels(): SimpleEntityDto
         var funSpecBuilder = FunSpec.builder("createShallowWithNewEmptyModels")
-            .returns(modelClassData.poetType)
+            .returns(modelClassDataFromDsl.poetType)
             .addAnnotation(JvmStatic::class)
-            .addStatement("val %L = _internal_createWithUuid()", modelClassData.asVarName)
-        for (prop in modelClassData.directProps.values) {
+            .addStatement("val %L = _internal_createWithUuid()", modelClassDataFromDsl.asVarName)
+        for (prop in modelClassDataFromDsl.directProps.values) {
             if (prop.eitherTypModelOrClass !is EitherTypOrModelOrPoetType.EitherModel) continue
             when (prop.collectionType) {
-                is COLLECTIONTYP.NONE -> funSpecBuilder.addStatement("%L.%L = %T._internal_createWithUuid()", modelClassData.asVarName, prop.name(), prop.poetType)
+                is COLLECTIONTYP.NONE -> funSpecBuilder.addStatement("%L.%L = %T._internal_createWithUuid()", modelClassDataFromDsl.asVarName, prop.name(), prop.poetType)
                 else -> {}
             }
         }
-        funSpecBuilder.addStatement("return %L", modelClassData.asVarName)
+        funSpecBuilder.addStatement("return %L", modelClassDataFromDsl.asVarName)
         companionBuilder.addFunction(funSpecBuilder.build())
 
         //@JvmStatic public fun createDeepWithNewEmptyModels(): SimpleEntityDto
         funSpecBuilder = FunSpec.builder("createDeepWithNewEmptyModels")
-            .returns(modelClassData.poetType)
+            .returns(modelClassDataFromDsl.poetType)
             .addAnnotation(JvmStatic::class)
-            .addStatement("val %L = _internal_createWithUuid()", modelClassData.asVarName)
-        for (prop in modelClassData.directProps.values) {
+            .addStatement("val %L = _internal_createWithUuid()", modelClassDataFromDsl.asVarName)
+        for (prop in modelClassDataFromDsl.directProps.values) {
             if (prop.eitherTypModelOrClass !is EitherTypOrModelOrPoetType.EitherModel) continue
             when (prop.collectionType) {
                 is COLLECTIONTYP.NONE -> {
                     funSpecBuilder.addStatement("/* beware of recursive calls, if Type or some submodel of it has a reference to this */")
-                    funSpecBuilder.addStatement("%L.%L = %T.createDeepWithNewEmptyModels()", modelClassData.asVarName, prop.name(), prop.poetType)
+                    funSpecBuilder.addStatement("%L.%L = %T.createDeepWithNewEmptyModels()", modelClassDataFromDsl.asVarName, prop.name(), prop.poetType)
                 }
                 else -> { }
             }
         }
-        funSpecBuilder.addStatement("return %L", modelClassData.asVarName)
+        funSpecBuilder.addStatement("return %L", modelClassDataFromDsl.asVarName)
         companionBuilder.addFunction(funSpecBuilder.build())
 
-        if ( ! modelClassData.constructorVisibility) {
+        if ( ! modelClassDataFromDsl.constructorVisibility) {
             companionBuilder
                 .addFunction(FunSpec.builder("create")
-                    .returns(modelClassData.poetType)
+                    .returns(modelClassDataFromDsl.poetType)
                     .addAnnotation(JvmStatic::class)
                     .addParameters(constrLikeParams)
                     .apply {
-                        if ( ! modelClassData.constructorVisibility) {
-                            this.addStatement("return %T(%L).apply { %L = %T.%M() }", modelClassData.poetType, constrLikeParams.joinToString { it.name }, UUID_PROPNAME, classNameUUID, classNameUUID_randomUUID)
+                        if ( ! modelClassDataFromDsl.constructorVisibility) {
+                            this.addStatement("return %T(%L).apply { %L = %T.%M() }", modelClassDataFromDsl.poetType, constrLikeParams.joinToString { it.name }, UUID_PROPNAME, classNameUUID, classNameUUID_randomUUID)
                         } else {
-                            this.addStatement("return %T(%L)", modelClassData.poetType, constrLikeParams.joinToString { it.name })
+                            this.addStatement("return %T(%L)", modelClassDataFromDsl.poetType, constrLikeParams.joinToString { it.name })
                         }
                     }
                     .build())

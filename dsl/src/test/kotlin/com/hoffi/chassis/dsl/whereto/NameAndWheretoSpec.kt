@@ -2,6 +2,7 @@ package com.hoffi.chassis.dsl.whereto
 
 //import org.koin.core.component.inject
 import com.hoffi.chassis.chassismodel.C
+import com.hoffi.chassis.chassismodel.Cap
 import com.hoffi.chassis.dsl.internal.DslCtx
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.internal.DslRun
@@ -11,6 +12,7 @@ import com.hoffi.chassis.dsl.modelgroup.DslModel
 import com.hoffi.chassis.dsl.modelgroup.DslModelgroup
 import com.hoffi.chassis.shared.dsl.DslRefString
 import com.hoffi.chassis.shared.parsedata.GenModel
+import com.squareup.kotlinpoet.ClassName
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -250,6 +252,7 @@ class NameAndWheretoSpec : BehaviorSpec({
                 dtoGenModel.modelClassName.packageName shouldBe "dtoPackageName.modelDtoPackageName.modelPackageName.groupDtoPackageName.modelgroupPackageName.runDtoPackageName.runPackageName"
                 dtoGenModel.modelClassName.classPrefix shouldBe "dtoClassPrefixmodelClassPrefixmodelgroupClassPrefixrunClassPrefix"
                 dtoGenModel.modelClassName.classPostfix shouldBe "modelDtoClassPostfixgroupDtoClassPostfixrunDtoClassPostfix"
+                dtoGenModel.poetType shouldBe ClassName(dtoGenModel.modelClassName.basePackage + "." + dtoGenModel.modelClassName.packageName, dtoGenModel.modelClassName.classPrefix.Cap() + dtoGenModel.modelOrTypeNameString + dtoGenModel.modelClassName.classPostfix)
             }
         }
     }

@@ -27,7 +27,7 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 
 context(GenCtxWrapper)
-class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn: KotlinClassModelTable) : AKotlinProperty(property, kotlinClassModelTablePropIsIn.modelClassData) {
+class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn: KotlinClassModelTable) : AKotlinProperty(property, kotlinClassModelTablePropIsIn.modelClassDataFromDsl) {
     override val builder: PropertySpec.Builder = PropertySpec.builder("dummy", Any::class.asClassName())
 
     fun whenInit(): PropertySpec.Builder {
@@ -52,7 +52,7 @@ class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn:
                     initializerCodeBlockBuilder.add(defaultInitializer.codeBlockFull())
                 }
                 kotlinClassModelTablePropIsIn.addOutgoingFK(
-                    FK(fromTableRef = this@KotlinPropertyTable.modelClassData.modelSubElRef, toTableRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef), this@KotlinPropertyTable.property, COLLECTIONTYP.NONE)
+                    FK(fromTableRef = this@KotlinPropertyTable.modelClassDataFromDsl.modelSubElRef, toTableRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef), this@KotlinPropertyTable.property, COLLECTIONTYP.NONE)
                 )
 
             },
@@ -77,8 +77,8 @@ class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn:
                 val reffedTable: GenModel = genCtx.genModel(reffedTableDslRef)
                 val fk = kotlinClassModelTablePropIsIn.addIncomingFK(
                     fromTableRef = reffedTableDslRef,
-                    //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.modelClassData.modelSubElRef.parentDslRef)),
-                    toTableRef = this@KotlinPropertyTable.modelClassData.modelSubElRef,
+                    //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.modelClassDataFromDsl.modelSubElRef.parentDslRef)),
+                    toTableRef = this@KotlinPropertyTable.modelClassDataFromDsl.modelSubElRef,
                     this@KotlinPropertyTable.property,
                     COLLECTIONTYP.LIST // <-- differs
                 )
@@ -91,8 +91,8 @@ class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn:
                 val reffedTable: GenModel = genCtx.genModel(reffedTableDslRef)
                 val fk = kotlinClassModelTablePropIsIn.addIncomingFK(
                     fromTableRef = reffedTableDslRef,
-                    //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.modelClassData.modelSubElRef.parentDslRef)),
-                    toTableRef = this@KotlinPropertyTable.modelClassData.modelSubElRef,
+                    //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.modelClassDataFromDsl.modelSubElRef.parentDslRef)),
+                    toTableRef = this@KotlinPropertyTable.modelClassDataFromDsl.modelSubElRef,
                     this@KotlinPropertyTable.property,
                     COLLECTIONTYP.SET // <-- differs
                 )

@@ -5,7 +5,7 @@ import com.hoffi.chassis.chassismodel.MixedCaseString
 import com.hoffi.chassis.chassismodel.decap
 import com.hoffi.chassis.shared.helpers.joinName
 import com.hoffi.chassis.shared.helpers.joinNonBlanksToStringBy
-import com.hoffi.chassis.shared.parsedata.ModelClassData
+import com.hoffi.chassis.shared.parsedata.ModelClassDataFromDsl
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeName
@@ -32,7 +32,7 @@ object ClassNameStrategy {
 
 interface IClassNameStrategy : INamingStrategy {
     enum class STRATEGY { DEFAULT, CAMELCASE, CAMELCASE_PREFIXED }
-    fun poetType(modelClassData: ModelClassData, className: String, packageName: String, prefix: String = "", postfix: String = ""): TypeName
+    fun poetType(modelClassDataFromDsl: ModelClassDataFromDsl, className: String, packageName: String, prefix: String = "", postfix: String = ""): TypeName
     fun asVarname(className: String, prefix: String = "", postfix: String = ""): String
 }
 
@@ -43,15 +43,15 @@ object ClassNameStrategyCamelCasePrefixed : IClassNameStrategy {
     override fun nameUpperFirstOf(string: String, prefix: String, postfix: String) = ClassNameStrategyCamelCase.nameUpperFirstOf(string, prefix, postfix)
     override fun nameLowerFirstOf(string: String) = ClassNameStrategyCamelCase.nameLowerFirstOf(string)
     override fun nameLowerFirstOf(string: String, prefix: String, postfix: String) = ClassNameStrategyCamelCase.nameLowerFirstOf(string, prefix, postfix)
-    override fun poetType(modelClassData: ModelClassData, className: String, packageName: String, prefix: String, postfix: String): TypeName {
-        return when (modelClassData.kind) {
-            TypeSpec.Kind.CLASS ->  if (KModifier.ABSTRACT in modelClassData.classModifiers) {
-                ClassNameStrategyCamelCase.poetType(modelClassData, className, packageName, "A$prefix", postfix)
+    override fun poetType(modelClassDataFromDsl: ModelClassDataFromDsl, className: String, packageName: String, prefix: String, postfix: String): TypeName {
+        return when (modelClassDataFromDsl.kind) {
+            TypeSpec.Kind.CLASS ->  if (KModifier.ABSTRACT in modelClassDataFromDsl.classModifiers) {
+                ClassNameStrategyCamelCase.poetType(modelClassDataFromDsl, className, packageName, "A$prefix", postfix)
             } else {
-                ClassNameStrategyCamelCase.poetType(modelClassData, className, packageName, prefix, postfix)
+                ClassNameStrategyCamelCase.poetType(modelClassDataFromDsl, className, packageName, prefix, postfix)
             }
-            TypeSpec.Kind.OBJECT -> ClassNameStrategyCamelCase.poetType(modelClassData, className, packageName, prefix, postfix)
-            TypeSpec.Kind.INTERFACE -> ClassNameStrategyCamelCase.poetType(modelClassData, className, packageName, "I$prefix", postfix)
+            TypeSpec.Kind.OBJECT -> ClassNameStrategyCamelCase.poetType(modelClassDataFromDsl, className, packageName, prefix, postfix)
+            TypeSpec.Kind.INTERFACE -> ClassNameStrategyCamelCase.poetType(modelClassDataFromDsl, className, packageName, "I$prefix", postfix)
         }
     }
     override fun asVarname(className: String, prefix: String, postfix: String): String {
@@ -66,7 +66,7 @@ object ClassNameStrategyCamelCase : IClassNameStrategy {
     override fun nameUpperFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string, prefix, postfix).toUpperCamelCase()
     override fun nameLowerFirstOf(string: String) = MixedCaseString(string).toLowerCamelCase()
     override fun nameLowerFirstOf(string: String, prefix: String, postfix: String) = MixedCaseString.concatCapitalized(string, prefix, postfix).toLowerCamelCase()
-    override fun poetType(modelClassData: ModelClassData, className: String, packageName: String, prefix: String, postfix: String): TypeName {
+    override fun poetType(modelClassDataFromDsl: ModelClassDataFromDsl, className: String, packageName: String, prefix: String, postfix: String): TypeName {
         return ClassName(packageName, MixedCaseString(joinName(prefix, className, postfix)).toUpperCamelCase())
     }
     override fun asVarname(className: String, prefix: String, postfix: String): String {

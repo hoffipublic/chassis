@@ -358,7 +358,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
                         funName.funName
                     )
                     val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinClassModelTable
-                    addStatement("%T.%L eq rr[%T.%L]", toPropKotlinClassModelTable.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME, tableClassModel.modelClassData.poetType, GenNaming.fkPropVarNameUUID(fk))
+                    addStatement("%T.%L eq rr[%T.%L]", toPropKotlinClassModelTable.modelClassDataFromDsl.poetType, RuntimeDefaults.UUID_PROPNAME, tableClassModel.modelClassDataFromDsl.poetType, GenNaming.fkPropVarNameUUID(fk))
                     endControlFlow()
                     addStatement(".firstOrNull()")
                     addStatement("%L.%L = %L!!", i.sourceGenModel.asVarName, fk.toProp.name(), fk.toProp.name())
@@ -378,7 +378,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
                 noPropBoundry = {
                     beginControlFlow("val %L = %T.%L", fk.toProp.name(), GenClassNames.crudFor(fk.fromTableRef, CrudData.CRUD.READ), funName.funName)
                     val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
-                    addStatement("%T.%L eq rr[%T.%L]", toPropKotlinClassModelTable.modelClassData.poetType, GenNaming.fkPropVarNameUUID(fk), tableClassModel.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME)
+                    addStatement("%T.%L eq rr[%T.%L]", toPropKotlinClassModelTable.modelClassDataFromDsl.poetType, GenNaming.fkPropVarNameUUID(fk), tableClassModel.modelClassDataFromDsl.poetType, RuntimeDefaults.UUID_PROPNAME)
                     endControlFlow()
                     addStatement("%L.%L%L.addAll(%L)", i.sourceGenModel.asVarName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
                 },
@@ -559,7 +559,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
                     val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinClassModelTable
                     //val toPropTableGenModel = genCtx.genModel(fk.toTableRef)
                     //val toPropDtoGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
-                    addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassData.poetType, DB.JoinTypeClassName, i.targetPoetType, GenNaming.fkPropVarNameUUID(fk), toPropKotlinClassModelTable.modelClassData.poetType, RuntimeDefaults.UUID_PROPNAME)
+                    addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassDataFromDsl.poetType, DB.JoinTypeClassName, i.targetPoetType, GenNaming.fkPropVarNameUUID(fk), toPropKotlinClassModelTable.modelClassDataFromDsl.poetType, RuntimeDefaults.UUID_PROPNAME)
                 },
                 IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
                 ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
@@ -576,7 +576,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             propBoundry(fk.toProp,
                 noPropBoundry = {
                     val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
-                    addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassData.poetType, DB.JoinTypeClassName, i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, toPropKotlinClassModelTable.modelClassData.poetType, GenNaming.fkPropVarNameUUID(fk))
+                    addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassDataFromDsl.poetType, DB.JoinTypeClassName, i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, toPropKotlinClassModelTable.modelClassDataFromDsl.poetType, GenNaming.fkPropVarNameUUID(fk))
                 },
                 IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
                 ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },

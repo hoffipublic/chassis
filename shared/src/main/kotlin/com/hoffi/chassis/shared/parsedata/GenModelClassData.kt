@@ -10,16 +10,16 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 
 sealed class GenModel(modelSubElRef: DslRef.IModelSubelement, modelClassName: ModelClassName)
-    : ModelClassData(modelSubElRef, modelClassName) {
-    class DtoModel(dtoRef: DslRef.dto, modelClassName: ModelClassName) : GenModel(dtoRef, modelClassName) { init { modelClassName.modelClassData = this } }
-    class TableModel(tableRef: DslRef.table, modelClassName: ModelClassName) : GenModel(tableRef, modelClassName) { init { modelClassName.modelClassData = this } }
+    : ModelClassDataFromDsl(modelSubElRef, modelClassName) {
+    class DtoModel(dtoRef: DslRef.dto, modelClassName: ModelClassName) : GenModel(dtoRef, modelClassName) { init { modelClassName.modelClassDataFromDsl = this } }
+    class TableModel(tableRef: DslRef.table, modelClassName: ModelClassName) : GenModel(tableRef, modelClassName) { init { modelClassName.modelClassDataFromDsl = this } }
 }
 
 /** all props and sub-props are set on chassis DSL PASS_FINISH */
-abstract class ModelClassData(
+abstract class ModelClassDataFromDsl(
     var modelSubElRef: DslRef.IModelSubelement,
     val modelClassName: ModelClassName
-) : Comparable<ModelClassData>,
+) : Comparable<ModelClassDataFromDsl>,
     IModelClassName by modelClassName
 {
     override fun toString() = "${this::class.simpleName} ${classModifiers.joinToString(" ")} $kind $modelClassName"
@@ -47,11 +47,11 @@ abstract class ModelClassData(
     //fun filterInclSuperclassPropsMap(propFilter: (Property) -> Boolean = { true }): MutableSet<Property> = propsInclSuperclassPropsMap.values.filter(propFilter).toMutableSet()
     fun getProp(name: String): Property = allProps[name] ?: throw GenException("$this does not contain a property named $name")
 
-    override fun compareTo(other: ModelClassData): Int = modelSubElRef.refList.last().simpleName.compareTo(other.modelSubElRef.refList.last().simpleName)
+    override fun compareTo(other: ModelClassDataFromDsl): Int = modelSubElRef.refList.last().simpleName.compareTo(other.modelSubElRef.refList.last().simpleName)
     //region equals and hashCode ...
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is ModelClassData) return false
+        if (other !is ModelClassDataFromDsl) return false
         if (modelSubElRef != other.modelSubElRef) return false
         return true
     }

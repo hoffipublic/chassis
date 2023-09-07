@@ -83,7 +83,7 @@ abstract class AModelSubelement(
 
     protected fun finishModelClassData(
         dslModel: DslModel,
-        modelClassData: ModelClassData,
+        modelClassDataFromDsl: ModelClassDataFromDsl,
         classModifiersImpl: DslClassModifiersImpl,
         extendsImpl: DslExtendsDelegateImpl,
         gatherPropertiesImpl: DslGatherPropertiesDelegateImpl,
@@ -95,14 +95,14 @@ abstract class AModelSubelement(
         sharedGatheredClassModifiers.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.put(selfDslRef.simpleName, setOfGatheredClassModifiers)
         setOfGatheredClassModifiers.addAll(classModifiersImpl.theClassModifiers)
         val modelGatherClassModifiers: Set<KModifier> = StrategyGatherClassModifiers.resolve(StrategyGatherClassModifiers.STRATEGY.UNION, selfDslRef, sharedGatheredClassModifiers)
-        modelClassData.classModifiers.addAll(modelGatherClassModifiers)
+        modelClassDataFromDsl.classModifiers.addAll(modelGatherClassModifiers)
 
         val sharedGatheredExtends = dslCtx.gatheredExtends(dslModel.selfDslRef)
         if (sharedGatheredExtends.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a map.entry of Extends for simpleName '${simpleName}' in dslCtx for '${selfDslRef}'")
         //val setOfGatheredExtends: MutableSet<Extends> = mutableSetOf()
         sharedGatheredExtends.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.putAll(extendsImpl.theExtendBlocks.values.map { it.simpleName to it.extends })
         val modelGatherExtends: MutableMap<String, Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.DEFAULT, selfDslRef, sharedGatheredExtends)
-        modelClassData.extends.putAll(modelGatherExtends)
+        modelClassDataFromDsl.extends.putAll(modelGatherExtends)
 
         val sharedGatheredGatherPropertys: SharedGatheredGatherPropertys = dslCtx.gatheredGatherPropertys(parentDslRef as DslRef.IElementLevel)
         if (sharedGatheredGatherPropertys.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a set of GatherPropertys in dslCtx for '${selfDslRef}")
@@ -110,12 +110,12 @@ abstract class AModelSubelement(
         sharedGatheredGatherPropertys.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.put(selfDslRef.simpleName, setOfGatheredPropertysOfThis)
         setOfGatheredPropertysOfThis.addAll(gatherPropertiesImpl.theGatherPropertys)
         val modelGatherProperties: Set<GatherPropertys> = StrategyGatherProperties.resolve(StrategyGatherProperties.STRATEGY.UNION, selfDslRef, sharedGatheredGatherPropertys)
-        modelClassData.gatheredPropsDslModelRefs.addAll(modelGatherProperties)
+        modelClassDataFromDsl.gatheredPropsDslModelRefs.addAll(modelGatherProperties)
 
         // the gathered properties will be fetched into the model                      in Modelgroup's PASS_GENMODELSCREATED fun gatherInheritedPropertys()
         // the ModelClassName of GenModel's will be set in Modelgroup's PASS_GENMODELSCREATED fun setModelClassNameOfReffedModelProperties()
         val mapOfPropertys = directPropertiesOf(propsImpl, dslModel.propsImpl)
-        modelClassData.directProps.putAll(mapOfPropertys)
+        modelClassDataFromDsl.directProps.putAll(mapOfPropertys)
     }
 
 }

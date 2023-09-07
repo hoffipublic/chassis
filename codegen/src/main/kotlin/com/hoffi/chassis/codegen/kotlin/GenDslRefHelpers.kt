@@ -5,7 +5,7 @@ import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.shared.codegen.GenCtx
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
-import com.hoffi.chassis.shared.parsedata.ModelClassData
+import com.hoffi.chassis.shared.parsedata.ModelClassDataFromDsl
 import com.squareup.kotlinpoet.TypeName
 
 object GenDslRefHelpers {
@@ -15,7 +15,7 @@ object GenDslRefHelpers {
         return swappedGenModel.poetType
     }
     context(GenCtxWrapper)
-    fun dtoClassName(dtoGenModel: ModelClassData) : TypeName {
+    fun dtoClassName(dtoGenModel: ModelClassDataFromDsl) : TypeName {
         if (dtoGenModel.modelSubElRef.parentDslRef !is DslRef.IElementLevel) throw GenException("no IElementLevel given")
         val swappedGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, dtoGenModel.modelSubElRef.parentDslRef))
         return swappedGenModel.poetType
