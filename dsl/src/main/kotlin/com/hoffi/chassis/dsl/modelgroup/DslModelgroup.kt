@@ -51,7 +51,6 @@ class DslModelgroup(
     override val selfDslRef: DslRef.modelgroup = modelgroupRef
     override fun toString() = selfDslRef.toString()
 
-    @DslInstance
     internal val allModelsBlockImpls = mutableSetOf<AllModels>()
 
     override var constructorVisibility: IDslApiConstructorVisibility.VISIBILITY = IDslApiConstructorVisibility.VISIBILITY.UNSET
@@ -77,7 +76,6 @@ globalDslCtx = dslCtx // TODO remove workaround
         }
     }
 
-    @DslInstance
     var dslModels = mutableSetOf<DslModel>()
 
     context(DslCtxWrapper)
@@ -88,7 +86,7 @@ globalDslCtx = dslCtx // TODO remove workaround
         when (dslCtx.currentPASS) {
             dslCtx.PASS_0_CONFIGURE -> {}
             dslCtx.PASS_1_BASEMODELS -> {
-                @DslInstance val dslModel = dslCtx.createModel(simpleName, selfDslRef)
+                val dslModel = dslCtx.createModel(simpleName, selfDslRef)
                 dslModels.add(dslModel)
                 dslModel.apply(dslModelBlock)
             }
@@ -229,7 +227,7 @@ globalDslCtx = dslCtx // TODO remove workaround
 
     fun setModelClassNameOfReffedModelPropertiesAndExtendsModel(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
-            for (dslSubel: AModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
+            for (dslSubel: AProperModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
                 val genModel: ModelClassDataFromDsl = dslCtx.genCtx.genModel(dslSubel.selfDslRef)
                 val listOfNonKClassNonTypButModelRefGenProp = genModel.directProps.values.filter { it.eitherTypModelOrClass is EitherTypOrModelOrPoetType.EitherModel }.map { it.eitherTypModelOrClass as EitherTypOrModelOrPoetType.EitherModel }
                 for (genPropEitherModel in listOfNonKClassNonTypButModelRefGenProp) {
@@ -273,7 +271,7 @@ globalDslCtx = dslCtx // TODO remove workaround
 
     private fun subelementGenModel(
         genPropEitherModel: EitherTypOrModelOrPoetType.EitherModel,
-        dslSubel: AModelSubelement,
+        dslSubel: AProperModelSubelement,
         dslCtx: DslCtx
     ): GenModel {
         val reffedGenModel = WhensDslRef.whenModelOrModelSubelement(genPropEitherModel.modelSubElementRef,
@@ -293,7 +291,7 @@ globalDslCtx = dslCtx // TODO remove workaround
     /** actually gather the reffed propertys */
     fun gatherReferencedPropertys(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
-            for (modelSubelement: AModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
+            for (modelSubelement: AProperModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
                 val genModel: ModelClassDataFromDsl = dslCtx.genCtx.genModel(modelSubelement.selfDslRef)
                 val refsToGatherPropsFrom: MutableList<GatherPropertys> = mutableListOf<GatherPropertys>().also { it.addAll(genModel.gatheredPropsDslModelRefs) }
                 while (refsToGatherPropsFrom.isNotEmpty()) {
@@ -335,7 +333,7 @@ globalDslCtx = dslCtx // TODO remove workaround
 
     fun gatherSuperclassPropertys(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
-            for (modelSubelement: AModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
+            for (modelSubelement: AProperModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
                 val superclassesProps: MutableMap<String, Property> = mutableMapOf()
                 val genModel: ModelClassDataFromDsl = dslCtx.genCtx.genModel(modelSubelement.selfDslRef)
                 var extendsEither: EitherTypOrModelOrPoetType? = genModel.extends[C.DEFAULT]?.typeClassOrDslRef

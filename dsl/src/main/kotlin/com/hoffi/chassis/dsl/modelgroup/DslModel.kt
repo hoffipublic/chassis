@@ -33,7 +33,7 @@ interface IDslApiConstructorVisibility {
 }
 
 context(DslCtxWrapper)
-abstract class AModelSubelement(
+abstract class AProperModelSubelement(
     val simpleName: String,
     val modelSubelementRef: DslRef.IModelSubelement,
     val classModifiersImpl: DslClassModifiersImpl,
@@ -372,7 +372,7 @@ class DslDto(
     //val extendsImpl: DslExtendsDelegateImpl                   = dslCtx.ctxObjOrCreate(DslRef.extends(simpleNameOfParentDslBlock, dtoRef)),
     //val showcaseImpl: DslShowcaseDelegateImpl                 = dslCtx.ctxObjOrCreate(DslRef.showcase(simpleNameOfParentDslBlock, dtoRef))
 )
-    : AModelSubelement(simpleName, dtoRef, classModifiersImpl, propsImpl, nameAndWheretoWithoutModelSubelementsImpl, gatherPropertiesImpl, classModsImpl, extendsImpl, showcaseImpl),
+    : AProperModelSubelement(simpleName, dtoRef, classModifiersImpl, propsImpl, nameAndWheretoWithoutModelSubelementsImpl, gatherPropertiesImpl, classModsImpl, extendsImpl, showcaseImpl),
     IDslApiDto,
     IDslApiModelAndModelSubelementsCommon,
     IDslApiKindClassObjectOrInterface,
@@ -480,7 +480,7 @@ class DslTable(
 //    val extendsImpl: DslExtendsDelegateImpl                   = dslCtx.ctxObjOrCreate(DslRef.extends(simpleNameOfParentDslBlock, tableRef)),
 //    val showcaseImpl: DslShowcaseDelegateImpl                 = dslCtx.ctxObjOrCreate(DslRef.showcase(simpleNameOfParentDslBlock, tableRef)),
 )
-    : AModelSubelement(simpleName, tableRef, classModifiersImpl, propsImpl, nameAndWheretoWithoutModelSubelementsImpl, gatherPropertiesImpl, classModsImpl, extendsImpl, showcaseImpl),
+    : AProperModelSubelement(simpleName, tableRef, classModifiersImpl, propsImpl, nameAndWheretoWithoutModelSubelementsImpl, gatherPropertiesImpl, classModsImpl, extendsImpl, showcaseImpl),
     IDslApiTable,
     IDslApiModelAndModelSubelementsCommon,
     IDslApiKindClassObjectOrInterface,

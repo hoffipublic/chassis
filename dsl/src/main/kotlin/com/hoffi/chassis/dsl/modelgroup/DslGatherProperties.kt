@@ -50,8 +50,7 @@ context(DslCtxWrapper)
 class DslGatherPropertiesDelegateImpl(
     simpleNameOfParentDslBlock: String,
     parentRef: IDslRef
-)
-    : ADslDelegateClass(simpleNameOfParentDslBlock, parentRef), IDslImplGatherPropertiesBoth, IDslParticipator
+) : ADslDelegateClass(simpleNameOfParentDslBlock, parentRef), IDslImplGatherPropertiesBoth, IDslParticipator
         //, IDslApiModelReffing by modelReffing  // by DslImplModelReffing(this)  // TODO remove workaround
 {
     override fun toString() = "${super@DslGatherPropertiesDelegateImpl.toString()}->[${theGatherPropertys}]"

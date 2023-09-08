@@ -72,8 +72,7 @@ class DslShowcasePropsData(
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
 
 /** props/fields and "direct/non-inner-dsl-block" funcs inside dsl block */
-@ChassisDslMarker
-interface IDslApiShowcaseProps {
+interface IDslApiShowcaseProps : IDslApi {
     var dslProp: Int
     operator fun String.unaryPlus()
     operator fun String.unaryMinus()
@@ -82,14 +81,12 @@ interface IDslApiShowcaseProps {
     operator fun IDslApiShowcaseProps.rem(rem: String)
 }
 /** the "outermost" dsl block fun, that opens up this new "scope-hierarchy" (doesn't hold gathered DSL data by itself) */
-@ChassisDslMarker
-interface IDslApiShowcaseDelegate {
+interface IDslApiShowcaseDelegate : IDslApi {
     /** default dsl block's simpleName */
     @DslBlockOn(DslModel::class, DslDto::class, DslTable::class) // IDE clickable shortcuts to implementing @ChassisDslMarker classes
     fun showcase(simpleName: String = C.DEFAULT, block: IDslApiShowcaseBlock.() -> Unit)
 }
 /** would contain "inner" nested Dsl block scopes, and implements the props/directFuns */
-@ChassisDslMarker
 interface IDslApiShowcaseBlock : IDslApiShowcaseProps {
 }
 
@@ -116,13 +113,13 @@ class DslShowcaseDelegateImpl(
 ) : ADslDelegateClass(simpleNameOfDelegator, delegatorRef), IDslImplShowcaseDelegate {
     override fun toString() = "${this::class.simpleName}(${theShowcaseBlocks.size})"
     val log = LoggerFactory.getLogger(javaClass)
-    // TODO !!! delegatorRef already IS showcase DslRef !?!?!?
     override val selfDslRef = DslRef.showcase(simpleNameOfDelegator, delegatorRef)
 
     /** different gathered dsl data holder for different simpleName's inside the BlockImpl's */
     override var theShowcaseBlocks: MutableMap<String, DslShowcaseBlockImpl> = mutableMapOf()
 
     /** DslBlock funcs always operate on IDslApi interfaces */
+    @DslBlockOn(DslShowcaseBlockImpl::class)
     override fun showcase(simpleName: String, block: IDslApiShowcaseBlock.() -> Unit) {
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {

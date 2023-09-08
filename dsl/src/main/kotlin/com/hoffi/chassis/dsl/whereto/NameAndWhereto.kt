@@ -21,8 +21,7 @@ import org.slf4j.LoggerFactory
 
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
 
-@ChassisDslMarker
-interface IDslApiNameAndWheretoProps : IDslApiSharedNameAndWheretoProps {
+interface IDslApiNameAndWheretoProps : IDslApi, IDslApiSharedNameAndWheretoProps {
     fun strategyClassName(strategyName: String) { strategyClassName = IClassNameStrategy.STRATEGY.valueOf(strategyName) }
     override var strategyClassName: IClassNameStrategy.STRATEGY
     fun strategyTableName(strategyName: String) { strategyTableName = ITableNameStrategy.STRATEGY.valueOf(strategyName) }
@@ -50,12 +49,10 @@ interface IDslApiNameAndWheretoProps : IDslApiSharedNameAndWheretoProps {
     fun packageNameAbsolute(absolute: String)
     fun packageName(concat: String)
 }
-@ChassisDslMarker
-interface IDslApiNameAndWheretoOnly {
+interface IDslApiNameAndWheretoOnly : IDslApi {
     fun nameAndWhereto(simpleName: String = C.DEFAULT, block: IDslApiNameAndWheretoProps.() -> Unit)
 }
-@ChassisDslMarker
-interface IDslApiNameAndWheretoWithSubelements {
+interface IDslApiNameAndWheretoWithSubelements : IDslApi {
     fun nameAndWhereto(simpleName: String = C.DEFAULT, block: IDslApiNameAndWheretoOnSubElements.() -> Unit)
 }
 interface IDslApiNameAndWheretoOnSubElements : IDslApiNameAndWheretoProps {
@@ -68,12 +65,12 @@ interface IDslApiNameAndWheretoOnSubElements : IDslApiNameAndWheretoProps {
 // === Impl Interfaces (extend IDslApi's plus methods and props that should not be visible from the DSL ===
 
 interface IImplNameAndWheretoOnlyDelegate : IDslApiNameAndWheretoOnly {
-    @DslInstance val nameAndWheretos: MutableMap<String, DslNameAndWheretoPropsImpl>
+    val nameAndWheretos: MutableMap<String, DslNameAndWheretoPropsImpl>
 }
 interface IDslImplNameAndWheretoWithSubelementsDelegate : IDslApiNameAndWheretoWithSubelements {
-    @DslInstance val nameAndWheretos: MutableMap<String, DslNameAndWheretoOnSubElementsDelegateImpl>
-    @DslInstance val dtoNameAndWheretos: MutableMap<String, DslNameAndWheretoPropsImpl>
-    @DslInstance val tableNameAndWheretos: MutableMap<String, DslNameAndWheretoPropsImpl>
+    val nameAndWheretos: MutableMap<String, DslNameAndWheretoOnSubElementsDelegateImpl>
+    val dtoNameAndWheretos: MutableMap<String, DslNameAndWheretoPropsImpl>
+    val tableNameAndWheretos: MutableMap<String, DslNameAndWheretoPropsImpl>
 }
 interface IDslImplNameAndWheretoOnSubElements : IDslApiNameAndWheretoOnSubElements  {
 }
@@ -132,7 +129,7 @@ open class DslNameAndWheretoPropsImpl(
 
 context(DslCtxWrapper)
 @ChassisDslMarker
-class DslNameAndWheretoOnlyDelegateImpl constructor(
+class DslNameAndWheretoOnlyDelegateImpl(
     simpleNameOfParentDslBlock: String,
     parentRef: IDslRef
 ) : ADslDelegateClass(simpleNameOfParentDslBlock, parentRef), IImplNameAndWheretoOnlyDelegate {
@@ -141,7 +138,7 @@ class DslNameAndWheretoOnlyDelegateImpl constructor(
 
     override val selfDslRef = DslRef.nameAndWhereto(simpleNameOfParentDslBlock, parentRef)
 
-    @DslInstance override val nameAndWheretos = mutableMapOf<String, DslNameAndWheretoPropsImpl>()
+    override val nameAndWheretos = mutableMapOf<String, DslNameAndWheretoPropsImpl>()
 
     //context(DslCtxWrapper)
     @DslBlockOn(DslModelgroup::class, DslModel::class, DslDto::class, DslTable::class)
@@ -168,7 +165,6 @@ class DslNameAndWheretoWithSubelementsDelegateImpl(
     val log = LoggerFactory.getLogger(javaClass)
     override val selfDslRef = DslRef.nameAndWhereto(simpleNameOfParentDslBlock, parentRef)
 
-    @DslInstance
     override val nameAndWheretos = mutableMapOf<String, DslNameAndWheretoOnSubElementsDelegateImpl>()
     override val dtoNameAndWheretos = mutableMapOf<String, DslNameAndWheretoPropsImpl>()
     override val tableNameAndWheretos = mutableMapOf<String, DslNameAndWheretoPropsImpl>()
@@ -194,7 +190,6 @@ class DslNameAndWheretoWithSubelementsDelegateImpl(
 }
 
 context(DslCtxWrapper)
-@ChassisDslMarker
 class DslNameAndWheretoOnSubElementsDelegateImpl(
     simpleNameOfParentDslBlock: String,
     parentRef: IDslRef

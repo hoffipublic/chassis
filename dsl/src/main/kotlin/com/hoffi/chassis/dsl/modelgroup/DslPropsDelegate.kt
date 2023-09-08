@@ -64,7 +64,7 @@ class DslPropsDelegate(
 ) : ADslDelegateClass(simpleNameOfParentDslBlock, parentRef), IDslApiPropFuns, IDslApiInitializer {
     val log = LoggerFactory.getLogger(javaClass)
 
-    override val selfDslRef = DslRef.showcase(simpleNameOfParentDslBlock, parentRef)
+    override val selfDslRef = DslRef.prop(simpleNameOfParentDslBlock, parentRef)
 
     val theProps = mutableMapOf<String, DslModelProp>()
     fun getPropOrNull(name: String) = theProps[name]
@@ -166,7 +166,7 @@ class DslPropsDelegate(
 
     override fun initializer(name: String, replaceAppendOrModify: ReplaceAppendOrModify, format: String, vararg args: Any, modifyInitializerBlock: Initializer.() -> Unit) {
         if (dslCtx.currentPASS != dslCtx.PASS_5_REFERENCING) return // do something only in this PASS
-        val subelementClass: AModelSubelement = dslCtx.ctxObj(parentDslRef)
+        val subelementClass: AProperModelSubelement = dslCtx.ctxObj(parentDslRef)
         val modelClass: DslModel = dslCtx.ctxObj(subelementClass.parentDslRef)
         val directDslProps: MutableMap<String, DslModelProp> = subelementClass.directDslPropertiesOf(subelementClass.propsImpl, modelClass.propsImpl)
         val dslProp: DslModelProp = directDslProps[name] ?: throw DslException("$parentDslRef neither its parent contain a property named '$name' to attach initializer '${Initializer.of(format, *args)}'")

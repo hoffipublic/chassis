@@ -13,21 +13,8 @@ interface IDslClass : IDslParticipator {
     val selfDslRef: IDslRef
     val parentDslRef: IDslRef
         get() = selfDslRef.parentDslRef
-    //val parent: IDslClass
-    //    get() = dslCtx.ctxObjOrCreate(parentDslRef)
-
-    //companion object {
-    ////    context(DslCtxWrapper)
-    //    object NULL : ADslClass() {
-    //        override val parent = NULL
-    //        override val selfDslRef = IDslRef.NULL
-    //    }
-    //}
-    //// making sure DslClasses (finally) extend ADslClass and (normally) do NOT implement IDslClass directly
-    //override fun equals(other: Any?): Boolean
-    //override fun hashCode(): Int
-    //override fun toString(): String
 }
+/** classes that contribute functions/props to the DSL and therefore go into DslCtx */
 context(DslCtxWrapper)
 abstract class ADslClass() : IDslClass {
     override fun toString() = "${this::class.simpleName}($selfDslRef)"
@@ -43,6 +30,7 @@ abstract class ADslClass() : IDslClass {
         return selfDslRef.hashCode()
     }
 }
+/** ADslClass's that another ADslClass/ADslDelegateClass delegates DSL contributing functions/props to */
 context(DslCtxWrapper)
 abstract class ADslDelegateClass(
     val simpleNameOfDelegator: String,

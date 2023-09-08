@@ -2,8 +2,8 @@ package com.hoffi.chassis.dsl
 
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.dsl.internal.ADslDelegateClass
-import com.hoffi.chassis.dsl.internal.ChassisDslMarker
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
+import com.hoffi.chassis.dsl.internal.IDslApi
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import org.slf4j.LoggerFactory
@@ -21,8 +21,7 @@ class ClassModProps(
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
 
 /** props/fields and "direct/non-inner-dsl-block" funcs inside dsl block */
-@ChassisDslMarker
-interface IDslApiClassModProps {
+interface IDslApiClassModProps : IDslApi {
     var dslProp: Int
     operator fun String.unaryPlus()
     operator fun String.unaryMinus()
@@ -31,13 +30,11 @@ interface IDslApiClassModProps {
     operator fun IDslApiClassModProps.rem(rem: String)
 }
 /** the "outermost" dsl block fun, that opens up this new "scope-hierarchy" (doesn't hold gathered DSL data by itself) */
-@ChassisDslMarker
-interface IDslApiClassModsDelegate {
+interface IDslApiClassModsDelegate : IDslApi {
     /** default dsl block's simpleName */
     fun classMods(simpleName: String = C.DEFAULT, block: IDslApiClassModsBlock.() -> Unit)
 }
 /** would contain "inner" nested Dsl block scopes, and implements the props/directFuns */
-@ChassisDslMarker
 interface IDslApiClassModsBlock : IDslApiClassModProps {
 }
 

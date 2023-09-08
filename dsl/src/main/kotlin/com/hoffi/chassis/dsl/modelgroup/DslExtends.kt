@@ -4,9 +4,9 @@ import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.Initializer
 import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.dsl.internal.ADslDelegateClass
-import com.hoffi.chassis.dsl.internal.ChassisDslMarker
 import com.hoffi.chassis.dsl.internal.DslBlockOn
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
+import com.hoffi.chassis.dsl.internal.IDslApi
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType.Companion.createPoetType
 import com.hoffi.chassis.shared.dsl.DslRef
@@ -22,8 +22,7 @@ import kotlin.reflect.KClass
 // === Api interfaces define pure props/directFuns and "union/intersections used in DSL Lambdas and/or IDslApi delegation ===
 
 /** props/fields and "direct/non-inner-dsl-block" funcs inside dsl block */
-@ChassisDslMarker
-interface IDslApiExtendsProps : IDslApiModelReffing { // TODO ModelReffing via delegated class (see DslGatherPropertiesDelegateImpl)
+interface IDslApiExtendsProps : IDslApi, IDslApiModelReffing { // TODO ModelReffing via delegated class (see DslGatherPropertiesDelegateImpl)
     var replaceSuperclass: Boolean
     var replaceSuperInterfaces: Boolean
     operator fun KClass<*>.unaryPlus()  // + for super class
@@ -40,15 +39,13 @@ interface IDslApiExtendsProps : IDslApiModelReffing { // TODO ModelReffing via d
     operator fun IDslApiExtendsProps.rem(docs: CodeBlock)
 }
 /** the "outermost" dsl block fun, that opens up this new "scope-hierarchy" (doesn't hold gathered DSL data by itself) */
-@ChassisDslMarker
-interface IDslApiExtendsDelegate {
+interface IDslApiExtendsDelegate : IDslApi {
     /** default dsl block's simpleName */
     // context(DslCtxWrapper) // see https://youtrack.jetbrains.com/issue/KT-57409/context-receivers-fail-if-implemented-via-delegated-interface
     @DslBlockOn(DslModel::class, DslDto::class, DslTable::class) // IDE clickable shortcuts to implementing @ChassisDslMarker classes
     fun extends(simpleName: String = C.DEFAULT, block: IDslApiExtendsBlock.() -> Unit)
 }
 /** would contain "inner" nested Dsl block scopes, and implements the props/directFuns */
-@ChassisDslMarker
 interface IDslApiExtendsBlock : IDslApiExtendsProps {
 }
 

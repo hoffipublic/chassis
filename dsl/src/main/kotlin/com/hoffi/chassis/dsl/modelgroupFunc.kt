@@ -1,7 +1,6 @@
 package com.hoffi.chassis.dsl
 
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
-import com.hoffi.chassis.dsl.internal.DslInstance
 import com.hoffi.chassis.dsl.internal.DslTopLevel
 import com.hoffi.chassis.dsl.internal.globalDslCtx
 import com.hoffi.chassis.dsl.modelgroup.DslModelgroup
@@ -18,7 +17,7 @@ fun modelgroup(simpleName: String, modelgroupBlock: DslModelgroup.() -> Unit) {
     globalDslCtx = dslCtx  // TODO remove workaround
     when (dslCtx.currentPASS) {
         dslCtx.PASS_1_BASEMODELS -> {
-            @DslInstance val dslModelgroup = dslCtx.createModelgroup(simpleName)
+            val dslModelgroup = dslCtx.createModelgroup(simpleName)
             dslModelgroup.apply(modelgroupBlock)
         }
         dslCtx.PASS_ERROR -> TODO()
