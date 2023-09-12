@@ -137,21 +137,6 @@ class DslImplOuterFillerBlock(val simpleName: String, val selfDslRef: IDslRef)
         innerImpl.apply(prefixedFillerBlock)
     }
 
-
-    //override fun <T : AHasCopyBoundrysData> List<T>.prefixed(businessName: String, dslApiCopyBoundryBlock: IDslApiCopyBoundry.() -> Unit) {
-    //    for (hasCopyBoundryData in this) {
-    //        hasCopyBoundryData.businessName = businessName
-    //        dslApiCopyBoundryBlock.invoke(DslImplCopyBoundryOn(hasCopyBoundryData))
-    //    }
-    //}
-    //override fun IDslRef.prefixed(businessName: String, dslApiCopyBoundryBlock: IDslApiCopyBoundry.() -> Unit) {
-    //    TODO("Not yet implemented")
-    //}
-    //override fun MODELREFENUM.prefixed(businessName: String, dslApiCopyBoundryBlock: IDslApiCopyBoundry.() -> Unit) {
-    //    (+this).prefixed(businessName, dslApiCopyBoundryBlock)
-    //}
-
-
     override fun MODELREFENUM.unaryPlus(): List<FillerData>                 = with(defaultBlock) { this@unaryPlus.unaryPlus() }
     override fun MODELREFENUM.mutual(other: MODELREFENUM): List<FillerData> = with(defaultBlock) { this@mutual.mutual(other) }
     override fun MODELREFENUM.mutual(other: IDslRef): List<FillerData>      = with(defaultBlock) { this@mutual.mutual(other) }

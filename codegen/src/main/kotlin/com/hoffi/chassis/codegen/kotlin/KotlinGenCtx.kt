@@ -79,20 +79,6 @@ class KotlinGenCtx private constructor() {
             Pair(exists, true)
         }
     }
-//    context(GenCtxWrapper)
-//    fun getOrCreateKotlinFillerClassForSyntheticCrud(fillerData: FillerData): Pair<AKotlinFiller, Boolean> { // TODO remove?
-//        val theDslRef = if (fillerData.targetDslRef is DslRef.table) {
-//            fillerData.targetDslRef
-//        } else {
-//            fillerData.sourceDslRef // special case e.g. CRUD.READ
-//        }
-//        val exists = allKotlinFillerClasses[MODELKIND.TABLEKIND]!![theDslRef]
-//        return if (exists == null) {
-//                Pair(KotlinFillerTable(fillerData).also {allKotlinFillerClasses[MODELKIND.TABLEKIND]!![theDslRef] = it}, false)
-//        } else {
-//            Pair(exists, true)
-//        }
-//    }
     fun putKotlinFillerClass(modelkind: MODELKIND, fillerData: FillerData, fillerClass: AKotlinFiller) { if (! allKotlinFillerClasses[modelkind]!!.containsKey(fillerData.targetDslRef)) { allKotlinFillerClasses[modelkind]!![fillerData.targetDslRef] = fillerClass } else { throw GenCtxException("${this::class.simpleName} already contains a filler for '${fillerData}'") } }
     fun allKotlinFillerClasses(modelkind: MODELKIND) = allKotlinFillerClasses[modelkind]!!.values
 

@@ -42,10 +42,6 @@ coming up:
   - upsert ?
   - insert/delete if not exists [stackoverflow: how-can-i-do-insert-if-not-exists-in-mysql](https://stackoverflow.com/questions/1361340/how-can-i-do-insert-if-not-exists-in-mysql)
 
-
-- static companion functions (NULL)
-
-
 - **many to many relations**
 - Properties with generic types
 - collections with generic generic types
@@ -86,8 +82,7 @@ coming up:
 a minimal `interface IDslApiXxx` might look like:
 
 ```kotlin
-@ChassisDslMarker
-interface IDslApiDco
+interface IDslApiDco : IDslApi
     :   IDslApiModelAndModelSubelementsCommon,
         IDslApiSubelementsOnlyCommon
 ```

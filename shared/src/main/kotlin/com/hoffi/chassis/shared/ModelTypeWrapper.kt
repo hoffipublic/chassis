@@ -18,11 +18,4 @@ sealed class ModelTypeWrapper private constructor(private val dsRef: DslRef, kMo
     abstract fun asVarName(prefix: String, postfix: String)
     abstract fun asTableName(prefix: String, postfix: String)
     abstract fun asFillerName(prefix: String, postfix: String)
-
-//    TODO ModelTypeWrapper for DtoType|TableType|Plain|...
-//    class DtoTypeWrapper(): ModelTypeWrapper() {
-//        fun className() = joinName()
-//    }
-//    class TableTypeWrapper(): ModelTypeWrapper()
-//    class PlainTypeWrapper(): ModelTypeWrapper()
 }

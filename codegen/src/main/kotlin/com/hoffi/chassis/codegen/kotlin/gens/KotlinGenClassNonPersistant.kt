@@ -37,9 +37,6 @@ abstract class KotlinGenClassNonPersistant(modelClassDataFromDsl: ModelClassData
         buildAnnotations()
         buildFeatures()
         buildCompanion()
-        if (companionBuilder != null && modelClassDataFromDsl.kind == TypeSpec.Kind.CLASS) {
-            builder.addType(companionBuilder!!.build())
-        }
         return builder
     }
 
@@ -335,5 +332,6 @@ abstract class KotlinGenClassNonPersistant(modelClassDataFromDsl: ModelClassData
                     }
                     .build())
         }
+        builder.addType(companionBuilder.build())
     }
 }

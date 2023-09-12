@@ -1,6 +1,5 @@
 package com.hoffi.chassis.dsl.modelgroup.copyboundry
 
-import com.hoffi.chassis.chassismodel.dsl.DslException
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.shared.AHasCopyBoundrysData
@@ -12,13 +11,6 @@ interface IDslApiPrefixedCopyBoundry {
     infix   fun <E : AHasCopyBoundrysData>  List<E>.shallowRestrictions(dslApiCopyBoundryBlock: IDslApiCopyBoundry.() -> Unit)
     infix   fun <E : AHasCopyBoundrysData>  List<E>.deepRestrictions(dslApiCopyBoundryBlock: IDslApiCopyBoundry.() -> Unit)
             fun <E : AHasCopyBoundrysData>  FOR(vararg aHasCopyBoundryDataList: List<E>): List<E>
-
-    fun <E : AHasCopyBoundrysData> List<E>.prefixed(dslApiCopyBoundryBlock: IDslApiCopyBoundry.() -> Unit) {
-        for (hasCopyBoundryData in this) {
-            throw DslException("is this ever used and for what??") // TODO remove me??
-            DslImplCopyBoundryOn(true, hasCopyBoundryData).apply(dslApiCopyBoundryBlock)
-        }
-    }
 }
 interface IDslApiCopyBoundry {
     fun copyBoundry(copyType: COPYTYPE, vararg propName: String): AHasCopyBoundrysData

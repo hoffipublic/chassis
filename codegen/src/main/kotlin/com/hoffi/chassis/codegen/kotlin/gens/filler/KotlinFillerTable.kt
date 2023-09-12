@@ -20,11 +20,6 @@ import com.squareup.kotlinpoet.*
 context(GenCtxWrapper)
 class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODELKIND.TABLEKIND) {
 
-    // TODO constructor fillerData has to construct the "right" "Filler" (might be Table filler even with target being a DTO
-    // also important for build() alreadyCreated
-    // move all Filler relevant data into intersectPropsData
-    // add target and source FillerClassName into intersectPropsData
-
     override fun build(modelkind: MODELKIND, fillerData: FillerData) {
         currentFillerData = fillerData
         currentAHasCopyBoundryData = fillerData

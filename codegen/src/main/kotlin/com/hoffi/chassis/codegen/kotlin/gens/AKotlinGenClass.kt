@@ -34,9 +34,6 @@ abstract class AKotlinGenClass(modelClassDataFromDsl: ModelClassDataFromDsl) : A
     }.apply {
         kdocGenerated(modelClassDataFromDsl)
         addSuperinterface(RuntimeDefaults.WAS_GENERATED_INTERFACE_ClassName)
-        if (modelClassDataFromDsl.kind != TypeSpec.Kind.OBJECT && modelClassDataFromDsl.kind != TypeSpec.Kind.INTERFACE) {
-            //addNullCompanion() // TODO("addNullCompanion()")
-        }
     }
     val constructorBuilder = FunSpec.constructorBuilder()
 

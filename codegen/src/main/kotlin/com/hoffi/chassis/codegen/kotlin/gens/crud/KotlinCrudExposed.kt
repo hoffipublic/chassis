@@ -19,11 +19,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 context(GenCtxWrapper)
 class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
 
-    // TODO constructor crudData has to construct the "right" "Crud" (might be Table crud even with target being a DTO
-    // also important for build() alreadyCreated
-    // move all Crud relevant data into intersectPropsData
-    // add target and source CrudClassName into intersectPropsData
-
     override fun build(crudData: CrudData) {
         currentCrudData = crudData
         currentAHasCopyBoundryData = crudData
@@ -38,7 +33,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             return
         }
 
-        // if we didn't explicitly declared a filler in the DSL ... but we need it for the CRUDs
+        // if we didn't explicitly declare a filler in the DSL ... but we need it for the CRUDs
         // CrudData always(!) has targetDslRef Table
         // FillerData might have targetDslRef DTO <-- TABLE sourceDslRef
         when (currentCrudData.crud) {
