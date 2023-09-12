@@ -37,7 +37,7 @@ fun simpleEntities() {
         model(SIMPLE__ROOT) {
             kind = INTERFACE
             dto {}
-            table {}
+            tableFor(DTO) {}
         }
 
         // ================================================================================================================================
@@ -86,7 +86,7 @@ fun simpleEntities() {
 //                }
 //                addToStringMembers("dtoSpecificProp")
             }
-            table {
+            tableFor(DTO) {
                 kind = OBJECT
                 extends {
                     replaceSuperclass = true
@@ -134,7 +134,7 @@ fun simpleEntities() {
 //                }
 //                addToStringMembers("dtoSpecificProp")
             }
-            table {
+            tableFor(DTO) {
                 propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
             }
 //            filler {

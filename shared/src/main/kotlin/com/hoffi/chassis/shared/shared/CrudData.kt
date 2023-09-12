@@ -55,6 +55,7 @@ open class CrudData(businessName: String, targetDslRef: IDslRef, sourceDslRef: I
             val UPDATE = UPDATE()
             val DELETE = DELETE()
             val entries = listOf(CREATE, READ, UPDATE, DELETE)
+            val entriesAllVariants = listOf(CREATE, READALLVARIANTS, UPDATE, DELETE)
         }
         fun isSameAs(other: Any?) = this == other && variant == (other as CRUD).variant
         override fun equals(other: Any?): Boolean {

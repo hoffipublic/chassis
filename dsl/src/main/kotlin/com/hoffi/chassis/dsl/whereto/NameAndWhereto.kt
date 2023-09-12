@@ -2,10 +2,7 @@ package com.hoffi.chassis.dsl.whereto
 
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.dsl.internal.*
-import com.hoffi.chassis.dsl.modelgroup.DslDto
-import com.hoffi.chassis.dsl.modelgroup.DslModel
-import com.hoffi.chassis.dsl.modelgroup.DslModelgroup
-import com.hoffi.chassis.dsl.modelgroup.DslTable
+import com.hoffi.chassis.dsl.modelgroup.*
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.helpers.joinPackage
@@ -60,6 +57,8 @@ interface IDslApiNameAndWheretoOnSubElements : IDslApiNameAndWheretoProps {
     fun dtoNameAndWhereto(  simpleName: String = C.DEFAULT, block: IDslApiNameAndWheretoProps.() -> Unit)
     @DslBlockOn(DslTable::class)
     fun tableNameAndWhereto(simpleName: String = C.DEFAULT, block: IDslApiNameAndWheretoProps.() -> Unit)
+    @DslBlockOn(DslDco::class)
+    fun dcoNameAndWhereto(simpleName: String = C.DEFAULT, block: IDslApiNameAndWheretoProps.() -> Unit)
 }
 
 // === Impl Interfaces (extend IDslApi's plus methods and props that should not be visible from the DSL ===
@@ -70,6 +69,7 @@ interface IImplNameAndWheretoOnlyDelegate : IDslApiNameAndWheretoOnly {
 interface IDslImplNameAndWheretoWithSubelementsDelegate : IDslApiNameAndWheretoWithSubelements {
     val nameAndWheretos: MutableMap<String, DslNameAndWheretoOnSubElementsDelegateImpl>
     val dtoNameAndWheretos: MutableMap<String, DslNameAndWheretoPropsImpl>
+    val dcoNameAndWheretos: MutableMap<String, DslNameAndWheretoPropsImpl>
     val tableNameAndWheretos: MutableMap<String, DslNameAndWheretoPropsImpl>
 }
 interface IDslImplNameAndWheretoOnSubElements : IDslApiNameAndWheretoOnSubElements  {
@@ -167,6 +167,7 @@ class DslNameAndWheretoWithSubelementsDelegateImpl(
 
     override val nameAndWheretos = mutableMapOf<String, DslNameAndWheretoOnSubElementsDelegateImpl>()
     override val dtoNameAndWheretos = mutableMapOf<String, DslNameAndWheretoPropsImpl>()
+    override val dcoNameAndWheretos = mutableMapOf<String, DslNameAndWheretoPropsImpl>()
     override val tableNameAndWheretos = mutableMapOf<String, DslNameAndWheretoPropsImpl>()
 
     //context(DslCtxWrapper)
@@ -197,7 +198,6 @@ class DslNameAndWheretoOnSubElementsDelegateImpl(
     val log = LoggerFactory.getLogger(javaClass)
     val parentDslClass = dslCtx.ctxObj<DslNameAndWheretoWithSubelementsDelegateImpl>(parentRef)
 
-    //context(DslCtxWrapper)
     override fun dtoNameAndWhereto(simpleName: String, block: IDslApiNameAndWheretoProps.() -> Unit) {
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
@@ -214,7 +214,6 @@ class DslNameAndWheretoOnSubElementsDelegateImpl(
             else -> { }
         }
     }
-    //context(DslCtxWrapper)
     override fun tableNameAndWhereto(simpleName: String, block: IDslApiNameAndWheretoProps.() -> Unit) {
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
@@ -224,6 +223,22 @@ class DslNameAndWheretoOnSubElementsDelegateImpl(
             }
             dslCtx.PASS_1_BASEMODELS -> {
                 val dslImpl = parentDslClass.tableNameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoPropsImpl(simpleName, selfDslRef) }
+                dslImpl.apply(block)
+            }
+            dslCtx.PASS_ERROR -> TODO()
+            dslCtx.PASS_FINISH -> { /* TODO implement me! */ }
+            else -> { }
+        }
+    }
+    override fun dcoNameAndWhereto(simpleName: String, block: IDslApiNameAndWheretoProps.() -> Unit) {
+        log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
+        when (dslCtx.currentPASS) {
+            dslCtx.PASS_0_CONFIGURE -> {
+                val dslImpl = parentDslClass.dcoNameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoPropsImpl(simpleName, selfDslRef) }
+                dslImpl.apply(block)
+            }
+            dslCtx.PASS_1_BASEMODELS -> {
+                val dslImpl = parentDslClass.dcoNameAndWheretos.getOrPut(simpleName) { DslNameAndWheretoPropsImpl(simpleName, selfDslRef) }
                 dslImpl.apply(block)
             }
             dslCtx.PASS_ERROR -> TODO()

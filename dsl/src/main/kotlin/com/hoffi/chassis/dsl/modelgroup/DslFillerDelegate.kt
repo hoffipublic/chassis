@@ -229,6 +229,7 @@ class DslImplInnerFillerBlock(val businessName: String, val dslOuterFillerBlockI
             MODELREFENUM.MODEL -> throw DslException("filler on '${selfDslRef}' unaryPlus not allowed to a 'MODEL'")
             MODELREFENUM.DTO ->   dslFillerDelegateImpl.getOrCreateFillerData(simpleName, businessName, DslRef.dto(C.DEFAULT, selfElementRef), DslRef.dto(C.DEFAULT, selfElementRef))
             MODELREFENUM.TABLE -> dslFillerDelegateImpl.getOrCreateFillerData(simpleName, businessName, DslRef.table(C.DEFAULT, selfElementRef), DslRef.table(C.DEFAULT, selfElementRef))
+            MODELREFENUM.DCO ->   dslFillerDelegateImpl.getOrCreateFillerData(simpleName, businessName, DslRef.dco(C.DEFAULT, selfElementRef), DslRef.dco(C.DEFAULT, selfElementRef))
         }
         return listOf(fillerData)
     }
@@ -236,12 +237,12 @@ class DslImplInnerFillerBlock(val businessName: String, val dslOuterFillerBlockI
     //override fun IDslRef.unaryPlus(): FillerData {
     //    //val (selfGroupRef, selfElementRef, selfSubelRef) = DslImplModelReffing.grouplementAndSubelementLevelDslRef(dslFillerDelegateImpl)
     //    val (targetGroupRef, targetElementRef, targetSubelRef) = DslImplModelReffing.grouplementAndSubelementLevelDslRef(dslCtx.ctxObj(this))
-    //    targetSubelRef ?: throw  DslException("filler on '${selfDslRef}' unaryPlus('${this}') not a model subelement (dto, table, ...)")
+    //    targetSubelRef ?: throw  DslException("filler on '${selfDslRef}' unaryPlus('${this}') not a model subelement (dto, tableFor, ...)")
     //    val fillerData: FillerData = WhensDslRef.whenModelSubelement (targetSubelRef,
     //        isDtoRef = { fillerData(targetSubelRef, targetSubelRef) },
     //        isTableRef = { fillerData(targetSubelRef, targetSubelRef) },
     //    ) {
-    //        DslException("filler on '${selfDslRef}' unaryPlus('$this') not a model subelement (dto, table, ...)")
+    //        DslException("filler on '${selfDslRef}' unaryPlus('$this') not a model subelement (dto, tableFor, ...)")
     //    }
     //    return fillerData
     //}
@@ -303,11 +304,13 @@ class DslImplInnerFillerBlock(val businessName: String, val dslOuterFillerBlockI
             MODELREFENUM.MODEL -> throw DslException("$this: filling a MODEL is not allowed")
             MODELREFENUM.DTO ->   DslRef.dto(C.DEFAULT, selfElementRef)
             MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, selfElementRef)
+            MODELREFENUM.DCO ->   DslRef.dco(C.DEFAULT, selfElementRef)
         }
         val sourceDslRef =  when (other) {
             MODELREFENUM.MODEL -> throw DslException("$this: filling a MODEL is not allowed")
             MODELREFENUM.DTO ->   DslRef.dto(C.DEFAULT, selfElementRef)
             MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, selfElementRef)
+            MODELREFENUM.DCO ->   DslRef.dco(C.DEFAULT, selfElementRef)
         }
 
         return listOf(dslFillerDelegateImpl.getOrCreateFillerData(simpleName, businessName, targetDslRef, sourceDslRef))
@@ -321,6 +324,7 @@ class DslImplInnerFillerBlock(val businessName: String, val dslOuterFillerBlockI
             MODELREFENUM.MODEL -> throw DslException("$this: filling a MODEL is not allowed")
             MODELREFENUM.DTO ->   DslRef.dto(C.DEFAULT, selfElementRef)
             MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, selfElementRef)
+            MODELREFENUM.DCO ->   DslRef.dco(C.DEFAULT, selfElementRef)
         }
 
         return listOf(dslFillerDelegateImpl.getOrCreateFillerData(simpleName, businessName, toRef, other))
@@ -345,6 +349,7 @@ class DslImplInnerFillerBlock(val businessName: String, val dslOuterFillerBlockI
             MODELREFENUM.MODEL -> throw DslException("$this: filling a MODEL is not allowed")
             MODELREFENUM.DTO ->   DslRef.dto(C.DEFAULT, elementRef)
             MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, elementRef)
+            MODELREFENUM.DCO ->   DslRef.dco(C.DEFAULT, elementRef)
         }
 
         return listOf(dslFillerDelegateImpl.getOrCreateFillerData(simpleName, businessName, this, fromRef))

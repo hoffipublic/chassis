@@ -15,8 +15,9 @@ object GenClassNames {
             MODELREFENUM.MODEL -> throw GenException("MODELs do not have fillers themselves")
             MODELREFENUM.DTO -> DslRef.dto(C.DEFAULT, subelDslRef.parentDslRef)
             MODELREFENUM.TABLE -> DslRef.table(C.DEFAULT, subelDslRef.parentDslRef)
+            MODELREFENUM.DCO -> DslRef.dco(C.DEFAULT, subelDslRef.parentDslRef)
         }
-        val swappedGenModel = genCtx.genModel(swappedDslRef)
+        val swappedGenModel = genCtx.genModelFromDsl(swappedDslRef)
         return ClassName(swappedGenModel.poetType.packageName + ".filler", "Filler" + swappedGenModel.poetType.simpleName)
     }
     context(GenCtxWrapper)
@@ -24,7 +25,7 @@ object GenClassNames {
         // TODO remove sentinel?
         if (subelDslRef !is DslRef.ISubElementLevel) throw GenException("targetDslRef for propCrud($subelDslRef) always should be a (model) subelement (DTO, TABLE, ...)")
         val swappedDslRef = DslRef.table(C.DEFAULT, subelDslRef.parentDslRef)
-        val swappedGenModel = genCtx.genModel(swappedDslRef)
+        val swappedGenModel = genCtx.genModelFromDsl(swappedDslRef)
         return ClassName(swappedGenModel.poetType.packageName + ".sql", swappedGenModel.modelClassName.crudBasePoetTypeForAllCruds.simpleName + crud.simpleName)
     }
 }

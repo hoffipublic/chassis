@@ -9,21 +9,33 @@ enum class GatherPropertiesEnum {
     SUPERCLASS_PROPERTIES_ONLY
 }
 
-class GatherPropertys(
+data class GatherPropertys(
     val modelOrModelSubelementRefOriginal: DslRef.IModelOrModelSubelement,
-    val gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES
+    val gatherPropertiesEnum: GatherPropertiesEnum = GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES,
+    //val actualMODELREFENUM: MODELREFENUM
 ) {
     override fun toString() = "$gatherPropertiesEnum of $modelSubelementRef"
+    //override fun toString() = "$actualMODELREFENUM gathers $gatherPropertiesEnum of $modelSubelementRef"
 
     val modelSubelementRef: DslRef.IModelSubelement
         get() = modelSubelementRefExpanded ?: modelOrModelSubelementRefOriginal as DslRef.IModelSubelement
     var modelSubelementRefExpanded: DslRef.IModelSubelement? = null
 
+    fun copyDeep() = this.copy().also { it.modelSubelementRefExpanded = this.modelSubelementRefExpanded }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is GatherPropertys) return false
+        if (modelOrModelSubelementRefOriginal != other.modelOrModelSubelementRefOriginal) return false
         if (gatherPropertiesEnum != other.gatherPropertiesEnum) return false
-        return modelSubelementRef == other.modelSubelementRef
+        //if (actualMODELREFENUM != other.actualMODELREFENUM) return false
+        return true
     }
-    override fun hashCode() = 31 * modelOrModelSubelementRefOriginal.hashCode() + gatherPropertiesEnum.hashCode()
+
+    override fun hashCode(): Int {
+        var result = modelOrModelSubelementRefOriginal.hashCode()
+        result = 31 * result + gatherPropertiesEnum.hashCode()
+        //result = 31 * result + actualMODELREFENUM.hashCode()
+        return result
+    }
 }

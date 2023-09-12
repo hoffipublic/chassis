@@ -15,21 +15,21 @@ import com.hoffi.chassis.chassismodel.typ.mutable
 import com.hoffi.chassis.codegen.kotlin.GenCtxWrapper
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.parsedata.GenModel
+import com.hoffi.chassis.shared.parsedata.ModelClassDataFromDsl
 import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.Tag
 import com.squareup.kotlinpoet.*
 
 context(GenCtxWrapper)
-class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
-    : AKotlinClass(dtoModel)
+abstract class KotlinGenClassNonPersistant(modelClassDataFromDsl: ModelClassDataFromDsl)
+    : AKotlinGenClass(modelClassDataFromDsl)
 {
     data class ConstrParam(val propName: String, val poetType: TypeName, val defaultInitializer: Initializer, val nullInitializer: Initializer)
     val constrParamsWithInitializersForCompanionCreate: MutableSet<ConstrParam> = mutableSetOf()
     val constrLikeParams = mutableListOf<ParameterSpec>()
 
     fun build(): TypeSpec.Builder {
-        builder.addModifiers(dtoModel.classModifiers)
+        builder.addModifiers(modelClassDataFromDsl.classModifiers)
         buildExtends()
         buildConstructorsAndPropertys()
         buildFunctions()
@@ -50,7 +50,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
             when (extends.typeClassOrDslRef) {
                 is EitherTypOrModelOrPoetType.EitherModel -> {
                     val eitherModel = extends.typeClassOrDslRef as EitherTypOrModelOrPoetType.EitherModel
-                    val reffedModel = genCtx.genModel(eitherModel.modelSubElementRef)
+                    val reffedModel = genCtx.genModelFromDsl(eitherModel.modelSubElementRef)
                     for (superConstrProp: Property in reffedModel.allProps.values.filter { Tag.CONSTRUCTOR in it.tags }) {
                         builder.addSuperclassConstructorParameter(superConstrProp.name())
                     }
@@ -70,20 +70,20 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
         val isUuidDto = modelClassDataFromDsl.propsInclSuperclassPropsMap.values.filter { Tag.Companion.PRIMARY in it.tags }
         if (isUuidDto.size == 1 && isUuidDto.first().dslPropName == UUID_PROPNAME) {
             builder.addSuperinterface(RuntimeDefaults.UUIDDTO_INTERFACE_CLASSNAME)
-            dtoModel.isUuidPrimary = true
+            modelClassDataFromDsl.isUuidPrimary = true
         }
     }
 
     fun buildConstructorsAndPropertys() {
-        if ( ! dtoModel.constructorVisibility) {
+        if ( ! modelClassDataFromDsl.constructorVisibility) {
             constructorBuilder.addModifiers(KModifier.PROTECTED)
         }
 
         val superConstructorProps: MutableSet<Property> = mutableSetOf()
-        val superModelEither = dtoModel.extends[C.DEFAULT]?.typeClassOrDslRef ?: EitherTypOrModelOrPoetType.NOTHING
+        val superModelEither = modelClassDataFromDsl.extends[C.DEFAULT]?.typeClassOrDslRef ?: EitherTypOrModelOrPoetType.NOTHING
         when (superModelEither) {
             is EitherTypOrModelOrPoetType.EitherModel -> {
-                val superModel = genCtx.genModel(superModelEither.modelSubElementRef)
+                val superModel = genCtx.genModelFromDsl(superModelEither.modelSubElementRef)
                 superConstructorProps.addAll(superModel.allProps.values.filter { Tag.CONSTRUCTOR in it.tags })
             }
             is EitherTypOrModelOrPoetType.EitherPoetType -> TODO()
@@ -92,14 +92,14 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
         }
 
         // add primary constructor propertys
-        for (theProp in dtoModel.allProps.values) {
+        for (theProp in modelClassDataFromDsl.allProps.values) {
             if (Tag.CONSTRUCTOR in theProp.tags) {
                 if (theProp in superConstructorProps) {
                     val paramBuilder = constrParamBuilder(theProp)
                     constructorBuilder.addParameter(paramBuilder.build())
                     constrLikeParams.add(paramBuilder.build())
                 } else {
-                    val kotlinProp = KotlinPropertyDto(theProp, this)
+                    val kotlinProp = KotlinPropertyNonPersistent(theProp, this)
                     kotlinProp.mergePropertyIntoConstructor()
                     builder.addProperty(kotlinProp.build())
                     val paramBuilder = constrParamBuilder(theProp)
@@ -107,12 +107,12 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                     constrLikeParams.add(paramBuilder.build())
                 }
             } else {
-                val kotlinProp = KotlinPropertyDto(theProp, this)
+                val kotlinProp = KotlinPropertyNonPersistent(theProp, this)
                 builder.addProperty(kotlinProp.build())
             }
         }
 
-        if (dtoModel.kind == TypeSpec.Kind.CLASS) {
+        if (modelClassDataFromDsl.kind == TypeSpec.Kind.CLASS) {
             builder.primaryConstructor(constructorBuilder.build())
         }
     }
@@ -238,7 +238,7 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
     }
 
     fun buildAnnotations() {
-        val tableModel = try { genCtx.genModel(DslRef.table(C.DEFAULT, dtoModel.modelSubElRef.parentDslRef)) } catch(e: GenCtxException) { null }
+        val tableModel = try { genCtx.genModelFromDsl(DslRef.table(C.DEFAULT, modelClassDataFromDsl.modelSubElRef.parentDslRef)) } catch(e: GenCtxException) { null }
         if (tableModel != null) {
             builder.addAnnotation(
                 AnnotationSpec.builder(ANNOTATION_TABLE_CLASSNAME)
@@ -285,38 +285,40 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                     .build())
         }
 
-        //@JvmStatic public fun createShallowWithNewEmptyModels(): SimpleEntityDto
-        var funSpecBuilder = FunSpec.builder("createShallowWithNewEmptyModels")
-            .returns(modelClassDataFromDsl.poetType)
-            .addAnnotation(JvmStatic::class)
-            .addStatement("val %L = _internal_createWithUuid()", modelClassDataFromDsl.asVarName)
-        for (prop in modelClassDataFromDsl.directProps.values) {
-            if (prop.eitherTypModelOrClass !is EitherTypOrModelOrPoetType.EitherModel) continue
-            when (prop.collectionType) {
-                is COLLECTIONTYP.NONE -> funSpecBuilder.addStatement("%L.%L = %T._internal_createWithUuid()", modelClassDataFromDsl.asVarName, prop.name(), prop.poetType)
-                else -> {}
-            }
-        }
-        funSpecBuilder.addStatement("return %L", modelClassDataFromDsl.asVarName)
-        companionBuilder.addFunction(funSpecBuilder.build())
-
-        //@JvmStatic public fun createDeepWithNewEmptyModels(): SimpleEntityDto
-        funSpecBuilder = FunSpec.builder("createDeepWithNewEmptyModels")
-            .returns(modelClassDataFromDsl.poetType)
-            .addAnnotation(JvmStatic::class)
-            .addStatement("val %L = _internal_createWithUuid()", modelClassDataFromDsl.asVarName)
-        for (prop in modelClassDataFromDsl.directProps.values) {
-            if (prop.eitherTypModelOrClass !is EitherTypOrModelOrPoetType.EitherModel) continue
-            when (prop.collectionType) {
-                is COLLECTIONTYP.NONE -> {
-                    funSpecBuilder.addStatement("/* beware of recursive calls, if Type or some submodel of it has a reference to this */")
-                    funSpecBuilder.addStatement("%L.%L = %T.createDeepWithNewEmptyModels()", modelClassDataFromDsl.asVarName, prop.name(), prop.poetType)
+        if (modelClassDataFromDsl.isUuidPrimary) {
+            //@JvmStatic public fun createShallowWithNewEmptyModels(): SimpleEntityDto
+            var funSpecBuilder = FunSpec.builder("createShallowWithNewEmptyModels")
+                .returns(modelClassDataFromDsl.poetType)
+                .addAnnotation(JvmStatic::class)
+                .addStatement("val %L = _internal_createWithUuid()", modelClassDataFromDsl.asVarName)
+            for (prop in modelClassDataFromDsl.directProps.values) {
+                if (prop.eitherTypModelOrClass !is EitherTypOrModelOrPoetType.EitherModel) continue
+                when (prop.collectionType) {
+                    is COLLECTIONTYP.NONE -> funSpecBuilder.addStatement("%L.%L = %T._internal_createWithUuid()", modelClassDataFromDsl.asVarName, prop.name(), prop.poetType)
+                    else -> {}
                 }
-                else -> { }
             }
+            funSpecBuilder.addStatement("return %L", modelClassDataFromDsl.asVarName)
+            companionBuilder.addFunction(funSpecBuilder.build())
+
+            //@JvmStatic public fun createDeepWithNewEmptyModels(): SimpleEntityDto
+            funSpecBuilder = FunSpec.builder("createDeepWithNewEmptyModels")
+                .returns(modelClassDataFromDsl.poetType)
+                .addAnnotation(JvmStatic::class)
+                .addStatement("val %L = _internal_createWithUuid()", modelClassDataFromDsl.asVarName)
+            for (prop in modelClassDataFromDsl.directProps.values) {
+                if (prop.eitherTypModelOrClass !is EitherTypOrModelOrPoetType.EitherModel) continue
+                when (prop.collectionType) {
+                    is COLLECTIONTYP.NONE -> {
+                        funSpecBuilder.addStatement("/* beware of recursive calls, if Type or some submodel of it has a reference to this */")
+                        funSpecBuilder.addStatement("%L.%L = %T.createDeepWithNewEmptyModels()", modelClassDataFromDsl.asVarName, prop.name(), prop.poetType)
+                    }
+                    else -> { }
+                }
+            }
+            funSpecBuilder.addStatement("return %L", modelClassDataFromDsl.asVarName)
+            companionBuilder.addFunction(funSpecBuilder.build())
         }
-        funSpecBuilder.addStatement("return %L", modelClassDataFromDsl.asVarName)
-        companionBuilder.addFunction(funSpecBuilder.build())
 
         if ( ! modelClassDataFromDsl.constructorVisibility) {
             companionBuilder
@@ -334,11 +336,4 @@ class KotlinClassModelDto(val dtoModel: GenModel.DtoModel)
                     .build())
         }
     }
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is KotlinClassModelDto) return false
-        return dtoModel == other.dtoModel
-    }
-
-    override fun hashCode() = dtoModel.hashCode()
 }

@@ -11,7 +11,7 @@ import com.hoffi.chassis.codegen.kotlin.GenDslRefHelpers
 import com.hoffi.chassis.codegen.kotlin.GenNaming
 import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
-import com.hoffi.chassis.shared.parsedata.GenModel
+import com.hoffi.chassis.shared.parsedata.ModelClassDataFromDsl
 import com.hoffi.chassis.shared.parsedata.Property
 import com.hoffi.chassis.shared.shared.FK
 import com.hoffi.chassis.shared.shared.Tag
@@ -21,8 +21,8 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 
 context(GenCtxWrapper)
-class KotlinClassModelTable(val tableModel: GenModel.TableModel)
-    : AKotlinClass(tableModel)
+abstract class KotlinGenExposedTable(modelClassDataFromDsl: ModelClassDataFromDsl)
+    : AKotlinGenClass(modelClassDataFromDsl)
 {
     val incomingFKs: MutableSet<FK> = mutableSetOf()
     val outgoingFKs: MutableSet<FK> = mutableSetOf()
@@ -39,7 +39,7 @@ class KotlinClassModelTable(val tableModel: GenModel.TableModel)
     }
 
     fun build(): TypeSpec.Builder {
-        builder.addModifiers(tableModel.classModifiers)
+        builder.addModifiers(modelClassDataFromDsl.classModifiers)
         buildExtends()
         buildPropertys()
         //buildFeatures()
@@ -53,11 +53,11 @@ class KotlinClassModelTable(val tableModel: GenModel.TableModel)
         val isUuidTable = modelClassDataFromDsl.propsInclSuperclassPropsMap.values.filter { Tag.Companion.PRIMARY in it.tags }
         if (isUuidTable.size == 1 && isUuidTable.first().dslPropName == UUID_PROPNAME) {
             builder.superclass(UUIDTABLE_CLASSNAME)
-            tableModel.isUuidPrimary = true
+            modelClassDataFromDsl.isUuidPrimary = true
         } else {
             builder.superclass(DB.TableClassName)
         }
-        builder.addSuperclassConstructorParameter("%S", tableModel.modelClassName.tableName)
+        builder.addSuperclassConstructorParameter("%S", modelClassDataFromDsl.modelClassName.tableName)
         val extends = modelClassDataFromDsl.extends["default"]
         for (superinterface in extends?.superInterfaces ?: mutableSetOf()) {
             builder.addSuperinterface(superinterface.modelClassName.poetType)
@@ -66,16 +66,16 @@ class KotlinClassModelTable(val tableModel: GenModel.TableModel)
     }
 
     fun buildPropertys() {
-        for (theProp in tableModel.allProps.values) {
-            if (tableModel.isUuidPrimary && theProp.dslPropName == UUID_PROPNAME) continue
+        for (theProp in modelClassDataFromDsl.propsInclSuperclassPropsMap.values) {
+            if (modelClassDataFromDsl.isUuidPrimary && theProp.dslPropName == UUID_PROPNAME) continue
             if (Tag.TRANSIENT in theProp.tags) continue
-            val kotlinProp = KotlinPropertyTable(theProp, this).whenInit()
+            val kotlinProp = KotlinPropertyExposedTable(theProp, this).whenInit()
             builder.addProperty(kotlinProp.build())
         }
     }
 
     fun buildAnnotations() {
-        val dtoModel = try { genCtx.genModel(DslRef.dto(C.DEFAULT, tableModel.modelSubElRef.parentDslRef)) } catch(e: GenCtxException) { null }
+        val dtoModel = try { genCtx.genModelFromDsl(DslRef.dto(C.DEFAULT, modelClassDataFromDsl.modelSubElRef.parentDslRef)) } catch(e: GenCtxException) { null }
         if (dtoModel != null) {
             builder.addAnnotation(
                 AnnotationSpec.builder(RuntimeDefaults.ANNOTATION_DTO_CLASSNAME)
@@ -86,18 +86,18 @@ class KotlinClassModelTable(val tableModel: GenModel.TableModel)
         }
     }
 
-    /** build after ALL normal KotlinClassModelTable and their "normal" props are build</br>
-     * because the "dependant" KotlinClassModelTable might not yet have been generated and may not yet exist */
+    /** build after ALL normal KotlinGenExposedTable and their "normal" props are build</br>
+     * because the "dependant" KotlinGenExposedTable might not yet have been generated and may not yet exist */
     fun buildMany2OneFK(fk: FK) {
         val fkPropVarName = GenNaming.fkPropVarNameUUID(fk)
         val fkPropColName = GenNaming.fkPropColumnNameUUID(fk)
-        val toKotlinClassmodelTable: AKotlinClass = kotlinGenCtx.kotlinGenClass(fk.toTableRef)
+        val toKotlinGenExposedTable: AKotlinGenClass = kotlinGenCtx.kotlinGenClass(fk.toTableRef)
         val propSpecBuilder = PropertySpec.builder(fkPropVarName, DB.ColumnClassName.parameterizedBy(RuntimeDefaults.classNameUUID), fk.toProp.modifiers)
         //propSpecBuilder.initializer("uuid(%S$nullQM).uniqueIndex().references(%T.%L)$nullFunc", columnName, toTable.modelClassDataFromDsl.poetType, toProp.name)
-        propSpecBuilder.initializer("uuid(%S).references(%T.%L)", fkPropColName, toKotlinClassmodelTable.modelClassDataFromDsl.poetType, "uuid") // toProp's class uuid
+        propSpecBuilder.initializer("uuid(%S).references(%T.%L)", fkPropColName, toKotlinGenExposedTable.modelClassDataFromDsl.poetType, "uuid") // toProp's class uuid
         propSpecBuilder.addAnnotation(
             AnnotationSpec.builder(RuntimeDefaults.ANNOTATION_FKFROM_CLASSNAME)
-                .addMember("%T::class", GenDslRefHelpers.dtoClassName(toKotlinClassmodelTable.modelClassDataFromDsl))
+                .addMember("%T::class", GenDslRefHelpers.nonpersistentClassName(toKotlinGenExposedTable.modelClassDataFromDsl))
                 .build()
         )
         //fromKotlinClassModelTable.builder.addProperty(propSpecBuilder.build())

@@ -68,3 +68,28 @@ coming up:
 - dslCtx.genCtx.genModels.filter { it.key.simpleName == "Base" }.map { it.value }
 - DslRefString.REF("disc:commonBaseModelsDisc;modelgroup:Simple;model:Entity;dto")
 - 
+
+# implementing you're own (non table) proper Models (subelements of model { })
+
+1) create by e.g. copying a simple existing DslModel Subelement (e.g. `class DslDco`)
+2) create DslRef subelement for it in `class DslRef` (and add it to the needed places for reffing in `DslRef.kt`)
+3) create a GenModel for it in `sealed class GenModel`
+4) create the `IDslApiXxx` and `IDslImplXxx` interfaces for your new proper model subelement (e.g. study `DslShowcase.kt`)
+5) add a `fun xxxNameAndWhereto(...)` to `interface IDslApiNameAndWheretoOnSubElements`</br>
+   (if you want to be able to specify where all you xxx generated proper models of a modelgroup should go (package, path, prefix, postfix, ...))
+6) add your Xxx to `enum class MODELREFENUM`
+7) add your xxx to `interface IDslApiModel`
+8) add implementation for it to `class DslModel`
+   and also add a `val dslXxxs: MutableMap<String, DslXxx> = mutableMapOf()` 
+9) at this point a lot of `when (...) {` should not compile anymore ... add meaningfull stuff to all of them for your Xxx
+
+a minimal `interface IDslApiXxx` might look like:
+
+```kotlin
+@ChassisDslMarker
+interface IDslApiDco
+    :   IDslApiModelAndModelSubelementsCommon,
+        IDslApiSubelementsOnlyCommon
+```
+For table's and CRUDS it is more difficult as these are *very heavily* dependant on you persistence Framework,</br>
+but your xxx should work just fine with the existing JetBrains "exposed" table's.

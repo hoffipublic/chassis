@@ -20,7 +20,7 @@ import io.kotest.matchers.shouldBe
 import okio.Path.Companion.toPath
 
 context(DslCtxWrapper)
-fun dslNameAndWheretoOverlapping() {
+fun dslNameAndWheretoStrategiesOverlapping() {
     dslCtx.topLevelDslFunctionName = object {}.javaClass.enclosingMethod.name
 //    apigroup(SIMPLE) {
 //
@@ -67,7 +67,7 @@ fun dslNameAndWheretoOverlapping() {
 
     }
 }
-fun mainNameAndWheretoOverlapping(): Pair<DslCtx, DslRun> {
+fun mainNameAndWheretoStrategiesOverlapping(): Pair<DslCtx, DslRun> {
     val specRunName = "SpecNameAndWheretoRun"
     val specDslRun = DslRun(specRunName)
     specDslRun.configure {
@@ -94,10 +94,10 @@ fun mainNameAndWheretoOverlapping(): Pair<DslCtx, DslRun> {
 }
 
 @OptIn(ExperimentalKotest::class)
-class NameAndWheretoSpec : BehaviorSpec({
+class NameAndWheretoStrategiesSpec : BehaviorSpec({
     Given("nameAndWhereto related DSLs") {
         When("parsing overlapping DSL") {
-            val (dslCtx, specDslRun) = mainNameAndWheretoOverlapping()
+            val (dslCtx, specDslRun) = mainNameAndWheretoStrategiesOverlapping()
             Then("values of dslRun should be there") {
                 val a = specDslRun.wheretoImpl.nameAndWheretos[C.DEFAULT]!!
                 val b = specDslRun.wheretoImpl.dtoNameAndWheretos[C.DEFAULT]!!

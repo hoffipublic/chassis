@@ -12,4 +12,12 @@ data class Extends(
     var superclassHasBeenSet: Boolean = false
 ) {
     override fun toString() = "${Extends::class.simpleName}(${typeClassOrDslRef}, interfaces: '${superInterfaces.joinToString()}')"
+    fun copyDeepForDsl() = Extends(simpleName, replaceSuperclass, replaceSuperInterfaces,
+        typeClassOrDslRef.copyDeepForDsl(),
+        superInterfaces.map { it.copyDeepForDsl() }.toMutableSet(),
+        superclassHasBeenSet)
+    fun copyDeep() = Extends(simpleName, replaceSuperclass, replaceSuperInterfaces,
+        typeClassOrDslRef.copyDeep(),
+        superInterfaces.map { it.copyDeep() }.toMutableSet(),
+        superclassHasBeenSet)
 }

@@ -1,7 +1,7 @@
 package com.hoffi.chassis.codegen.kotlin
 
 import com.hoffi.chassis.chassismodel.dsl.GenCtxException
-import com.hoffi.chassis.codegen.kotlin.gens.AKotlinClass
+import com.hoffi.chassis.codegen.kotlin.gens.AKotlinGenClass
 import com.hoffi.chassis.codegen.kotlin.gens.crud.AKotlinCrud
 import com.hoffi.chassis.codegen.kotlin.gens.crud.KotlinCrudExposed
 import com.hoffi.chassis.codegen.kotlin.gens.filler.AKotlinFiller
@@ -37,9 +37,9 @@ class GenCtxWrapper(val genCtx: GenCtx) {
 /** specific to project codegen (kotlin) stuff (codegen subproject only write into this, not into GenCtx)</br>
  * -> just READ the "immutable" GenCtx (which is the finished DSL parsing result bite-sized for codegen) */
 class KotlinGenCtx private constructor() {
-    private val allKotlinGenClasses: MutableMap<IDslRef, AKotlinClass> = mutableMapOf()
+    private val allKotlinGenClasses: MutableMap<IDslRef, AKotlinGenClass> = mutableMapOf()
     fun kotlinGenClass(modelSubelementRef: IDslRef) = allKotlinGenClasses[modelSubelementRef] ?: throw GenCtxException("${this::class.simpleName} does not contain a subelement model for $modelSubelementRef")
-    fun putKotlinGenClass(modelSubelementRef: IDslRef, genModel: AKotlinClass) { if (! allKotlinGenClasses.containsKey(modelSubelementRef)) { allKotlinGenClasses[modelSubelementRef] = genModel } else { throw GenCtxException("${this::class.simpleName} already contains a GenModel for '${modelSubelementRef}'") } }
+    fun putKotlinGenClass(modelSubelementRef: IDslRef, aKotlinGenClass: AKotlinGenClass) { if (! allKotlinGenClasses.containsKey(modelSubelementRef)) { allKotlinGenClasses[modelSubelementRef] = aKotlinGenClass } else { throw GenCtxException("${this::class.simpleName} already contains a GenModel for '${modelSubelementRef}'") } }
     fun allKotlinGenClasses() = allKotlinGenClasses.values
 
     private val allKotlinFillerClasses = mutableMapOf<MODELKIND, MutableMap<IDslRef, AKotlinFiller>>().also {
@@ -69,7 +69,9 @@ class KotlinGenCtx private constructor() {
                     val kft = KotlinFillerTable(fillerData)
                     allKotlinFillerClasses[modelkind]!![theDslRef] = kft
                     // double check
-                    if ( ! allKotlinCrudClassNames.add(kft.fillerPoetType) ) { throw GenCtxException("already did a ${kft.fillerPoetType} for $fillerData") }
+                    if ( ! allKotlinCrudClassNames.add(kft.fillerPoetType) ) {
+                        throw GenCtxException("already did a ${kft.fillerPoetType} for $fillerData [modelkind:$modelkind][theDslRef:$theDslRef]")
+                    }
                     Pair(kft, false)
                 }
             }

@@ -9,10 +9,10 @@ import com.hoffi.chassis.shared.codegen.GenCtx
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
-import com.hoffi.chassis.shared.parsedata.SharedGatheredClassModifiers
-import com.hoffi.chassis.shared.parsedata.SharedGatheredExtends
-import com.hoffi.chassis.shared.parsedata.SharedGatheredGatherPropertys
-import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
+import com.hoffi.chassis.shared.parsedata.CollectedClassModifiers
+import com.hoffi.chassis.shared.parsedata.CollectedExtends
+import com.hoffi.chassis.shared.parsedata.CollectedGatherPropertys
+import com.hoffi.chassis.shared.parsedata.nameandwhereto.CollectedNameAndWheretos
 import com.hoffi.chassis.shared.whens.WhensDslRef
 import org.slf4j.LoggerFactory
 import kotlin.reflect.full.createType
@@ -176,49 +176,51 @@ class DslCtx private constructor(){
     fun getAllModelgroups() = modelgroups.values
     fun getAllModels() = models.values
 
-    val sharedGatheredNameAndWheretos: MutableMap<DslRef.IElementLevel, SharedGatheredNameAndWheretos> = mutableMapOf()
-    fun createGatheredNameAndWheretos(dslRef: DslRef.IElementLevel): SharedGatheredNameAndWheretos {
-        val item = sharedGatheredNameAndWheretos[dslRef]
-        return if (item == null) SharedGatheredNameAndWheretos(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredNameAndWheretos[dslRef] = it }
-            else throw DslCtxException("${SharedGatheredNameAndWheretos::class.simpleName}('$dslRef') already exists in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    private val basemodelNameAndWheretos: MutableMap<DslRef.IElementLevel, CollectedNameAndWheretos> = mutableMapOf()
+    fun createCollectedBasemodelNameAndWheretos(dslRef: DslRef.IElementLevel): CollectedNameAndWheretos {
+        val item = basemodelNameAndWheretos[dslRef]
+        return if (item == null) CollectedNameAndWheretos(dslRef, dslRun.runIdentifierEgEnvAndTime).also { basemodelNameAndWheretos[dslRef] = it }
+            else throw DslCtxException("${CollectedNameAndWheretos::class.simpleName}('$dslRef') already exists in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
     }
-    fun getGatheredNameAndWheretos(dslRef: DslRef.IElementLevel): SharedGatheredNameAndWheretos =
-        sharedGatheredNameAndWheretos[dslRef] ?: throw DslCtxException("no ${SharedGatheredNameAndWheretos::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
-    fun gatheredNameAndWheretos(dslRef: DslRef.IElementLevel): SharedGatheredNameAndWheretos =
-        sharedGatheredNameAndWheretos[dslRef] ?: SharedGatheredNameAndWheretos(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredNameAndWheretos[dslRef] = it }
+    fun cloneOfCollectedBasemodelNameAndWheretos(dslRef: DslRef.IElementLevel) = getCollectedBasemodelNameAndWheretos(dslRef).copyForNewSubelement()
+    fun getCollectedBasemodelNameAndWheretos(dslRef: DslRef.IElementLevel): CollectedNameAndWheretos =
+        basemodelNameAndWheretos[dslRef] ?: throw DslCtxException("no ${CollectedNameAndWheretos::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
 
-    val sharedGatheredGatherPropertys: MutableMap<DslRef.IElementLevel, SharedGatheredGatherPropertys> = mutableMapOf()
-    fun createGatheredGatherPropertys(dslRef: DslRef.IElementLevel): SharedGatheredGatherPropertys {
-        val item = sharedGatheredGatherPropertys[dslRef]
-        return if (item == null) SharedGatheredGatherPropertys(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredGatherPropertys[dslRef] = it }
-            else throw DslCtxException("${SharedGatheredGatherPropertys::class.simpleName}('$dslRef') already exists in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    private val basemodelGatheredGatherPropertys: MutableMap<DslRef.IElementLevel, CollectedGatherPropertys> = mutableMapOf()
+    fun createCollectedBasemodelGatherPropertys(dslRef: DslRef.IElementLevel): CollectedGatherPropertys {
+        val item = basemodelGatheredGatherPropertys[dslRef]
+        return if (item == null) CollectedGatherPropertys(dslRef, dslRun.runIdentifierEgEnvAndTime).also { basemodelGatheredGatherPropertys[dslRef] = it }
+            else throw DslCtxException("${CollectedGatherPropertys::class.simpleName}('$dslRef') already exists in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
     }
-    fun getGatheredGatherPropertys(dslRef: DslRef.IElementLevel): SharedGatheredGatherPropertys =
-        sharedGatheredGatherPropertys[dslRef] ?: throw DslCtxException("no ${SharedGatheredGatherPropertys::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
-    fun gatheredGatherPropertys(dslRef: DslRef.IElementLevel): SharedGatheredGatherPropertys =
-        sharedGatheredGatherPropertys[dslRef] ?: SharedGatheredGatherPropertys(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredGatherPropertys[dslRef] = it }
+    fun cloneOfCollectedBasemodelGatherPropertys(dslRef: DslRef.IElementLevel) = getCollectedBasemodelGatherPropertys(dslRef).copyForNewSubelement()
+    fun getCollectedBasemodelGatherPropertys(dslRef: DslRef.IElementLevel): CollectedGatherPropertys =
+        basemodelGatheredGatherPropertys[dslRef] ?: throw DslCtxException("no ${CollectedGatherPropertys::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    //fun gatheredGatherPropertys(dslRef: DslRef.IElementLevel): CollectedGatherPropertys =
+    //    basemodelGatheredGatherPropertys[dslRef] ?: CollectedGatherPropertys(dslRef, dslRun.runIdentifierEgEnvAndTime).also { basemodelGatheredGatherPropertys[dslRef] = it }
 
-    val sharedGatheredClassModifiers: MutableMap<DslRef.IElementLevel, SharedGatheredClassModifiers> = mutableMapOf()
-    fun createGatheredClassModifiers(dslRef: DslRef.IElementLevel): SharedGatheredClassModifiers {
-        val item = sharedGatheredClassModifiers[dslRef]
-        return if (item == null) SharedGatheredClassModifiers(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredClassModifiers[dslRef] = it }
-            else throw DslCtxException("${SharedGatheredClassModifiers::class.simpleName}('$dslRef') already exists in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    private val basemodelClassModifiers: MutableMap<DslRef.IElementLevel, CollectedClassModifiers> = mutableMapOf()
+    fun createCollectedBasemodelClassModifiers(dslRef: DslRef.IElementLevel): CollectedClassModifiers {
+        val item = basemodelClassModifiers[dslRef]
+        return if (item == null) CollectedClassModifiers(dslRef, dslRun.runIdentifierEgEnvAndTime).also { basemodelClassModifiers[dslRef] = it }
+            else throw DslCtxException("${CollectedClassModifiers::class.simpleName}('$dslRef') already exists in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
     }
-    fun getGatheredClassModifiers(dslRef: DslRef.IElementLevel): SharedGatheredClassModifiers =
-        sharedGatheredClassModifiers[dslRef] ?: throw DslCtxException("no ${SharedGatheredClassModifiers::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
-    fun gatheredClassModifiers(dslRef: DslRef.IElementLevel): SharedGatheredClassModifiers =
-        sharedGatheredClassModifiers[dslRef] ?: SharedGatheredClassModifiers(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredClassModifiers[dslRef] = it }
+    fun cloneOfCollectedBasemodelClassModifiers(dslRef: DslRef.IElementLevel) = getCollectedBasemodelClassModifiers(dslRef).copyForNewSubelement()
+    fun getCollectedBasemodelClassModifiers(dslRef: DslRef.IElementLevel): CollectedClassModifiers =
+        basemodelClassModifiers[dslRef] ?: throw DslCtxException("no ${CollectedClassModifiers::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    //fun gatheredClassModifiers(dslRef: DslRef.IElementLevel): CollectedClassModifiers =
+    //    basemodelClassModifiers[dslRef] ?: CollectedClassModifiers(dslRef, dslRun.runIdentifierEgEnvAndTime).also { basemodelClassModifiers[dslRef] = it }
 
-    val sharedGatheredExtends: MutableMap<DslRef.IElementLevel, SharedGatheredExtends> = mutableMapOf()
-    fun createGatheredExtends(dslRef: DslRef.IElementLevel): SharedGatheredExtends {
-        val item = sharedGatheredExtends[dslRef]
-        return if (item == null) SharedGatheredExtends(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredExtends[dslRef] = it }
-            else throw DslCtxException("${SharedGatheredExtends::class.simpleName}('$dslRef') already exists in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    private val basemodelExtends: MutableMap<DslRef.IElementLevel, CollectedExtends> = mutableMapOf()
+    fun createCollectedBasemodelExtends(dslRef: DslRef.IElementLevel): CollectedExtends {
+        val item = basemodelExtends[dslRef]
+        return if (item == null) CollectedExtends(dslRef, dslRun.runIdentifierEgEnvAndTime).also { basemodelExtends[dslRef] = it }
+            else throw DslCtxException("${CollectedExtends::class.simpleName}('$dslRef') already exists in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
     }
-    fun getGatheredExtends(dslRef: DslRef.IElementLevel): SharedGatheredExtends =
-        sharedGatheredExtends[dslRef] ?: throw DslCtxException("no ${SharedGatheredExtends::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
-    fun gatheredExtends(dslRef: DslRef.IElementLevel): SharedGatheredExtends =
-        sharedGatheredExtends[dslRef] ?: SharedGatheredExtends(dslRef, dslRun.runIdentifierEgEnvAndTime).also { sharedGatheredExtends[dslRef] = it }
+    fun cloneOfCollectedBasemodelExtends(dslRef: DslRef.IElementLevel) = getCollectedBasemodelExtends(dslRef).copyForNewSubelement()
+    fun getCollectedBasemodelExtends(dslRef: DslRef.IElementLevel): CollectedExtends =
+        basemodelExtends[dslRef] ?: throw DslCtxException("no ${CollectedExtends::class.simpleName}('$dslRef') in DslCtx('${dslRun.runIdentifierEgEnvAndTime}')")
+    //fun gatheredExtends(dslRef: DslRef.IElementLevel): CollectedExtends =
+    //    basemodelExtends[dslRef] ?: CollectedExtends(dslRef, dslRun.runIdentifierEgEnvAndTime).also { basemodelExtends[dslRef] = it }
 
     fun isInterface(dslRef: IDslRef, callerDslClass: ADslClass): Boolean {
         val reffedDslClass = ctxObj<ADslClass>(dslRef) as IDslApiKindClassObjectOrInterface
@@ -229,12 +231,12 @@ class DslCtx private constructor(){
                     isModelRef = {
                         // I am a DslModel and I reference a Model
                         // HERE we want to know the kind (interface) of a model AND we do so FROM a model, but we don't know if any subelement might overrule this later on in finish()
-                        log.warn("isInterface() reference directly from a model (not a dto/table/...) and referencing also a model (not a dto/table/...) ! caller: '{}' is reffing: '{}'", callerDslClass.selfDslRef, dslRef)
+                        log.warn("isInterface() reference directly from a model (not a dto/tableFor/...) and referencing also a model (not a dto/tableFor/...) ! caller: '{}' is reffing: '{}'", callerDslClass.selfDslRef, dslRef)
                         if (reffedDslClass.kind == DslClassObjectOrInterface.UNDEFINED) {
                             log.warn("isInterface() AND reffed MODEL has Kind.UNDEFINED")
                         }
                         reffedDslClass.kind == DslClassObjectOrInterface.INTERFACE
-                        //throw DslException("isInterface() reference directly from a model (not a dto/table/...) and referencing also a model (not a dto/table/...) ! caller: '${callerDslClass.selfDslRef}' was reffing: '$dslRef'")
+                        //throw DslException("isInterface() reference directly from a model (not a dto/tableFor/...) and referencing also a model (not a dto/tableFor/...) ! caller: '${callerDslClass.selfDslRef}' was reffing: '$dslRef'")
 
                     },
                     isModelSubelementRef = {
@@ -256,6 +258,7 @@ class DslCtx private constructor(){
                         // I am a ModelSubelement and I reference a Model
                         val subelementDslClass: IDslApiKindClassObjectOrInterface = WhensDslRef.whenModelSubelement(callerExtendsParent.selfDslRef,
                             isDtoRef = { ctxObj<DslDto>(DslRef.dto(C.DEFAULT, dslRef)) },
+                            isDcoRef = { ctxObj<DslDco>(DslRef.dco(C.DEFAULT, dslRef)) },
                             isTableRef = { ctxObj<DslTable>(DslRef.table(C.DEFAULT, dslRef)) }
                         ) {
                             DslException("neither of defined Model Subelements")

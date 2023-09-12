@@ -14,7 +14,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 
 context(GenCtxWrapper)
-class KotlinPropertyDto(property: Property, val genModel: KotlinClassModelDto) : AKotlinProperty(property, genModel.modelClassDataFromDsl) {
+class KotlinPropertyNonPersistent(property: Property, val kotlinGenNonPersistentPropIsIn: KotlinGenClassNonPersistant) : AKotlinProperty(property, kotlinGenNonPersistentPropIsIn.modelClassDataFromDsl) {
     override val builder: PropertySpec.Builder = whenInit()
 
     fun whenInit(): PropertySpec.Builder {
@@ -76,7 +76,7 @@ class KotlinPropertyDto(property: Property, val genModel: KotlinClassModelDto) :
             initializerCodeBlockBuilder.add(property.initializer.codeBlockAddendum())
         }
         initBuilder.initializer(initializerCodeBlockBuilder.build())
-        if (modelClassDataFromDsl.isUuidPrimary && property.dslPropName == UUID_PROPNAME) { initBuilder.addModifiers(KModifier.OVERRIDE) }
+        if (kotlinGenNonPersistentPropIsIn.modelClassDataFromDsl.isUuidPrimary && property.dslPropName == UUID_PROPNAME) { initBuilder.addModifiers(KModifier.OVERRIDE) }
         return initBuilder
     }
 }

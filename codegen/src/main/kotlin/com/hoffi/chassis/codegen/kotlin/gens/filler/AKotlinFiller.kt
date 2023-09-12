@@ -33,19 +33,19 @@ abstract class AKotlinFiller(fillerData: FillerData, modelkind: MODELKIND): ABas
     init {
         when (modelkind) {
             MODELKIND.DTOKIND -> {
-                val targetGenModel = genCtx.genModel(fillerData.targetDslRef)
+                val targetGenModel = genCtx.genModelFromDsl(fillerData.targetDslRef)
                 fillerBasePath = targetGenModel.modelClassName.basePath
                 fillerPath =     targetGenModel.modelClassName.path
                 fillerPoetType = targetGenModel.fillerPoetType
             }
             MODELKIND.TABLEKIND -> {
                 if (fillerData.targetDslRef !is DslRef.table) {
-                    val sourceGenModel = genCtx.genModel(fillerData.sourceDslRef)
+                    val sourceGenModel = genCtx.genModelFromDsl(fillerData.sourceDslRef)
                     fillerBasePath = sourceGenModel.modelClassName.basePath
                     fillerPath =     sourceGenModel.modelClassName.path
                     fillerPoetType = sourceGenModel.fillerPoetType
                 } else {
-                    val targetGenModel = genCtx.genModel(fillerData.targetDslRef)
+                    val targetGenModel = genCtx.genModelFromDsl(fillerData.targetDslRef)
                     fillerBasePath = targetGenModel.modelClassName.basePath
                     fillerPath =     targetGenModel.modelClassName.path
                     fillerPoetType = targetGenModel.fillerPoetType
@@ -92,8 +92,8 @@ abstract class AKotlinFiller(fillerData: FillerData, modelkind: MODELKIND): ABas
     }
 
     protected fun cloneFillerFunctions(i: IntersectPropertys.CommonPropData) {
-        if (KModifier.ABSTRACT in i.targetGenModel.classModifiers) return
-        val allPKs = i.targetGenModel.propsInclSuperclassPropsMap.values.filter { Tag.PRIMARY in it.tags }
+        if (KModifier.ABSTRACT in i.targetGenModelFromDsl.classModifiers) return
+        val allPKs = i.targetGenModelFromDsl.propsInclSuperclassPropsMap.values.filter { Tag.PRIMARY in it.tags }
         if (allPKs.isNotEmpty()) {
             val funNamePairs = listOf(
                 "cloneShallowIgnoreModels" to "copyShallowIgnoreModelsInto",
@@ -102,12 +102,12 @@ abstract class AKotlinFiller(fillerData: FillerData, modelkind: MODELKIND): ABas
             )
             for (funNamePair in funNamePairs) {
                 val funSpecBuilder = FunSpec.builder(funNamePair.first)
-                    .addParameter(ParameterSpec.builder(i.sourceVarName, i.sourceGenModel.poetType).build())
-                    .returns(i.targetGenModel.poetType)
+                    .addParameter(ParameterSpec.builder(i.sourceVarName, i.sourceGenModelFromDsl.poetType).build())
+                    .returns(i.targetGenModelFromDsl.poetType)
                 if (allPKs.size == 1 && allPKs[0].dslPropName == RuntimeDefaults.UUID_PROPNAME) {
-                    funSpecBuilder.addStatement("val %L = %T._internal_create()", i.targetVarName, i.sourceGenModel.poetType)
+                    funSpecBuilder.addStatement("val %L = %T._internal_create()", i.targetVarName, i.sourceGenModelFromDsl.poetType)
                 } else {
-                    funSpecBuilder.addStatement("val %L = %T._internal_create()", i.targetVarName, i.sourceGenModel.poetType)
+                    funSpecBuilder.addStatement("val %L = %T._internal_create()", i.targetVarName, i.sourceGenModelFromDsl.poetType)
                     for (pkProp in allPKs) {
                         funSpecBuilder.addStatement("%L.%L = %L.%L", i.targetVarName, pkProp.name(), i.sourceVarName, pkProp.name())
                     }

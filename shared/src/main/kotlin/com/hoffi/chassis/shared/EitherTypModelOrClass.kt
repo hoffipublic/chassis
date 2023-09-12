@@ -18,6 +18,8 @@ interface ITypOrModelOrPoetType {
     val isInterface: Boolean
     val initializer: Initializer
     fun validate(any: Any)
+    fun copyDeep() : EitherTypOrModelOrPoetType
+    fun copyDeepForDsl() : EitherTypOrModelOrPoetType
     //fun classname(prefix: String = "", postfix: String = "")
 }
 
@@ -28,7 +30,7 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
     lateinit var modelClassName: ModelClassName
     abstract fun finish(replaceAppendOrModify: ReplaceAppendOrModify, formatAddendum: String, argsAddendum: MutableList<Any>): EitherTypOrModelOrPoetType
 
-    class EitherTyp constructor(val typ: TYP, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
+    class EitherTyp(val typ: TYP, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName!!.removePrefix("Either")}($typ)"
         init { modelClassName = fakePoetTypeClassName(typ.poetType) }
         override val isInterface = typ.isInterface
@@ -38,8 +40,12 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
         override fun validate(any: Any) {
             modelClassName.validate(any)
         }
+        override fun copyDeep() : EitherTypOrModelOrPoetType = copyDeepForDsl().also { it.modelClassName = modelClassName }
+        override fun copyDeepForDsl() : EitherTypOrModelOrPoetType {
+            return EitherTyp(typ, initializer.copy())
+        }
     }
-    class EitherModel constructor(val modelSubElementRefOriginal: DslRef.IModelOrModelSubelement, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
+    class EitherModel(val modelSubElementRefOriginal: DslRef.IModelOrModelSubelement, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName!!.removePrefix("Either")}($modelSubElementRef)"
         // modelClassName (with poetType) init'ed in finish of modelSubelement
         /** invalid to use before modelsubelement finish'ed */
@@ -54,6 +60,10 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
         override fun validate(any: Any) {
             modelClassName.validate(any)
         }
+        override fun copyDeep() : EitherTypOrModelOrPoetType = copyDeepForDsl().also { it.modelClassName = modelClassName ; (it as EitherModel).modelSubElementRefExpanded = modelSubElementRefExpanded}
+        override fun copyDeepForDsl() : EitherTypOrModelOrPoetType {
+            return EitherModel(modelSubElementRefOriginal, initializer.copy())
+        }
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is EitherModel) return false
@@ -61,7 +71,7 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
         }
         override fun hashCode() = modelSubElementRefOriginal.hashCode()
     }
-    class EitherPoetType constructor(val poetType: ClassName, override var isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
+    class EitherPoetType(val poetType: ClassName, override var isInterface: Boolean, initializer: Initializer) : EitherTypOrModelOrPoetType(initializer) {
         override fun toString() = "${this::class.simpleName!!.removePrefix("Either")}($poetType)"
         init { modelClassName = fakePoetTypeClassName(poetType) }
         override fun finish(replaceAppendOrModify: ReplaceAppendOrModify, formatAddendum: String, argsAddendum: MutableList<Any>): EitherTypOrModelOrPoetType {
@@ -69,6 +79,10 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
         }
         override fun validate(any: Any) {
             modelClassName.validate(any)
+        }
+        override fun copyDeep() : EitherTypOrModelOrPoetType = copyDeepForDsl().also { it.modelClassName = modelClassName }
+        override fun copyDeepForDsl() : EitherTypOrModelOrPoetType {
+            return EitherPoetType(poetType, isInterface, initializer.copy())
         }
     }
     class NOTHING : EitherTypOrModelOrPoetType(Initializer.EMPTY) {
@@ -80,6 +94,8 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
             argsAddendum: MutableList<Any>
         ): EitherTypOrModelOrPoetType = NOTHING
         override fun validate(any: Any) {}
+        override fun copyDeep() = this
+        override fun copyDeepForDsl() = this
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             return (other is NOTHING)
@@ -122,7 +138,11 @@ sealed class EitherTypOrModelOrPoetType(override val initializer: Initializer) :
                         is DslRef.model -> {
                             WhensDslRef.whenModelSubelement(callerModelSubelementRef,
                                 isDtoRef = {   either.modelSubElementRefExpanded = DslRef.dto(C.DEFAULT, either.modelSubElementRefOriginal) },
-                                isTableRef = { either.modelSubElementRefExpanded = DslRef.table(C.DEFAULT, either.modelSubElementRefOriginal) }
+                                isDcoRef = {   either.modelSubElementRefExpanded = DslRef.dco(C.DEFAULT, either.modelSubElementRefOriginal) },
+                                isTableRef = {
+                                    // DSL caller has to change this the the Dsl proper Subelement tableFor of abstract class AProperModelSubelement
+                                    either.modelSubElementRefExpanded = DslRef.table(C.DEFAULT, either.modelSubElementRefOriginal)
+                                }
                             ) {
                                 DslException("no known model subelement")
                             }

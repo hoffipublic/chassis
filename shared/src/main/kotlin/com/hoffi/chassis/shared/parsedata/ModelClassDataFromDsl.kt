@@ -6,13 +6,15 @@ import com.hoffi.chassis.shared.parsedata.nameandwhereto.IModelClassName
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.ModelClassName
 import com.hoffi.chassis.shared.shared.Extends
 import com.hoffi.chassis.shared.shared.GatherPropertys
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 
 sealed class GenModel(modelSubElRef: DslRef.IModelSubelement, modelClassName: ModelClassName)
     : ModelClassDataFromDsl(modelSubElRef, modelClassName) {
-    class DtoModel(dtoRef: DslRef.dto, modelClassName: ModelClassName) : GenModel(dtoRef, modelClassName) { init { modelClassName.modelClassDataFromDsl = this } }
-    class TableModel(tableRef: DslRef.table, modelClassName: ModelClassName) : GenModel(tableRef, modelClassName) { init { modelClassName.modelClassDataFromDsl = this } }
+    class DtoModelFromDsl(dtoRef: DslRef.dto, modelClassName: ModelClassName) : GenModel(dtoRef, modelClassName) { init { modelClassName.modelClassDataFromDsl = this } }
+    class TableModelFromDsl(tableRef: DslRef.table, modelClassName: ModelClassName) : GenModel(tableRef, modelClassName) { init { modelClassName.modelClassDataFromDsl = this } }
+    class DcoModelFromDsl(dcoRef: DslRef.dco, modelClassName: ModelClassName) : GenModel(dcoRef, modelClassName) { init { modelClassName.modelClassDataFromDsl = this } }
 }
 
 /** all props and sub-props are set on chassis DSL PASS_FINISH */
@@ -23,6 +25,7 @@ abstract class ModelClassDataFromDsl(
     IModelClassName by modelClassName
 {
     override fun toString() = "${this::class.simpleName} ${classModifiers.joinToString(" ")} $kind $modelClassName"
+    var tableFor: MODELREFENUM? = null
     var kind: TypeSpec.Kind = TypeSpec.Kind.CLASS
     val isInterface: Boolean
         get() = kind == TypeSpec.Kind.INTERFACE

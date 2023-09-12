@@ -1,12 +1,14 @@
 package com.hoffi.chassis.dsl.scratchdslEXAMPLES
 
 import com.hoffi.chassis.chassismodel.C
-import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.*
+import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.CLASS
+import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.INTERFACE
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.DslRefString
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.DTO
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.MODEL
 import com.squareup.kotlinpoet.KModifier
 
@@ -75,8 +77,7 @@ fun commonScratch() {
                     dslProp = 66
                 }
             }
-            table {
-                kind = OBJECT
+            tableFor(DTO) {
             }
         }
         model(SCRATCH__ROOT) {

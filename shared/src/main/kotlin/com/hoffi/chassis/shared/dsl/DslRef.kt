@@ -146,6 +146,8 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
                     , IModelSubelement { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
     class         table(simpleName: String, parentDslRef: IDslRef)       : DslRef(3, simpleName, parentDslRef)
                     , IModelSubelement { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
+    class         dco(simpleName: String, parentDslRef: IDslRef)       : DslRef(3, simpleName, parentDslRef)
+                    , IModelSubelement { companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
 
     class           crud(simpleName: String, parentDslRef: IDslRef)     : DslRef(4, simpleName, parentDslRef) {
                         companion object companion : ADslRefCompanion() init { this.disc = parentDslRef.disc ; refListCloneAndAdd(level, parentDslRef, dslRefName, simpleName) } }
@@ -235,6 +237,8 @@ sealed class DslRef(level: Int, simpleName: String, parentRef: IDslRef) : ADslRe
         }
         fun dtoRefFrom(dslRef: IDslRef, simpleName: String = C.DEFAULT, swappedModelSimpleName: String = C.NULLSTRING): dto =
             dto(simpleName, modelRefFrom(dslRef, swappedModelSimpleName))
+        fun dcoRefFrom(dslRef: IDslRef, simpleName: String = C.DEFAULT, swappedModelSimpleName: String = C.NULLSTRING): dco =
+            dco(simpleName, modelRefFrom(dslRef, swappedModelSimpleName))
         fun tableRefFrom(dslRef: IDslRef, simpleName: String = C.DEFAULT, swappedModelSimpleName: String = C.NULLSTRING): table =
             table(simpleName, modelRefFrom(dslRef, swappedModelSimpleName))
 
@@ -308,7 +312,7 @@ object DslRefString {
         // sentinel for ALL DslRef's
         // IF ONE IS MISSING, YOU ALSO HAVE TO ADD IT BELOW
         when (genericInstance()) {
-            is DslRef.dslRun, is DslRef.apigroup, is DslRef.modelgroup, is DslRef.allModels, is DslRef.api, is DslRef.apifun, is DslRef.classMods, is DslRef.dto, is DslRef.extends, is DslRef.filler, is DslRef.model, is DslRef.nameAndWhereto, is DslRef.properties, is DslRef.prop, is DslRef.propertiesOf, is DslRef.showcase, is DslRef.table, is DslRef.crud, is DslRef.crudBlock, is DslRef.crudSubBlock, is DslRef.copyBoundry -> {}
+            is DslRef.dslRun, is DslRef.apigroup, is DslRef.modelgroup, is DslRef.allModels, is DslRef.api, is DslRef.apifun, is DslRef.classMods, is DslRef.dto, is DslRef.extends, is DslRef.filler, is DslRef.model, is DslRef.nameAndWhereto, is DslRef.properties, is DslRef.prop, is DslRef.propertiesOf, is DslRef.showcase, is DslRef.table, is DslRef.crud, is DslRef.crudBlock, is DslRef.crudSubBlock, is DslRef.copyBoundry, is DslRef.dco -> {}
         }
         var currentDslRef: DslRef = DslRef.modelgroup("DUMMY", DslDiscriminator(C.NULLSTRING)) // dummy
         for ((i, refAtom) in refAtomsListFull.withIndex()) {
@@ -335,6 +339,7 @@ object DslRefString {
                 DslRef.crudBlock.dslRefName -> { currentDslRef = DslRef.crudBlock(refAtom.simpleName, currentDslRef)}
                 DslRef.crudSubBlock.dslRefName -> { currentDslRef = DslRef.crudSubBlock(refAtom.simpleName, currentDslRef)}
                 DslRef.copyBoundry.dslRefName -> { currentDslRef = DslRef.copyBoundry(refAtom.simpleName, currentDslRef)}
+                DslRef.dco.dslRefName -> { currentDslRef = DslRef.copyBoundry(refAtom.simpleName, currentDslRef)}
             }
         }
         return currentDslRef

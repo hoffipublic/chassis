@@ -25,17 +25,22 @@ fun modelgroup(simpleName: String, modelgroupBlock: DslModelgroup.() -> Unit) {
             /* no special modelgroup finishing at the moment, so the same as else -> { } */
             val modelgroupRef = DslRef.modelgroup(simpleName, dslDiscriminator)
             val dslModelgroup = dslCtx.getModelgroup(modelgroupRef)
-            dslModelgroup.prepareNameAndWheretos(dslCtx)
-            dslModelgroup.prepareClassModifiers(dslCtx)
-            dslModelgroup.prepareExtends(dslCtx)
-            dslModelgroup.prepareGatherPropertys(dslCtx)
+            // "prepare" information that might get "inherited" from run|modelgroup|model
+            // (like nameAndWhereto, extends, classModifiers or props defined on model for all subelements)
+            // and put them into ctx (for cloning in finish() of subelements)
+            dslModelgroup.putBasemodelNameAndWheretosInDslCtx(dslCtx)
+            dslModelgroup.putBasemodelClassModifiersInDslCtx(dslCtx)
+            dslModelgroup.putBasemodelExtendsInDslCtx(dslCtx)
+            dslModelgroup.putBasemodelGatherPropertysInDslCtx(dslCtx)
             dslModelgroup.apply(modelgroupBlock)
             dslModelgroup.finish()
         }
         dslCtx.PASS_FINISHGENMODELS -> {
-            // we do not decend the dsl tree in this Pass !!!
+            // we do not decend the DSL tree in this Pass !!!
             val modelgroupRef = DslRef.modelgroup(simpleName, dslDiscriminator)
             val dslModelgroup = dslCtx.getModelgroup(modelgroupRef)
+            // after(!) all elements and subelements finish() was completed, do some housekeeping
+            // so that codegen doesn't have to do this (all the time)
             dslModelgroup.setModelClassNameOfReffedModelPropertiesAndExtendsModel(dslCtx)
             dslModelgroup.gatherReferencedPropertys(dslCtx)
             dslModelgroup.gatherSuperclassPropertys(dslCtx)

@@ -5,7 +5,7 @@ import com.hoffi.chassis.shared.dsl.IDslRef
 open class FillerData(businessName: String, targetDslRef: IDslRef, sourceDslRef: IDslRef)
     : AHasCopyBoundrysData(businessName, targetDslRef, sourceDslRef) {
     override fun toString() = "${this::class.simpleName}('$businessName', '${targetDslRef.toString(2)}' <-- '${sourceDslRef.toString(2)}', " +
-            "boundys:" + super.toString()
+            "boundys:" + super.toString() + ')'
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

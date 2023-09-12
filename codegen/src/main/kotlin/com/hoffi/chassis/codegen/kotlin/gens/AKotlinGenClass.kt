@@ -10,10 +10,10 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import org.slf4j.LoggerFactory
 
-abstract class AHasPropertys(val modelClassDataFromDsl: ModelClassDataFromDsl)
+abstract class AHasPropertys(modelClassDataFromDsl: ModelClassDataFromDsl) : AKotlinGen(modelClassDataFromDsl)
 
 context(GenCtxWrapper)
-abstract class AKotlinClass(modelClassDataFromDsl: ModelClassDataFromDsl) : AHasPropertys(modelClassDataFromDsl) {
+abstract class AKotlinGenClass(modelClassDataFromDsl: ModelClassDataFromDsl) : AHasPropertys(modelClassDataFromDsl) {
     override fun toString() = "${this::class.simpleName}(${modelClassDataFromDsl})"
     private val log = LoggerFactory.getLogger(javaClass)
 

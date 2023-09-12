@@ -2,8 +2,8 @@ package com.hoffi.chassis.codegen.kotlin
 
 import com.hoffi.chassis.chassismodel.C
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
-import com.hoffi.chassis.codegen.kotlin.gens.KotlinClassModelDto
-import com.hoffi.chassis.codegen.kotlin.gens.KotlinClassModelTable
+import com.hoffi.chassis.codegen.kotlin.gens.KotlinGen
+import com.hoffi.chassis.codegen.kotlin.gens.KotlinGenExposedTable
 import com.hoffi.chassis.shared.codegen.GenRun
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.parsedata.GenModel
@@ -35,9 +35,11 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
             when (modelrefenum) {
                 MODELREFENUM.MODEL -> {
                     codeGenSpecificOrAll(MODELREFENUM.DTO)
+                    codeGenSpecificOrAll(MODELREFENUM.DCO)
                     codeGenSpecificOrAll(MODELREFENUM.TABLE)
                 }
                 MODELREFENUM.DTO ->   { codeGenDto() ;   writeDtos() }
+                MODELREFENUM.DCO ->   { codeGenDco() ;   writeDcos() }
                 MODELREFENUM.TABLE -> { codeGenTable() ; writeTables() }
             }
         }
@@ -48,9 +50,9 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
         println("==================================")
         println("===  generate \"DTOs\"     ========")
         println("==================================")
-        for(model in genCtx.allGenModels().filterIsInstance<GenModel.DtoModel>()) {
+        for(model in genCtx.allGenModelsFromDsl().filterIsInstance<GenModel.DtoModelFromDsl>()) {
             log.info("{}() for {} {}", object{}.javaClass.enclosingMethod.name, model, model.extends.values.firstOrNull{it.simpleName == "default"} ?: "extends NOTHING")
-            val kcmDto = KotlinClassModelDto(model)
+            val kcmDto = KotlinGen.KotlinGenDto(model)
             kcmDto.build()
         }
     }
@@ -59,16 +61,16 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
         println("==================================")
         println("===  write \"DTO\" classes     =====")
         println("==================================")
-        for(kcmDto in kotlinGenCtx.allKotlinGenClasses()) {
+        for(kcmDto in kotlinGenCtx.allKotlinGenClasses().filterIsInstance<KotlinGen.KotlinGenDto>()) {
             kcmDto.generate()
         }
     }
 
     context(GenCtxWrapper)
     private fun codeGenTable() {
-        for(model in genCtx.allGenModels().filterIsInstance<GenModel.TableModel>()) {
+        for(model in genCtx.allGenModelsFromDsl().filterIsInstance<GenModel.TableModelFromDsl>()) {
             log.info("{}() for {} {} ", object{}.javaClass.enclosingMethod.name, model, model.extends.values.firstOrNull{it.simpleName == "default"} ?: "extends NOTHING")
-            val kcmTable = KotlinClassModelTable(model)
+            val kcmTable = KotlinGen.KotlinGenTable(model)
             kcmTable.build()
         }
         println("=============================================================")
@@ -79,11 +81,11 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
             // set outgoingFKs into XTo1 kotlinGenClasses and incomingFKs into reffed 1To1 kotlinGenClasses
             when (fk.COLLECTIONTYP) {
                 is COLLECTIONTYP.NONE -> {
-                    val one2OneOtherEndKotlinGenClass =  kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinClassModelTable
+                    val one2OneOtherEndKotlinGenClass =  kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinGenExposedTable
                     one2OneOtherEndKotlinGenClass.addIncomingFK(fk.fromTableRef as DslRef.table, fk.toTableRef, fk.toProp, fk.COLLECTIONTYP)
                 }
                 is COLLECTIONTYP.COLLECTION, is COLLECTIONTYP.ITERABLE, is COLLECTIONTYP.LIST, is COLLECTIONTYP.SET -> {
-                    val many2OneKotlinGenClass = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
+                    val many2OneKotlinGenClass = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinGenExposedTable
                     many2OneKotlinGenClass.addOutgoingFK(FK(fk.fromTableRef as DslRef.table, fk.toTableRef, fk.toProp, fk.COLLECTIONTYP))
                     many2OneKotlinGenClass.buildMany2OneFK(fk)
                 }
@@ -95,9 +97,31 @@ class KotlinCodeGen constructor(val codegenRun: GenRun) {
         println("==================================")
         println("===  write Table classes     =====")
         println("==================================")
-        for(aKotlinClass in kotlinGenCtx.allKotlinGenClasses().filterIsInstance<KotlinClassModelTable>()) {
+        for(aKotlinClass in kotlinGenCtx.allKotlinGenClasses().filterIsInstance<KotlinGen.KotlinGenTable>()) {
             log.info("{}() write Table class for {}", object{}.javaClass.enclosingMethod.name, aKotlinClass)
             aKotlinClass.generate()
+        }
+    }
+
+
+    context(GenCtxWrapper)
+    private fun codeGenDco() {
+        println("==================================")
+        println("===  generate \"DCOs\"     ========")
+        println("==================================")
+        for(model in genCtx.allGenModelsFromDsl().filterIsInstance<GenModel.DcoModelFromDsl>()) {
+            log.info("{}() for {} {}", object{}.javaClass.enclosingMethod.name, model, model.extends.values.firstOrNull{it.simpleName == "default"} ?: "extends NOTHING")
+            val kcmDco = KotlinGen.KotlinGenDco(model)
+            kcmDco.build()
+        }
+    }
+    context(GenCtxWrapper)
+    private fun writeDcos() {
+        println("==================================")
+        println("===  write \"DCO\" classes     =====")
+        println("==================================")
+        for(kcmDco in kotlinGenCtx.allKotlinGenClasses().filterIsInstance<KotlinGen.KotlinGenDco>()) {
+            kcmDco.generate()
         }
     }
 

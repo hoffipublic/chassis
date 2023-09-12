@@ -27,7 +27,7 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 
 context(GenCtxWrapper)
-class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn: KotlinClassModelTable) : AKotlinProperty(property, kotlinClassModelTablePropIsIn.modelClassDataFromDsl) {
+class KotlinPropertyExposedTable(property: Property, val kotlinGenExposedTablePropIsIn: KotlinGenExposedTable) : AKotlinProperty(property, kotlinGenExposedTablePropIsIn.modelClassDataFromDsl) {
     override val builder: PropertySpec.Builder = PropertySpec.builder("dummy", Any::class.asClassName())
 
     fun whenInit(): PropertySpec.Builder {
@@ -51,8 +51,8 @@ class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn:
                     val defaultInitializer = Initializer.of("%T.%L", this.modelClassName.poetType, "NULL")
                     initializerCodeBlockBuilder.add(defaultInitializer.codeBlockFull())
                 }
-                kotlinClassModelTablePropIsIn.addOutgoingFK(
-                    FK(fromTableRef = this@KotlinPropertyTable.modelClassDataFromDsl.modelSubElRef, toTableRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef), this@KotlinPropertyTable.property, COLLECTIONTYP.NONE)
+                kotlinGenExposedTablePropIsIn.addOutgoingFK(
+                    FK(fromTableRef = this@KotlinPropertyExposedTable.modelClassDataFromDslPropIsIn.modelSubElRef, toTableRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef), this@KotlinPropertyExposedTable.property, COLLECTIONTYP.NONE)
                 )
 
             },
@@ -72,28 +72,28 @@ class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn:
             },
             postNonCollection = { },
             isModelList = {
-                //val reffedTable_DTO_GenModel: GenModel = genCtx.genModel(this.modelSubElementRef)
+                //val reffedTable_DTO_GenModel: GenModel = genCtx.genModelFromDsl(this.modelSubElementRef)
                 val reffedTableDslRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)
-                val reffedTable: GenModel = genCtx.genModel(reffedTableDslRef)
-                val fk = kotlinClassModelTablePropIsIn.addIncomingFK(
+                val reffedTable: GenModel = genCtx.genModelFromDsl(reffedTableDslRef)
+                val fk = kotlinGenExposedTablePropIsIn.addIncomingFK(
                     fromTableRef = reffedTableDslRef,
-                    //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.modelClassDataFromDsl.modelSubElRef.parentDslRef)),
-                    toTableRef = this@KotlinPropertyTable.modelClassDataFromDsl.modelSubElRef,
-                    this@KotlinPropertyTable.property,
+                    //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyExposedTable.modelClassDataFromDsl.modelSubElRef.parentDslRef)),
+                    toTableRef = this@KotlinPropertyExposedTable.modelClassDataFromDslPropIsIn.modelSubElRef,
+                    this@KotlinPropertyExposedTable.property,
                     COLLECTIONTYP.LIST // <-- differs
                 )
                 initBuilder = PropertySpec.builder(property.name(), Any::class.asTypeName().nullable())
                 initializerCodeBlockBuilder.add("mappedBy(%T::%L)", reffedTable.poetType, GenNaming.fkPropVarNameUUID(fk)) // placeholder property TODO let's see if exposed explodes on this
             },
             isModelSet = {
-                //val reffedTable_DTO_GenModel: GenModel = genCtx.genModel(this.modelSubElementRef)
+                //val reffedTable_DTO_GenModel: GenModel = genCtx.genModelFromDsl(this.modelSubElementRef)
                 val reffedTableDslRef = DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)
-                val reffedTable: GenModel = genCtx.genModel(reffedTableDslRef)
-                val fk = kotlinClassModelTablePropIsIn.addIncomingFK(
+                val reffedTable: GenModel = genCtx.genModelFromDsl(reffedTableDslRef)
+                val fk = kotlinGenExposedTablePropIsIn.addIncomingFK(
                     fromTableRef = reffedTableDslRef,
-                    //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyTable.modelClassDataFromDsl.modelSubElRef.parentDslRef)),
-                    toTableRef = this@KotlinPropertyTable.modelClassDataFromDsl.modelSubElRef,
-                    this@KotlinPropertyTable.property,
+                    //toTable = kotlinGenCtx.kotlinGenClass(DslRef.table(C.DEFAULT, this@KotlinPropertyExposedTable.modelClassDataFromDsl.modelSubElRef.parentDslRef)),
+                    toTableRef = this@KotlinPropertyExposedTable.modelClassDataFromDslPropIsIn.modelSubElRef,
+                    this@KotlinPropertyExposedTable.property,
                     COLLECTIONTYP.SET // <-- differs
                 )
                 initBuilder = PropertySpec.builder(property.name(), Any::class.asTypeName().nullable())
@@ -166,7 +166,7 @@ class KotlinPropertyTable(property: Property, val kotlinClassModelTablePropIsIn:
                 eitherTypOrModelOrPoetType.initializer.originalFormat = "uuid(%S$nullQM).references(%T.%L)$nullFunc"
                 eitherTypOrModelOrPoetType.initializer.originalArgs.clear()
                 eitherTypOrModelOrPoetType.initializer.originalArgs.add(property.columnName())
-                val correspondingTable = genCtx.genModel(DslRef.table(C.DEFAULT, eitherTypOrModelOrPoetType.modelSubElementRef.parentDslRef))
+                val correspondingTable = genCtx.genModelFromDsl(DslRef.table(C.DEFAULT, eitherTypOrModelOrPoetType.modelSubElementRef.parentDslRef))
                 eitherTypOrModelOrPoetType.initializer.originalArgs.add(correspondingTable.modelClassName.poetType)
                 eitherTypOrModelOrPoetType.initializer.originalArgs.add(RuntimeDefaults.UUID_PROPNAME)
 

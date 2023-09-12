@@ -27,7 +27,7 @@ interface IDslApiExtendsProps : IDslApi, IDslApiModelReffing { // TODO ModelReff
     var replaceSuperInterfaces: Boolean
     operator fun KClass<*>.unaryPlus()  // + for super class
     operator fun IDslRef.unaryPlus()    // + for super class
-    /** inherit from same SubElement Type (e.g. dto/table/...) with simpleName C.DEFAULT, of an element (e.g. model) in the same group which has this name */
+    /** inherit from same SubElement Type (e.g. dto/tableFor/...) with simpleName C.DEFAULT, of an element (e.g. model) in the same group which has this name */
     operator fun String.unaryPlus()    // + for super class (referencing this@modelgroup's name of ModelSubElement of this@modelsubelement(thisSimpleName)
     //operator fun DslRef.model.MODELELEMENT.unaryPlus() // + for super class
     operator fun KClass<*>.unaryMinus() // - for super interfaces
@@ -126,6 +126,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         val refTarget: DslRef.IModelOrModelSubelement = WhensDslRef.whenModelOrModelSubelement (this,
             isModelRef = { this as DslRef.model },
             isDtoRef =   { this as DslRef.dto},
+            isDcoRef =   { this as DslRef.dco},
             isTableRef = { this as DslRef.table }
         ) {
             DslException(" in '${dslExtendsDelegateImpl.selfDslRef}' referring to '$this'")
@@ -145,11 +146,12 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         }
     }
 
-    /** inherit from same SubElement Type (e.g. dto/table/...) with simpleName C.DEFAULT, of an element (e.g. model) in the same group which has this name */
+    /** inherit from same SubElement Type (e.g. dto/tableFor/...) with simpleName C.DEFAULT, of an element (e.g. model) in the same group which has this name */
     override operator fun String.unaryPlus() {
         val refTarget: DslRef.IModelOrModelSubelement = WhensDslRef.whenModelOrModelSubelement(dslExtendsDelegateImpl.parentDslRef,
             isModelRef = { DslRef.modelRefFrom(dslExtendsDelegateImpl.selfDslRef, swappedModelSimpleName = this) },
             isDtoRef =   { DslRef.dtoRefFrom(dslExtendsDelegateImpl.selfDslRef, C.DEFAULT, swappedModelSimpleName = this) },
+            isDcoRef =   { DslRef.dcoRefFrom(dslExtendsDelegateImpl.selfDslRef, C.DEFAULT, swappedModelSimpleName = this) },
             isTableRef = { DslRef.tableRefFrom(dslExtendsDelegateImpl.selfDslRef, C.DEFAULT, swappedModelSimpleName = this) },
         ) {
             DslException("unknown model or modelSubelement")
@@ -171,6 +173,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         val refTarget: DslRef.IModelOrModelSubelement = WhensDslRef.whenModelOrModelSubelement (this,
             isModelRef = { this as DslRef.model },
             isDtoRef =   { this as DslRef.dto},
+            isDcoRef =   { this as DslRef.dco},
             isTableRef = { this as DslRef.table }
         ) {
             DslException(" in '${dslExtendsDelegateImpl.selfDslRef}' referring to '$this'")
@@ -186,7 +189,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         }
     }
 
-    /** inherit from same SubElement Type (e.g. dto/table/...) with simpleName C.DEFAULT, of an element (e.g. model) in the same group which has this name */
+    /** inherit from same SubElement Type (e.g. dto/tableFor/...) with simpleName C.DEFAULT, of an element (e.g. model) in the same group which has this name */
     override operator fun String.unaryMinus() {
         var elementLevelDslRef = dslExtendsDelegateImpl.parentDslRef
         while (elementLevelDslRef !is DslRef.IElementLevel) {
@@ -198,6 +201,7 @@ class DslExtendsBlockImpl(val simpleName: String, val dslExtendsDelegateImpl: Ds
         val refTarget: DslRef.IModelOrModelSubelement = WhensDslRef.whenModelOrModelSubelement(dslExtendsDelegateImpl.parentDslRef,
             isModelRef = { DslRef.model(this, groupRef) },
             isDtoRef =   { DslRef.dto(C.DEFAULT, DslRef.model(this, groupRef)) },
+            isDcoRef =   { DslRef.dco(C.DEFAULT, DslRef.model(this, groupRef)) },
             isTableRef = { DslRef.table(C.DEFAULT, DslRef.model(this, groupRef)) },
         ) {
             DslException("unknown model or modelSubelement")

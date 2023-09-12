@@ -13,11 +13,11 @@ import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.helpers.onThrow
 import com.hoffi.chassis.shared.helpers.tryCatch
+import com.hoffi.chassis.shared.parsedata.CollectedExtends
 import com.hoffi.chassis.shared.parsedata.GenModel
 import com.hoffi.chassis.shared.parsedata.ModelClassDataFromDsl
 import com.hoffi.chassis.shared.parsedata.Property
-import com.hoffi.chassis.shared.parsedata.SharedGatheredExtends
-import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
+import com.hoffi.chassis.shared.parsedata.nameandwhereto.CollectedNameAndWheretos
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedNameAndWhereto
 import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.GatherPropertys
@@ -108,11 +108,11 @@ globalDslCtx = dslCtx // TODO remove workaround
     fun finish() {
 
     }
-    fun prepareNameAndWheretos(dslCtx: DslCtx) {
-        val gatheredNameAndWheretosFakeOfDslRun = SharedGatheredNameAndWheretos(DslRef.model("Fake", DslRef.NULL), "Fake")
+    fun putBasemodelNameAndWheretosInDslCtx(dslCtx: DslCtx) {
+        val fakeCollectedNameAndWheretosAboveModel = CollectedNameAndWheretos.FAKE(object {}.javaClass.enclosingMethod.name)
         val nameAndWheretoWithSubelementsDevRun: DslNameAndWheretoWithSubelementsDelegateImpl = dslCtx.ctxObj(DslRef.nameAndWhereto(C.DSLRUNREFSIMPLENAME, dslCtx.dslRun.runRef))
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.nameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFor(SharedGatheredNameAndWheretos.THINGSWITHNAMEANDWHERETOS.DslRunConfigure, SharedNameAndWhereto(
+            fakeCollectedNameAndWheretosAboveModel.createFor(CollectedNameAndWheretos.THINGSWITHNAMEANDWHERETOS.DslRunConfigure, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
@@ -124,35 +124,54 @@ globalDslCtx = dslCtx // TODO remove workaround
                 dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
+        when (MODELREFENUM.sentinel) { MODELREFENUM.MODEL, MODELREFENUM.DTO, MODELREFENUM.TABLE, MODELREFENUM.DCO -> {} } // sentinel to check if new MODELREFENUM was added
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.dtoNameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(MODELREFENUM.DTO, SharedNameAndWhereto(
-                dslNameAndWheretoDelegateEntry.value.simpleName,
-                dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
-                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
-                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
-                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
-                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
-                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
-                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
-            ))
+            fakeCollectedNameAndWheretosAboveModel.createFromDslRunForSubelement(
+                MODELREFENUM.DTO, SharedNameAndWhereto(
+                    dslNameAndWheretoDelegateEntry.value.simpleName,
+                    dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                    dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                    dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                    dslNameAndWheretoDelegateEntry.value.pathAbsolute, dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                    dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                    dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                    dslNameAndWheretoDelegateEntry.value.basePackageAbsolute, dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                    dslNameAndWheretoDelegateEntry.value.packageNameAbsolute, dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
+                )
+            )
+        }
+        for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.dcoNameAndWheretos) {
+            fakeCollectedNameAndWheretosAboveModel.createFromDslRunForSubelement(
+                MODELREFENUM.DCO, SharedNameAndWhereto(
+                    dslNameAndWheretoDelegateEntry.value.simpleName,
+                    dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                    dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                    dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                    dslNameAndWheretoDelegateEntry.value.pathAbsolute, dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                    dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                    dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                    dslNameAndWheretoDelegateEntry.value.basePackageAbsolute, dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                    dslNameAndWheretoDelegateEntry.value.packageNameAbsolute, dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
+                )
+            )
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelementsDevRun.tableNameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFromDslRunForSubelement(MODELREFENUM.TABLE, SharedNameAndWhereto(
-                dslNameAndWheretoDelegateEntry.value.simpleName,
-                dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
-                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
-                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
-                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
-                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
-                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
-                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
-            ))
+            fakeCollectedNameAndWheretosAboveModel.createFromDslRunForSubelement(
+                MODELREFENUM.TABLE, SharedNameAndWhereto(
+                    dslNameAndWheretoDelegateEntry.value.simpleName,
+                    dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                    dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                    dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                    dslNameAndWheretoDelegateEntry.value.pathAbsolute, dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                    dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                    dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                    dslNameAndWheretoDelegateEntry.value.basePackageAbsolute, dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                    dslNameAndWheretoDelegateEntry.value.packageNameAbsolute, dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
+                )
+            )
         }
-
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.nameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFor(SharedGatheredNameAndWheretos.THINGSWITHNAMEANDWHERETOS.Modelgroup, SharedNameAndWhereto(
+            fakeCollectedNameAndWheretosAboveModel.createFor(CollectedNameAndWheretos.THINGSWITHNAMEANDWHERETOS.Modelgroup, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
                 dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
@@ -164,62 +183,81 @@ globalDslCtx = dslCtx // TODO remove workaround
                 dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
+        when (MODELREFENUM.sentinel) { MODELREFENUM.MODEL, MODELREFENUM.DTO, MODELREFENUM.TABLE, MODELREFENUM.DCO -> {} } // sentinel to check if new MODELREFENUM was added
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.dtoNameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(MODELREFENUM.DTO, SharedNameAndWhereto(
-                dslNameAndWheretoDelegateEntry.value.simpleName,
-                dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
-                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
-                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
-                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
-                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
-                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
-                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
-            ))
+            fakeCollectedNameAndWheretosAboveModel.createFromGroupForSubelement(
+                MODELREFENUM.DTO, SharedNameAndWhereto(
+                    dslNameAndWheretoDelegateEntry.value.simpleName,
+                    dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                    dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                    dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                    dslNameAndWheretoDelegateEntry.value.pathAbsolute, dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                    dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                    dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                    dslNameAndWheretoDelegateEntry.value.basePackageAbsolute, dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                    dslNameAndWheretoDelegateEntry.value.packageNameAbsolute, dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
+                )
+            )
+        }
+        for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.dcoNameAndWheretos) {
+            fakeCollectedNameAndWheretosAboveModel.createFromGroupForSubelement(
+                MODELREFENUM.DCO, SharedNameAndWhereto(
+                    dslNameAndWheretoDelegateEntry.value.simpleName,
+                    dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                    dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                    dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                    dslNameAndWheretoDelegateEntry.value.pathAbsolute, dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                    dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                    dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                    dslNameAndWheretoDelegateEntry.value.basePackageAbsolute, dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                    dslNameAndWheretoDelegateEntry.value.packageNameAbsolute, dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
+                )
+            )
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.tableNameAndWheretos) {
-            gatheredNameAndWheretosFakeOfDslRun.createFromGroupForSubelement(MODELREFENUM.TABLE, SharedNameAndWhereto(
-                dslNameAndWheretoDelegateEntry.value.simpleName,
-                dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
-                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
-                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
-                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
-                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
-                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
-                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
-            ))
+            fakeCollectedNameAndWheretosAboveModel.createFromGroupForSubelement(
+                MODELREFENUM.TABLE, SharedNameAndWhereto(
+                    dslNameAndWheretoDelegateEntry.value.simpleName,
+                    dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                    dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                    dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                    dslNameAndWheretoDelegateEntry.value.pathAbsolute, dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                    dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                    dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                    dslNameAndWheretoDelegateEntry.value.basePackageAbsolute, dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                    dslNameAndWheretoDelegateEntry.value.packageNameAbsolute, dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
+                )
+            )
         }
-
         for (dslModel in dslModels) {
-            val gatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(dslModel.selfDslRef)
-            gatheredNameAndWheretos.allFromDslRunConfigure.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromDslRunConfigure)
-            gatheredNameAndWheretos.allFromDslRunConfigureForSubelement.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromDslRunConfigureForSubelement)
-            gatheredNameAndWheretos.allFromGroup.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromGroup)
-            gatheredNameAndWheretos.allFromGroupForSubelement.putAll(gatheredNameAndWheretosFakeOfDslRun.allFromGroupForSubelement)
-            dslModel.prepareNameAndWheretos(dslCtx)
+            val collectedNameAndWheretos: CollectedNameAndWheretos = dslCtx.createCollectedBasemodelNameAndWheretos(dslModel.selfDslRef)
+            collectedNameAndWheretos.allFromDslRunConfigure.putAll(fakeCollectedNameAndWheretosAboveModel.allFromDslRunConfigure)
+            collectedNameAndWheretos.allFromDslRunConfigureForSubelement.putAll(fakeCollectedNameAndWheretosAboveModel.allFromDslRunConfigureForSubelement)
+            collectedNameAndWheretos.allFromGroup.putAll(fakeCollectedNameAndWheretosAboveModel.allFromGroup)
+            collectedNameAndWheretos.allFromGroupForSubelement.putAll(fakeCollectedNameAndWheretosAboveModel.allFromGroupForSubelement)
+            dslModel.prepareNameAndWheretos(collectedNameAndWheretos)
         }
     }
 
-    fun prepareClassModifiers(dslCtx: DslCtx) {
+    fun putBasemodelClassModifiersInDslCtx(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
-            val gatheredClassModifiers = dslCtx.gatheredClassModifiers(dslModel.selfDslRef)
+            val gatheredClassModifiers = dslCtx.createCollectedBasemodelClassModifiers(dslModel.selfDslRef)
             gatheredClassModifiers.allFromGroup.addAll(classModifiersImpl.theClassModifiers)
             gatheredClassModifiers.allFromElement.addAll(dslModel.classModifiersImpl.theClassModifiers)
         }
     }
 
-    fun prepareExtends(dslCtx: DslCtx) {
+    fun putBasemodelExtendsInDslCtx(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
-            val gatheredExtends: SharedGatheredExtends = dslCtx.gatheredExtends(dslModel.selfDslRef)
+            val gatheredExtends: CollectedExtends = dslCtx.createCollectedBasemodelExtends(dslModel.selfDslRef)
             gatheredExtends.allFromElement.putAll(dslModel.extendsImpl.theExtendBlocks.map { entry -> entry.key to entry.value.extends })
         }
     }
 
     /** gather dslRefs to gather from */
-    fun prepareGatherPropertys(dslCtx: DslCtx) {
+    fun putBasemodelGatherPropertysInDslCtx(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
-            val gatheredGatherPropertys = dslCtx.gatheredGatherPropertys(dslModel.selfDslRef)
+            val gatheredGatherPropertys = dslCtx.createCollectedBasemodelGatherPropertys(dslModel.selfDslRef)
             gatheredGatherPropertys.allFromGroup.addAll(gatherPropertiesImpl.theGatherPropertys)
             gatheredGatherPropertys.allFromElement.addAll(dslModel.gatherPropertiesImpl.theGatherPropertys)
         }
@@ -227,37 +265,39 @@ globalDslCtx = dslCtx // TODO remove workaround
 
     fun setModelClassNameOfReffedModelPropertiesAndExtendsModel(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
-            for (dslSubel: AProperModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
-                val genModel: ModelClassDataFromDsl = dslCtx.genCtx.genModel(dslSubel.selfDslRef)
-                val listOfNonKClassNonTypButModelRefGenProp = genModel.directProps.values.filter { it.eitherTypModelOrClass is EitherTypOrModelOrPoetType.EitherModel }.map { it.eitherTypModelOrClass as EitherTypOrModelOrPoetType.EitherModel }
-                for (genPropEitherModel in listOfNonKClassNonTypButModelRefGenProp) {
-                    val reffedModel: GenModel = subelementGenModel(genPropEitherModel, dslSubel, dslCtx)
+            when (MODELREFENUM.sentinel) { MODELREFENUM.MODEL, MODELREFENUM.DTO, MODELREFENUM.TABLE, MODELREFENUM.DCO -> {} } // sentinel to check if new MODELREFENUM was added
+            for (dslSubel: AProperModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values + dslModel.dslDcos.values)) {
+                val genModel: ModelClassDataFromDsl = dslCtx.genCtx.genModelFromDsl(dslSubel.selfDslRef)
+                val listOfNonKClassNonTypButModelProps = genModel.directProps.values.filter { it.eitherTypModelOrClass is EitherTypOrModelOrPoetType.EitherModel }
+                for (modelProp in listOfNonKClassNonTypButModelProps) {
+                    val reffedModel: GenModel = subelementGenModel(modelProp.eitherTypModelOrClass as EitherTypOrModelOrPoetType.EitherModel, dslSubel, dslCtx, "modelProp '$modelProp'")
                     val reffedModelClassName = reffedModel.modelClassName
-                    genPropEitherModel.modelClassName = reffedModelClassName
+                    modelProp.eitherTypModelOrClass.modelClassName = reffedModelClassName
                 }
-                val listOfExtendsModelClass = genModel.extends.values.filter { it.typeClassOrDslRef is EitherTypOrModelOrPoetType.EitherModel }.map { it.typeClassOrDslRef as EitherTypOrModelOrPoetType.EitherModel }
-                for (extendsEitherModel in listOfExtendsModelClass) {
-                    //val reffedSubElRef = extendsEitherModel.modelSubElementRef
-                    val reffedModel = subelementGenModel(extendsEitherModel, dslSubel, dslCtx)
-                    val reffedModelClassName = reffedModel.modelClassName
-                    extendsEitherModel.modelClassName = reffedModelClassName
-                }
+                //val listOfExtendsModelClass = genModel.extends.values.filter { it.typeClassOrDslRef is EitherTypOrModelOrPoetType.EitherModel }
+                //for (extendsEitherModel in listOfExtendsModelClass) {
+                //    //val reffedSubElRef = extendsEitherModel.modelSubElementRef
+                //    val reffedModel = subelementGenModel(extendsEitherModel.typeClassOrDslRef as EitherTypOrModelOrPoetType.EitherModel, dslSubel, dslCtx, "extends Class: '${extendsEitherModel.typeClassOrDslRef}")
+                //    val reffedModelClassName = reffedModel.modelClassName
+                //    extendsEitherModel.typeClassOrDslRef.modelClassName = reffedModelClassName
+                //}
                 for (extends in genModel.extends.values) {
                     var extendsTypClassOrDslRef = extends.typeClassOrDslRef
                     when (extendsTypClassOrDslRef) {
                         is EitherTypOrModelOrPoetType.EitherModel -> {
-                            //val reffedSubElRef = extendsTypClassOrDslRef.modelSubElementRef
-                            val reffedModel = subelementGenModel(extendsTypClassOrDslRef, dslSubel, dslCtx)
-                            val reffedModelClassName = reffedModel.modelClassName
-                            extendsTypClassOrDslRef.modelClassName = reffedModelClassName
+                            //when (MODELREFENUM.sentinel) { MODELREFENUM.MODEL, MODELREFENUM.DTO, MODELREFENUM.TABLE, MODELREFENUM.DCO -> {} } // sentinel to check if new MODELREFENUM was added
+                            //if (dslSubel.selfDslRef !is DslRef.table) { // persistent proper subelements (e.g. tables) get their own superclass in codegen
+                                val reffedModel = subelementGenModel(extendsTypClassOrDslRef, dslSubel, dslCtx, "extends Class: '${extendsTypClassOrDslRef}")
+                                val reffedModelClassName = reffedModel.modelClassName
+                                extendsTypClassOrDslRef.modelClassName = reffedModelClassName
+                            //}
                         }
                         else -> {}
                     }
                     for (extendsInterface in extends.superInterfaces) {
                         when (extendsInterface) {
                             is EitherTypOrModelOrPoetType.EitherModel -> {
-                                //val reffedSubElRef = extendsInterface.modelSubElementRef
-                                val reffedModel = subelementGenModel(extendsInterface, dslSubel, dslCtx)
+                                val reffedModel = subelementGenModel(extendsInterface, dslSubel, dslCtx, "extends Interface: '${extendsTypClassOrDslRef}")
                                 val reffedModelClassName = reffedModel.modelClassName
                                 extendsInterface.modelClassName = reffedModelClassName
                             }
@@ -270,29 +310,36 @@ globalDslCtx = dslCtx // TODO remove workaround
     }
 
     private fun subelementGenModel(
-        genPropEitherModel: EitherTypOrModelOrPoetType.EitherModel,
+        eitherModel: EitherTypOrModelOrPoetType.EitherModel,
         dslSubel: AProperModelSubelement,
-        dslCtx: DslCtx
+        dslCtx: DslCtx,
+        stringForExceptionCase: String
     ): GenModel {
-        val reffedGenModel = WhensDslRef.whenModelOrModelSubelement(genPropEitherModel.modelSubElementRef,
-            isModelRef = {
-                WhensDslRef.whenModelSubelement(dslSubel.selfDslRef,
-                    isDtoRef = { dslCtx.genCtx.genModel(DslRef.dto(C.DEFAULT, genPropEitherModel.modelSubElementRef)) },
-                    isTableRef = { dslCtx.genCtx.genModel(DslRef.table(C.DEFAULT, genPropEitherModel.modelSubElementRef)) }
-                ) {
-                    DslException("neither known ModelSubelement")
-                }
-            },
-            isModelSubelementRef = { dslCtx.genCtx.genModel(genPropEitherModel.modelSubElementRef) }
-        ) { DslException("neither Model or Model Subelement") }
+        val reffedGenModel = try {
+            WhensDslRef.whenModelOrModelSubelement(eitherModel.modelSubElementRef,
+                isModelRef = {
+                    WhensDslRef.whenModelSubelement(dslSubel.selfDslRef,
+                        isDtoRef = { dslCtx.genCtx.genModelFromDsl(DslRef.dto(C.DEFAULT, eitherModel.modelSubElementRef)) },
+                        isDcoRef = { dslCtx.genCtx.genModelFromDsl(DslRef.dco(C.DEFAULT, eitherModel.modelSubElementRef)) },
+                        isTableRef = { dslCtx.genCtx.genModelFromDsl(DslRef.table(C.DEFAULT, eitherModel.modelSubElementRef)) }
+                    ) {
+                        DslException("neither known ModelSubelement")
+                    }
+                },
+                isModelSubelementRef = { dslCtx.genCtx.genModelFromDsl(eitherModel.modelSubElementRef) }
+            ) { DslException("neither Model or Model Subelement") }
+        } catch (e: Exception) {
+            throw DslException("for '$dslSubel' '$stringForExceptionCase' ${e.message}")
+        }
         return reffedGenModel
     }
 
     /** actually gather the reffed propertys */
     fun gatherReferencedPropertys(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
-            for (modelSubelement: AProperModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
-                val genModel: ModelClassDataFromDsl = dslCtx.genCtx.genModel(modelSubelement.selfDslRef)
+            when (MODELREFENUM.sentinel) { MODELREFENUM.MODEL, MODELREFENUM.DTO, MODELREFENUM.TABLE, MODELREFENUM.DCO -> {} } // sentinel to check if new MODELREFENUM was added
+            for (modelSubelement: AProperModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values + dslModel.dslDcos.values)) {
+                val genModel: ModelClassDataFromDsl = dslCtx.genCtx.genModelFromDsl(modelSubelement.selfDslRef)
                 val refsToGatherPropsFrom: MutableList<GatherPropertys> = mutableListOf<GatherPropertys>().also { it.addAll(genModel.gatheredPropsDslModelRefs) }
                 while (refsToGatherPropsFrom.isNotEmpty()) {
                     val reffedGatherPropertys: GatherPropertys = refsToGatherPropsFrom.removeFirst()
@@ -302,7 +349,7 @@ globalDslCtx = dslCtx // TODO remove workaround
                             throw DslException("refs to models should have been resolved while earlier PASSes")
                         }
                         is DslDto, is DslTable -> {
-                            val reffedGenModel: ModelClassDataFromDsl = dslCtx.genCtx.genModel(reffedDslClass.selfDslRef as DslRef.IModelSubelement)
+                            val reffedGenModel: ModelClassDataFromDsl = dslCtx.genCtx.genModelFromDsl(reffedDslClass.selfDslRef as DslRef.IModelSubelement)
 
                             when (reffedGatherPropertys.gatherPropertiesEnum) {
                                 GatherPropertiesEnum.NONE -> { }
@@ -333,16 +380,17 @@ globalDslCtx = dslCtx // TODO remove workaround
 
     fun gatherSuperclassPropertys(dslCtx: DslCtx) {
         for (dslModel in dslModels) {
-            for (modelSubelement: AProperModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values)) {
+            when (MODELREFENUM.sentinel) { MODELREFENUM.MODEL, MODELREFENUM.DTO, MODELREFENUM.TABLE, MODELREFENUM.DCO -> {} } // sentinel to check if new MODELREFENUM was added
+            for (modelSubelement: AProperModelSubelement in (dslModel.dslDtos.values + dslModel.dslTables.values + dslModel.dslDcos.values)) {
                 val superclassesProps: MutableMap<String, Property> = mutableMapOf()
-                val genModel: ModelClassDataFromDsl = dslCtx.genCtx.genModel(modelSubelement.selfDslRef)
+                val genModel: ModelClassDataFromDsl = dslCtx.genCtx.genModelFromDsl(modelSubelement.selfDslRef)
                 var extendsEither: EitherTypOrModelOrPoetType? = genModel.extends[C.DEFAULT]?.typeClassOrDslRef
                 var extendsModel: EitherTypOrModelOrPoetType.EitherModel? = null
                 if (extendsEither != null && extendsEither is EitherTypOrModelOrPoetType.EitherModel) {
                     extendsModel = extendsEither
                 }
                 while (extendsModel != null) {
-                    val theGenModel: GenModel = dslCtx.genCtx.genModel(extendsModel.modelSubElementRef)
+                    val theGenModel: GenModel = dslCtx.genCtx.genModelFromDsl(extendsModel.modelSubElementRef)
                     superclassesProps.putAll(theGenModel.allProps)
                     extendsEither = theGenModel.extends[C.DEFAULT]?.typeClassOrDslRef
                     extendsModel = if (extendsEither != null && extendsEither is EitherTypOrModelOrPoetType.EitherModel) extendsEither else null

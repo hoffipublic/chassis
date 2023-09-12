@@ -28,11 +28,11 @@ abstract class AKotlinCrud(crudData: CrudData): ABaseForCrudAndFiller(crudData, 
         if (crudData.targetDslRef !is DslRef.table) {
             throw GenException("CRUD gen Target always has to be DslRef.table (for Exposed SQL): currentCrudData: $currentCrudData")
         } else {
-            val targetGenModel = genCtx.genModel(crudData.targetDslRef)
+            val targetGenModel = genCtx.genModelFromDsl(crudData.targetDslRef)
             crudBasePath = targetGenModel.modelClassName.basePath
             crudPath =     targetGenModel.modelClassName.path
             crudPoetType = targetGenModel.modelClassName.crudBasePoetTypeForAllCruds + currentCrudData.crud.simpleName
-            //targetGenModel.crudBasePoetTypeForAllCruds + "${currentCrudData.crud.simpleName}"
+            //targetGenModelFromDsl.crudBasePoetTypeForAllCruds + "${currentCrudData.crud.simpleName}"
         }
     }
 

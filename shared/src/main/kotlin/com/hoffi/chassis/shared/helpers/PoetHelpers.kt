@@ -21,7 +21,7 @@ object PoetHelpers {
         )
     }
     fun TypeSpec.Builder.kdocGeneratedFiller(genCtx: GenCtx, fillerData: FillerData): TypeSpec.Builder {
-        val modelClassData = genCtx.genModel(fillerData.targetDslRef)
+        val modelClassData = genCtx.genModelFromDsl(fillerData.targetDslRef)
         return this.addKdoc(
             "Filler for %L model: %L\nwith dslRef: %L\ngenerated at %L on %L",
             modelClassData.modelSubElRef.refList.last().dslRefName,
@@ -32,7 +32,7 @@ object PoetHelpers {
         )
     }
     fun TypeSpec.Builder.kdocGeneratedCrud(genCtx: GenCtx, crudData: CrudData): TypeSpec.Builder {
-        val modelClassData = genCtx.genModel(crudData.targetDslRef)
+        val modelClassData = genCtx.genModelFromDsl(crudData.targetDslRef)
         return this.addKdoc(
             "CRUD ${crudData.crud.simpleName} for %L model: %L\nwith dslRef: %L\ngenerated at %L on %L",
             modelClassData.modelSubElRef.refList.last().dslRefName,

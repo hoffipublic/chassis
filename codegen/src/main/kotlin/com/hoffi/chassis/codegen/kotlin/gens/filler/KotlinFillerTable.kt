@@ -34,28 +34,30 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
         }
         log.trace("build({}, {})", modelkind, currentFillerData)
 
-        val targetGenModel: GenModel = genCtx.genModel(fillerData.targetDslRef)
-        val sourceGenModel: GenModel = genCtx.genModel(fillerData.sourceDslRef)
+        val targetGenModelFromDsl: GenModel = genCtx.genModelFromDsl(fillerData.targetDslRef)
+        val sourceGenModelFromDsl: GenModel = genCtx.genModelFromDsl(fillerData.sourceDslRef)
         if (fillerData.targetDslRef is DslRef.table) {
-            if (sourceGenModel.isInterface || KModifier.ABSTRACT in sourceGenModel.classModifiers) {
+            if (sourceGenModelFromDsl.isInterface || KModifier.ABSTRACT in sourceGenModelFromDsl.classModifiers) {
                 throw GenException("something went wrong, trying to generate a TABLE filler from an abstract or interface DTOTYPE class for $currentFillerData")
             }
-        } else if (targetGenModel.isInterface || KModifier.ABSTRACT in targetGenModel.classModifiers) {
+        } else if (targetGenModelFromDsl.isInterface || KModifier.ABSTRACT in targetGenModelFromDsl.classModifiers) {
                 throw GenException("something went wrong, trying to generate a TABLE filler from an abstract or interface DTOTYPE class for $currentFillerData")
         }
 
 
         val intersectPropsData = IntersectPropertys.intersectPropsOf(
-            genCtx, targetGenModel, sourceGenModel,
+            genCtx, targetGenModelFromDsl, sourceGenModelFromDsl,
             "", ""
         )
 
-        intersectPropsData.sourceVarName = WhensDslRef.whenModelSubelement(sourceGenModel.modelSubElRef,
+        intersectPropsData.sourceVarName = WhensDslRef.whenModelSubelement(sourceGenModelFromDsl.modelSubElRef,
             isDtoRef = { "source${intersectPropsData.sourceVarNamePostfix}" },
+            isDcoRef = { "source${intersectPropsData.sourceVarNamePostfix}" },
             isTableRef = { "resultRow${intersectPropsData.sourceVarNamePostfix}" },
         )
-        intersectPropsData.targetVarName = WhensDslRef.whenModelSubelement(targetGenModel.modelSubElRef,
+        intersectPropsData.targetVarName = WhensDslRef.whenModelSubelement(targetGenModelFromDsl.modelSubElRef,
             isDtoRef = { "target${intersectPropsData.targetVarNamePostfix}" },
+            isDcoRef = { "target${intersectPropsData.targetVarNamePostfix}" },
             isTableRef = { "resultRow${intersectPropsData.targetVarNamePostfix}" },
         )
 
@@ -63,20 +65,20 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
             // special case e.g. DTO <-- TABLE
             createFromTable(intersectPropsData)
         } else {
-            // so for all these, targetGenModel is a DslRef.table
+            // so for all these, targetGenModelFromDsl is a DslRef.table
             fillLambdas(intersectPropsData)
         }
         super.alreadyCreated = true
     }
 
     private fun fillLambdas(i: IntersectPropertys.CommonPropData) {
-        //val kotlinGenClassTable: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
+        //val kotlinGenClassTable: KotlinGenExposedTable = kotlinGenCtx.kotlinGenClass(i.targetGenModelFromDsl.modelSubElRef) as KotlinGenExposedTable
         //val outgoingFKs = kotlinGenClassTable.outgoingFKs
 
         log.trace("fillLambdas: -> from {}", currentFillerData)
 
         val returnInsertLambda = LambdaTypeName.get(i.targetPoetType, DB.InsertStatementTypeName(), returnType = UNIT)
-        val returnBatchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatementClassName, GenDslRefHelpers.dtoClassName(i.sourceGenModel), returnType = UNIT)
+        val returnBatchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatementClassName, GenDslRefHelpers.nonpersistentClassName(i.targetGenModelFromDsl), returnType = UNIT)
 
         var funNameInsertOrBatch = funNameExpanded("fillShallowLambda", currentFillerData)
         var funSpec = FunSpec.builder(funNameInsertOrBatch.funName)
@@ -150,7 +152,7 @@ class KotlinFillerTable(fillerData: FillerData): AKotlinFiller(fillerData, MODEL
 
     /** special case e.g. DTO <-- TABLE */
     private fun createFromTable(i: IntersectPropertys.CommonPropData) {
-        val funName = GenNaming.createFromTableFunName(currentFillerData, i.targetGenModel.modelClassName)
+        val funName = GenNaming.createFromTableFunName(currentFillerData, i.targetGenModelFromDsl.modelClassName)
         log.trace("create(Dto)FromTable: -> {} from {}", funName, currentFillerData)
         val funSpec = FunSpec.builder(funName)
             .addParameter(i.sourceVarName, DB.ResultRowClassName)

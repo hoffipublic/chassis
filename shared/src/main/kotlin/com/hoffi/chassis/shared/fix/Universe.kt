@@ -81,7 +81,7 @@ object Universe {
                 .build())
             .build()
         //var universeModelGenRef = ModelGenRef(ModelRef(ModelgroupName(UNIVERSE___MODELGROUP), ModelName(WAS_GENERATED_INTERFACE_ClassName.simpleName)), GENS.COMMON)
-        //var universeEitherModelNew = EitherModelNew.DtoModel(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
+        //var universeEitherModelNew = EitherModelNew.DtoModelFromDsl(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
         //ctx.fileSpecs.getOrPut(universeEitherModelNew){ mutableListOf()}.add(fileSpec)
 
         val universeDefaultsClassName = ClassName(UNIVERSE___PACKAGE, UNIVERSE___DEFAULTS)
@@ -110,7 +110,7 @@ object Universe {
 
 
         //universeModelGenRef = ModelGenRef(ModelRef(ModelgroupName(UNIVERSE___MODELGROUP), ModelName(universeDefaultsClassName.simpleName)), GENS.COMMON)
-        //universeEitherModelNew = EitherModelNew.DtoModel(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
+        //universeEitherModelNew = EitherModelNew.DtoModelFromDsl(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
         //ctx.fileSpecs.getOrPut(universeEitherModelNew){ mutableListOf()}.add(fileSpec)
     }
 
@@ -123,7 +123,7 @@ object Universe {
         var fileSpec = FileSpec.builder(UUIDDTO_INTERFACE_CLASSNAME.packageName, UUIDDTO_INTERFACE_CLASSNAME.simpleName)
             .addType(typeSpec).build()
         //val universeModelGenRef = ModelGenRef(ModelRef(ModelgroupName(UNIVERSE___MODELGROUP), ModelName(UUIDDTO_INTERFACE_CLASSNAME.simpleName)), GENS.DTO)
-        //val universeEitherModelNew = EitherModelNew.DtoModel(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
+        //val universeEitherModelNew = EitherModelNew.DtoModelFromDsl(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
         //ctx.fileSpecs.getOrPut(universeEitherModelNew){ mutableListOf()}.add(fileSpec)
         fileSpec.writeTo(RuntimeDefaults.UNIVERSE__BASEDIR.toNioPath())
 
@@ -196,7 +196,7 @@ object Universe {
         fileSpec = FileSpec.builder(UUIDTABLE_CLASSNAME.packageName, UUIDTABLE_CLASSNAME.simpleName)
             .addType(typeSpec).build()
         //val universeModelGenRef = ModelGenRef(ModelRef(ModelgroupName(UNIVERSE___MODELGROUP), ModelName(UUIDTABLE_CLASSNAME.simpleName)), GENS.TABLE)
-        //val universeEitherModelNew = EitherModelNew.DtoModel(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
+        //val universeEitherModelNew = EitherModelNew.DtoModelFromDsl(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
         //ctx.fileSpecs.getOrPut(universeEitherModelNew){ mutableListOf()}.add(fileSpec)
 
         fileSpec.writeTo(RuntimeDefaults.UNIVERSE__BASEDIR.toNioPath())
@@ -249,7 +249,7 @@ object Universe {
             .build()
 
         //val universeModelGenRef = ModelGenRef(ModelRef(ModelgroupName(UNIVERSE___MODELGROUP), ModelName("Annotations")), GENS.TABLE)
-        //val universeEitherModelNew = EitherModelNew.DtoModel(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
+        //val universeEitherModelNew = EitherModelNew.DtoModelFromDsl(universeModelGenRef, DslModel.universeCreate(universeModelGenRef))
         //ctx.fileSpecs.getOrPut(universeEitherModelNew){ mutableListOf()}.add(fileSpec)
         fileSpec.writeTo(RuntimeDefaults.UNIVERSE__BASEDIR.toNioPath())
     }

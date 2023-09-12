@@ -53,8 +53,8 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
                 FunName(origFunName, origFunName).also { it.prefix = prefix.decap(); it.postfix = postfix.Cap() }
             } else {
                 // C.DEFAULT fill for "some other" Model
-                val sourceGenModel: GenModel = genCtx.genModel(aHasCopyBoundrysData.sourceDslRef)
-                val thePrefix = sourceGenModel.asVarName + prefix.Cap()
+                val sourceGenModelFromDsl: GenModel = genCtx.genModelFromDsl(aHasCopyBoundrysData.sourceDslRef)
+                val thePrefix = sourceGenModelFromDsl.asVarName + prefix.Cap()
                 val thePostfix = postfix.Cap()
                 val theFunName = thePrefix + origFunName.Cap() + thePostfix
                 FunName(theFunName, origFunName).also { it.prefix = thePrefix; it.postfix = thePostfix }
@@ -65,16 +65,16 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
                 FunName(origFunName, origFunName).also { it.prefix = prefix; it.postfix = postfix }
             } else {
                 // C.DEFAULT fill for "some other" Model
-                val sourceGenModel: GenModel = genCtx.genModel(aHasCopyBoundrysData.sourceDslRef)
+                val sourceGenModelFromDsl: GenModel = genCtx.genModelFromDsl(aHasCopyBoundrysData.sourceDslRef)
                 if (aHasCopyBoundrysData.targetDslRef !is DslRef.table) {
                     // special case e.g. DTO <-- TABLE
-                    val targetGenModel: GenModel = genCtx.genModel(aHasCopyBoundrysData.targetDslRef)
-                    val thePrefix = targetGenModel.asVarName + prefix.Cap()
+                    val targetGenModelFromDsl: GenModel = genCtx.genModelFromDsl(aHasCopyBoundrysData.targetDslRef)
+                    val thePrefix = targetGenModelFromDsl.asVarName + prefix.Cap()
                     val thePostfix = postfix.Cap()
                     val theFunName = thePrefix + origFunName.Cap() + thePostfix
                     FunName(theFunName, origFunName).also { it.prefix = thePrefix; it.postfix = thePostfix }
                 } else {
-                    val thePrefix = sourceGenModel.asVarName + prefix.Cap()
+                    val thePrefix = sourceGenModelFromDsl.asVarName + prefix.Cap()
                     val thePostfix = postfix.Cap()
                     val theFunName = thePrefix + origFunName.Cap() + thePostfix
                     FunName(theFunName, origFunName).also { it.prefix = thePrefix; it.postfix = thePostfix }
@@ -116,7 +116,7 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
             if ( (collectionType == COLLECTIONTYP.NONE && fk.COLLECTIONTYP != COLLECTIONTYP.NONE) ||
                 (collectionType != COLLECTIONTYP.NONE && fk.COLLECTIONTYP == COLLECTIONTYP.NONE) )
                 continue
-            val toTableDtoGenModel = genCtx.genModel(DslRef.dto(fk.toTableRef.simpleName, fk.toTableRef.parentDslRef))
+            val toTableDtoGenModel = genCtx.genModelFromDsl(DslRef.dto(fk.toTableRef.simpleName, fk.toTableRef.parentDslRef))
             when (collectionType) {
                 is COLLECTIONTYP.NONE -> {
                     val fkParamBuilder = ParameterSpec.builder(fk.toProp.name(), toTableDtoGenModel.poetType, fk.toProp.modifiers)
@@ -179,10 +179,10 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
         if (funNameInsertOrBatch.originalFunName.startsWith("batch")) {
             for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
                 none = false
-                beginControlFlow("val %LTo%L = %L.associateWith", i.targetGenModel.asVarName, fk.toProp.name().Cap(), i.sourceVarName + "s")
+                beginControlFlow("val %LTo%L = %L.associateWith", i.targetGenModelFromDsl.asVarName, fk.toProp.name().Cap(), i.sourceVarName + "s")
                 addStatement("%L -> %L.%L", i.sourceVarName, i.sourceVarName, fk.toProp.name())
                 endControlFlow()
-                addStatement("%T.%L(%LTo%L.values)", GenClassNames.crudFor(fk.toTableRef, CrudData.CRUD.CREATE), funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertDb"), i.targetGenModel.asVarName, fk.toProp.name().Cap())
+                addStatement("%T.%L(%LTo%L.values)", GenClassNames.crudFor(fk.toTableRef, CrudData.CRUD.CREATE), funNameInsertOrBatch.swapOutOriginalFunNameWith("batchInsertDb"), i.targetGenModelFromDsl.asVarName, fk.toProp.name().Cap())
             }
         } else {
             for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
@@ -212,7 +212,7 @@ abstract class ABaseForCrudAndFiller(val originalAHasCopyBoundrysData: AHasCopyB
                             funNameInsertOrBatch.itOrThis(),
                             i.targetPoetType,
                             GenNaming.fkPropVarNameUUID(fk),
-                            i.targetGenModel.asVarName, fk.toProp.name().Cap(),
+                            i.targetGenModelFromDsl.asVarName, fk.toProp.name().Cap(),
                             RuntimeDefaults.UUID_PROPNAME
                         )
                     } else {

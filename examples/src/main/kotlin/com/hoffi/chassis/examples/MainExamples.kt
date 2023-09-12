@@ -4,7 +4,8 @@ import com.hoffi.chassis.chassismodel.helpers.boxed
 import com.hoffi.chassis.codegen.kotlin.KotlinCodeGen
 import com.hoffi.chassis.dsl.internal.DslRun
 import com.hoffi.chassis.examples.basic.baseModelsPersistent
-import com.hoffi.chassis.examples.basic.entities
+import com.hoffi.chassis.examples.basic.dcosFunc
+import com.hoffi.chassis.examples.basic.entitiesFunc
 import com.hoffi.chassis.shared.codegen.GenRun
 import com.hoffi.chassis.shared.dsl.DslDiscriminator
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
@@ -44,7 +45,8 @@ object MainExamples {
                 baseModelsPersistent()
             }
             this.dslDiscriminator = DslDiscriminator("simpleEntities")
-            entities() // TODO still the project :dsl which will be executed
+            entitiesFunc() // TODO still the project :dsl which will be executed
+            dcosFunc()
         }
 
         val examplesCodegenRun = GenRun(examplesDslRun.dslCtx.genCtx, examplesRunName)

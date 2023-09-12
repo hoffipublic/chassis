@@ -24,10 +24,10 @@ import com.hoffi.chassis.shared.shared.SynthFillerData
  */
 class GenCtx private constructor() {
     lateinit var genRun: GenRun
-    private val allGenModels: MutableMap<IDslRef, GenModel> = mutableMapOf()
-    fun genModel(modelSubelementRef: IDslRef) = allGenModels[modelSubelementRef] ?: throw GenCtxException("GenCtx does not contain a subelement model for $modelSubelementRef")
-    fun putModel(modelSubelementRef: IDslRef, genModel: GenModel) { if (! allGenModels.containsKey(modelSubelementRef)) { allGenModels[modelSubelementRef] = genModel } else { throw GenCtxException("genCtx already contains a GenModel for '${modelSubelementRef}'") } }
-    fun allGenModels() = allGenModels.values
+    private val allGenModelsFromDsl: MutableMap<IDslRef, GenModel> = mutableMapOf()
+    fun genModelFromDsl(modelSubelementRef: IDslRef) = allGenModelsFromDsl[modelSubelementRef] ?: throw GenCtxException("GenCtx does not contain a subelement model for $modelSubelementRef")
+    fun putGenModelFromDsl(modelSubelementRef: IDslRef, genModelFromDsl: GenModel) { if (! allGenModelsFromDsl.containsKey(modelSubelementRef)) { allGenModelsFromDsl[modelSubelementRef] = genModelFromDsl } else { throw GenCtxException("genCtx already contains a GenModel for '${modelSubelementRef}'") } }
+    fun allGenModelsFromDsl() = allGenModelsFromDsl.values
 
     val fillerDatas: MutableMap<String, MutableMap<DslRef.model, MutableSet<FillerData>>> = mutableMapOf()
     private val syntheticFillerDatas: MutableSet<SynthFillerData> = mutableSetOf()

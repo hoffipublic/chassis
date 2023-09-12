@@ -6,11 +6,16 @@ import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType.Companion.NOTHING
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.shared.Extends
 
-class SharedGatheredExtends(val dslRef: DslRef.IElementLevel, val dslRunIdentifier: String) {
-    override fun toString() = "${this::class.simpleName}($dslRef, $dslRunIdentifier)"
+class CollectedExtends(val dslRefOfBasemodelWithoutAllFromSubelements: DslRef.IElementLevel, val dslRunIdentifier: String) {
+    override fun toString() = "${this::class.simpleName}($dslRefOfBasemodelWithoutAllFromSubelements, $dslRunIdentifier)"
     val allFromGroup: MutableMap<String, Extends> = mutableMapOf()
     val allFromElement: MutableMap<String, Extends> = mutableMapOf()
     val allFromSubelements: MutableMap<DslRef.ISubElementLevel, MutableMap<String, Extends>> = mutableMapOf()
+    fun copyForNewSubelement() = CollectedExtends(dslRefOfBasemodelWithoutAllFromSubelements, dslRunIdentifier).also {
+        it.allFromGroup.putAll(allFromGroup.map { el -> el.key to el.value.copyDeepForDsl() })
+        it.allFromElement.putAll(allFromElement.map { el -> el.key to el.value.copyDeepForDsl() })
+        it.allFromSubelements.putAll(allFromSubelements.map { outer -> outer.key to outer.value.map { inner -> inner.key to inner.value.copyDeepForDsl() }.toMap().toMutableMap() }) // should be empty here
+    }
 }
 
 object StrategyGatherExtends {
@@ -19,13 +24,13 @@ object StrategyGatherExtends {
     fun resolve(
         strategy: StrategyGatherExtends.STRATEGY,
         ownModelSubelementRef: DslRef.ISubElementLevel,
-        sharedGatheredExtends: SharedGatheredExtends
+        collectedExtends: CollectedExtends
     ): MutableMap<String, Extends> {
         val result: MutableMap<String, Extends> = when (strategy) {
-            STRATEGY.DEFAULT, STRATEGY.SPECIAL_CLASS_WINS_UNION_OF_INTERFACES -> union(ownModelSubelementRef, sharedGatheredExtends, specialWinsForClass = true)
-            STRATEGY.UNION -> union(ownModelSubelementRef, sharedGatheredExtends, specialWinsForClass = false)
-            STRATEGY.SPECIAL_WINS -> specialWins(ownModelSubelementRef, sharedGatheredExtends)
-            STRATEGY.GENERAL_WINS -> generalWins(ownModelSubelementRef, sharedGatheredExtends)
+            STRATEGY.DEFAULT, STRATEGY.SPECIAL_CLASS_WINS_UNION_OF_INTERFACES -> union(ownModelSubelementRef, collectedExtends, specialWinsForClass = true)
+            STRATEGY.UNION -> union(ownModelSubelementRef, collectedExtends, specialWinsForClass = false)
+            STRATEGY.SPECIAL_WINS -> specialWins(ownModelSubelementRef, collectedExtends)
+            STRATEGY.GENERAL_WINS -> generalWins(ownModelSubelementRef, collectedExtends)
         }
         for (extend in result.values) {
             EitherTypOrModelOrPoetType.expandReffedEitherToSubelementIfModel(extend.typeClassOrDslRef, ownModelSubelementRef)
@@ -36,9 +41,9 @@ object StrategyGatherExtends {
         return result
     }
 
-    private fun union(ownModelSubelementRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends, specialWinsForClass: Boolean): MutableMap<String, Extends> {
+    private fun union(ownModelSubelementRef: DslRef.ISubElementLevel, collectedExtends: CollectedExtends, specialWinsForClass: Boolean): MutableMap<String, Extends> {
         val result = mutableMapOf<String, Extends>()
-        with(sharedGatheredExtends) {
+        with(collectedExtends) {
             result.putAll(allFromGroup.map { it.key to it.value.copy() }) // we might alter the Extends content of group/element in EACH subelement
             for (extends in allFromElement.values) {
                 putUnionInResultExtend(result, extends.copy(), ownModelSubelementRef, specialWinsForClass)
@@ -50,9 +55,9 @@ object StrategyGatherExtends {
         return result
     }
 
-    private fun specialWins(ownModelSubelementRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends): MutableMap<String, Extends> {
+    private fun specialWins(ownModelSubelementRef: DslRef.ISubElementLevel, collectedExtends: CollectedExtends): MutableMap<String, Extends> {
         val result: MutableMap<String, Extends> = mutableMapOf()
-        with(sharedGatheredExtends) {
+        with(collectedExtends) {
             result.putAll(allFromSubelements[ownModelSubelementRef] ?: emptyMap())
             for (extends in allFromElement.values) {
                 result.putIfAbsent(extends.simpleName, extends.copy())
@@ -64,9 +69,9 @@ object StrategyGatherExtends {
         return result
     }
 
-    private fun generalWins(ownModelSubelementRef: DslRef.ISubElementLevel, sharedGatheredExtends: SharedGatheredExtends): MutableMap<String, Extends> {
+    private fun generalWins(ownModelSubelementRef: DslRef.ISubElementLevel, collectedExtends: CollectedExtends): MutableMap<String, Extends> {
         val result: MutableMap<String, Extends> = mutableMapOf()
-        with(sharedGatheredExtends) {
+        with(collectedExtends) {
             result.putAll(allFromGroup)
             for (extends in allFromElement.values) {
                 result.putIfAbsent(extends.simpleName, extends.copy())

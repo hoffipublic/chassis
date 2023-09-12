@@ -6,7 +6,6 @@ import com.hoffi.chassis.chassismodel.ReplaceAppendOrModify.APPEND
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.chassismodel.typ.TYP
 import com.hoffi.chassis.chassismodel.typ.mutable
-import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.INTERFACE
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
@@ -17,7 +16,6 @@ import com.hoffi.chassis.shared.shared.COPYTYPE.IGNORE
 import com.hoffi.chassis.shared.shared.COPYTYPE.NEW
 import com.hoffi.chassis.shared.shared.CrudData.CRUD.Companion.CREATE
 import com.hoffi.chassis.shared.shared.CrudData.CRUD.Companion.READ
-import com.hoffi.chassis.shared.shared.GatherPropertiesEnum
 import com.hoffi.chassis.shared.shared.Tag
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.*
 import com.hoffi.generated.universe.Dummy
@@ -31,7 +29,7 @@ const val ENTITY__SOMEOTHER = "SomeOther"
 
 
 context(DslCtxWrapper)
-fun entities() {
+fun entitiesFunc() {
     dslCtx.topLevelDslFunctionName = object{}.javaClass.enclosingMethod.name
 //    apigroup(SIMPLE) {
 //
@@ -104,11 +102,7 @@ fun entities() {
                 removeToStringMembers("prio")
             }
 
-            table {
-                kind = DslClassObjectOrInterface.OBJECT
-                extends { replaceSuperclass = true } // mandatory for table { }, if model { } has an extends { } block
-
-                propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+            tableFor(DTO) {
                 initializer("name", APPEND, ".uniqueIndex()")
                 initializer("prio", APPEND, "/* some table prio comment */")
 
@@ -216,8 +210,7 @@ fun entities() {
 //                addToStringMembers("dtoSpecificProp")
             }
 
-            table {
-                propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+            tableFor(DTO) {
             }
         }
 
@@ -229,9 +222,7 @@ fun entities() {
             property("someValue", TYP.STRING, mutable, length = 4096, Tag.CONSTRUCTOR, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
             dto {
             }
-            table {
-                extends { replaceSuperclass = true } // mandatory for table { }, if model { } has an extends { } block
-                propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+            tableFor(DTO) {
             }
             filler {
                 +DTO
@@ -246,9 +237,7 @@ fun entities() {
             property("someValue", TYP.STRING, mutable, length = 4096, Tag.CONSTRUCTOR, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
             dto {
             }
-            table {
-                extends { replaceSuperclass = true } // mandatory for table { }, if model { } has an extends { } block
-                propertiesOf(DTO, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES)
+            tableFor(DTO) {
             }
             filler {
                 +DTO

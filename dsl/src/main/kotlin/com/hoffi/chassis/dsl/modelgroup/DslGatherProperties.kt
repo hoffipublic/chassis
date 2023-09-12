@@ -76,7 +76,7 @@ class DslGatherPropertiesDelegateImpl(
         gatherPropertiesEnum: GatherPropertiesEnum
     ) {
         if (dslCtx.currentPASS != dslCtx.PASS_5_REFERENCING) return
-        if (dslModelOrElementRef !is DslRef.IModelOrModelSubelement) throw DslException("$this cannot reference a non-model/non-modelSubelement (dto, table, ...")
+        if (dslModelOrElementRef !is DslRef.IModelOrModelSubelement) throw DslException("$this cannot reference a non-model/non-modelSubelement (dto, tableFor, ...")
         theGatherPropertys.add(GatherPropertys(dslModelOrElementRef, gatherPropertiesEnum))
     }
 
@@ -92,6 +92,7 @@ class DslGatherPropertiesDelegateImpl(
             MODELREFENUM.MODEL -> theGatherPropertys.add(GatherPropertys(modelRef, gatherPropertiesEnum))
             MODELREFENUM.DTO -> theGatherPropertys.add(GatherPropertys(DslRef.dto(simpleName, modelRef), gatherPropertiesEnum))
             MODELREFENUM.TABLE -> theGatherPropertys.add(GatherPropertys(DslRef.table(simpleName, modelRef), gatherPropertiesEnum))
+            MODELREFENUM.DCO -> theGatherPropertys.add(GatherPropertys(DslRef.dco(simpleName, modelRef), gatherPropertiesEnum))
         }
     }
 

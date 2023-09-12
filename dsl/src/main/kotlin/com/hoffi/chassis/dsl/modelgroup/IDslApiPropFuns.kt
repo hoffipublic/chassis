@@ -42,6 +42,7 @@ interface IDslApiPropFuns {
     // ===================================================================================================================================
     // ====================   "CLASS" propertys   ====================================================================================
     // ===================================================================================================================================
+    fun property(name: String, kclass: KClass<*>, mutable: Mutable, initializer: Initializer, vararg tags: Tag) = property(name, kclass.asTypeName(), kclass.java.isInterface, mutable, COLLECTIONTYP.NONE, initializer, mutableSetOf(), TYP.DEFAULT_INT, Tags.of(*tags))
     fun property(name: String, kclass: KClass<*>, mutable: Mutable = immutable, vararg tags: Tag) = property(name, kclass.asTypeName(), kclass.java.isInterface, mutable, COLLECTIONTYP.NONE, Initializer.EMPTY, mutableSetOf(), TYP.DEFAULT_INT, Tags.of(*tags))
     fun property(name: String, kclass: KClass<*>, mutable: Mutable = immutable, tags: Tags) = property(name, kclass.asTypeName(), kclass.java.isInterface, mutable, COLLECTIONTYP.NONE, Initializer.EMPTY, mutableSetOf(), TYP.DEFAULT_INT, tags)
     fun property(name: String, kclass: KClass<*>, mutable: Mutable = immutable, length: Int = TYP.DEFAULT_INT, vararg tags: Tag) = property(name, kclass.asTypeName(), kclass.java.isInterface, mutable, COLLECTIONTYP.NONE, Initializer.EMPTY, mutableSetOf(), length, Tags.of(*tags))

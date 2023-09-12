@@ -7,6 +7,7 @@ import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.INTERFACE
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
 import com.hoffi.chassis.shared.shared.Tag
+import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM.DTO
 import com.squareup.kotlinpoet.KModifier
 
 const val COMMON = "CommonModel"
@@ -42,7 +43,7 @@ fun commonBaseModels() {
             dto("other") {
                 kind = CLASS
             }
-            table {
+            tableFor(DTO) {
             }
         }
         model(COMMON__ROOT) {

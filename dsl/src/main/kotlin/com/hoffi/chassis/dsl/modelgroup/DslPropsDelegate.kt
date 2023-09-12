@@ -125,6 +125,7 @@ class DslPropsDelegate(
             MODELREFENUM.MODEL -> throw DslException("should have been catched above")
             MODELREFENUM.DTO ->   property(name, DslRef.dto(  C.DEFAULT, modelOrModelSubElementRef), mutable, collectionType, initializer, modifiers, length, tags)
             MODELREFENUM.TABLE -> property(name, DslRef.table(C.DEFAULT, modelOrModelSubElementRef), mutable, collectionType, initializer, modifiers, length, tags)
+            MODELREFENUM.DCO ->   property(name, DslRef.dco(  C.DEFAULT, modelOrModelSubElementRef), mutable, collectionType, initializer, modifiers, length, tags)
         }
     }
 
@@ -139,7 +140,7 @@ class DslPropsDelegate(
         ////if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
         val modelOrModelSubElementRef = DslRefString.REFmodelOrModelSubelement(modelSubElementRefString)
         if (modelOrModelSubElementRef !is DslRef.IModelSubelement) {
-            throw DslException("prop $name of ref: $delegateRef does not reference a modelSubElement (dto/table/...)")
+            throw DslException("prop $name of ref: $delegateRef does not reference a modelSubElement (dto/tableFor/...)")
         }
         property(name, modelOrModelSubElementRef, mutable, collectionType, initializer, modifiers, length, tags)
     }
@@ -154,8 +155,8 @@ class DslPropsDelegate(
         ////if (tags.contains(Tag.TO_STRING_MEMBER)) { toStringMembersClassProps.add(ModelGenPropRef(modelGenRef, name)) }
 
         // sentinel
-        WhensDslRef.whenModelSubelement(modelSubElementRef, {}, {}) {
-            DslException("must be a modelsubelement (dto, table, ...): property '${name}' of $delegateRef")
+        WhensDslRef.whenModelSubelement(modelSubElementRef, {}, {}, {}) {
+            DslException("must be a modelsubelement (dto, tableFor, ...): property '${name}' of $delegateRef")
         }
 
         if (Tag.NULLABLE in tags) log.warn("Tag.NULLABLE for Class property $name of $delegateRef")
@@ -184,7 +185,7 @@ class DslPropsDelegate(
             ReplaceAppendOrModify.MODIFY -> {
                 val initializerCopy: Initializer = dslProp.initializer.copy()
                 initializerCopy.modifyInitializerBlock()
-                // dslProp.initializer.originalFormat // CANNOT do this, because if it is a model property (not on dto/table/...) it would be altered FOR ALL subelements
+                // dslProp.initializer.originalFormat // CANNOT do this, because if it is a model property (not on dto/tableFor/...) it would be altered FOR ALL subelements
                 dslProp.initializerReplaceAppendOrModify[delegateRef] = initializerCopy.replaceAppendOrModify
                 dslProp.initializerFormatAddendum[delegateRef] = initializerCopy.formatAddendum
                 dslProp.initializerArgsAddendum[delegateRef] = initializerCopy.argsAddendum

@@ -5,7 +5,7 @@ import com.hoffi.chassis.chassismodel.RuntimeDefaults
 import com.hoffi.chassis.chassismodel.dsl.GenException
 import com.hoffi.chassis.chassismodel.typ.COLLECTIONTYP
 import com.hoffi.chassis.codegen.kotlin.*
-import com.hoffi.chassis.codegen.kotlin.gens.KotlinClassModelTable
+import com.hoffi.chassis.codegen.kotlin.gens.KotlinGenExposedTable
 import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.db.DB
 import com.hoffi.chassis.shared.dsl.DslRef
@@ -48,27 +48,29 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             is CrudData.CRUD.DELETE -> genCtx.addSyntheticFillerData(SynthFillerData.create(currentCrudData.targetDslRef, currentCrudData.sourceDslRef, currentCrudData, via = "${this::class.simpleName}('$crudData')"))
         }
 
-        val targetGenModel: GenModel = genCtx.genModel(crudData.targetDslRef)
-        val sourceGenModel: GenModel = genCtx.genModel(crudData.sourceDslRef)
+        val targetGenModelFromDsl: GenModel = genCtx.genModelFromDsl(crudData.targetDslRef)
+        val sourceGenModelFromDsl: GenModel = genCtx.genModelFromDsl(crudData.sourceDslRef)
 
-        if (sourceGenModel.isInterface || KModifier.ABSTRACT in sourceGenModel.classModifiers) {
+        if (sourceGenModelFromDsl.isInterface || KModifier.ABSTRACT in sourceGenModelFromDsl.classModifiers) {
             log.error("crudData source is Interface or Abstract: $crudData for $this")
             throw GenException("crudData source is Interface or Abstract: $crudData for $this")
         }
 
         val intersectPropsData = IntersectPropertys.intersectPropsOf(
-            genCtx, targetGenModel, sourceGenModel,
+            genCtx, targetGenModelFromDsl, sourceGenModelFromDsl,
             "", ""
         )
 
         intersectPropsData.sourceVarName = WhensDslRef.whenModelSubelement(
-            sourceGenModel.modelSubElRef,
+            sourceGenModelFromDsl.modelSubElRef,
             isDtoRef = { "source${intersectPropsData.sourceVarNamePostfix}" },
+            isDcoRef = { "source${intersectPropsData.sourceVarNamePostfix}" },
             isTableRef = { throw GenException("CrudData.sourceDslRef not allowed to be DslRef.table") },
         )
         intersectPropsData.targetVarName = WhensDslRef.whenModelSubelement(
-            targetGenModel.modelSubElRef,
-            isDtoRef = { throw GenException("CrudData.targetDslRef has to be DslRef.table") },
+            targetGenModelFromDsl.modelSubElRef,
+            isDtoRef = { throw GenException("CrudData.targetDslRef has to be a persistent proper subelement, e.g. DslRef.table") },
+            isDcoRef = { throw GenException("CrudData.targetDslRef has to be a persistent proper subelement, e.g. DslRef.table") },
             isTableRef = { "resultRow${intersectPropsData.targetVarNamePostfix}" },
         )
 
@@ -77,10 +79,21 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             is CrudData.CRUD.READ ->   {
                 when (crud.variant) {
                     CrudData.CRUD.READ.READVARIANT.ALLVARIANTS -> {
-                        readByJoinDb(intersectPropsData)
+                        if ( ! targetGenModelFromDsl.isUuidPrimary) {
+                            log.warn("cannot create CRUD READ for $targetGenModelFromDsl as it DOES NOT have a ${RuntimeDefaults.UUID_PROPNAME} prop")
+                        } else {
+                            readByJoinDb(intersectPropsData)
+                        }
                         readBySelect(intersectPropsData)
                     }
-                    CrudData.CRUD.READ.READVARIANT.JOIN -> readByJoinDb(intersectPropsData)
+                    CrudData.CRUD.READ.READVARIANT.JOIN -> {
+                        if ( ! targetGenModelFromDsl.isUuidPrimary) {
+                            log.warn("cannot create CRUD READ for $targetGenModelFromDsl as it DOES NOT have a ${RuntimeDefaults.UUID_PROPNAME} prop -> creating readBySelect() instead")
+                            readBySelect(intersectPropsData)
+                        } else {
+                            readByJoinDb(intersectPropsData)
+                        }
+                    }
                     CrudData.CRUD.READ.READVARIANT.SELECT -> readBySelect(intersectPropsData)
                 }
             }
@@ -91,7 +104,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
     }
 
     private fun insertDb(i: IntersectPropertys.CommonPropData) {
-        val tableClassModel: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
+        val tableClassModel: KotlinGenExposedTable = kotlinGenCtx.kotlinGenClass(i.targetGenModelFromDsl.modelSubElRef) as KotlinGenExposedTable
         val outgoingFKs = tableClassModel.outgoingFKs
         val incomingFKs = tableClassModel.incomingFKs
 
@@ -104,7 +117,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         }
 
         val insertLambda = LambdaTypeName.get(i.targetPoetType, DB.InsertStatementTypeName(), returnType = UNIT)
-        val batchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatementClassName, GenDslRefHelpers.dtoClassName(i.sourceGenModel), returnType = UNIT)
+        val batchInsertLambda = LambdaTypeName.get(DB.BatchInsertStatementClassName, GenDslRefHelpers.nonpersistentClassName(i.targetGenModelFromDsl), returnType = UNIT)
 
         // ============================
         // fun insertDb
@@ -118,7 +131,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         funSpec
             .addComment("insert 1To1 Models")
             .insertOutgoing1To1Props(outgoingFKs, funNameInsertOrBatch, i)
-            .addComment("insertShallow %L and add outgoing ManyTo1-backrefUuids and 1To1-forwardRefUuids", i.targetGenModel.poetTypeSimpleName)
+            .addComment("insertShallow %L and add outgoing ManyTo1-backrefUuids and 1To1-forwardRefUuids", i.targetGenModelFromDsl.poetTypeSimpleName)
             .beginControlFlow("%T.%M", i.targetPoetType, DB.insertMember)
             .addStatement("%T.%L(%L).invoke(this, it)", i.targetFillerPoetType, funNameInsertOrBatch.swapOutOriginalFunNameWith("fillShallowLambda"), i.sourceVarName)
             .addComment("outgoing FK uuid refs")
@@ -143,7 +156,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         funSpec
             .addComment("insert 1To1 Models")
             .insertOutgoing1To1Props(outgoingFKs,funNameInsertOrBatch, i)
-            .addComment("batchInsertShallow %L and add outgoing ManyTo1-backrefUuids and 1To1-forwardRefUuids", i.targetGenModel.poetTypeSimpleName)
+            .addComment("batchInsertShallow %L and add outgoing ManyTo1-backrefUuids and 1To1-forwardRefUuids", i.targetGenModelFromDsl.poetTypeSimpleName)
             .beginControlFlow("%T.%M(%L, shouldReturnGeneratedValues = false)", i.targetPoetType, DB.batchInsertMember, i.sourceVarName + "s")
             .addStatement("%T.%L().invoke(this, it)", i.targetFillerPoetType, funNameInsertOrBatch.swapOutOriginalFunNameWith("batchFillShallowLambda"))
             .addComment("outgoing FK uuid refs")
@@ -223,7 +236,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
 //                    none = false
 //                    //bodyBuilder.addStatement(
 //                    //    "%T.%M(%L.%L ?: emptyList(), shouldReturnGeneratedValues = false, body = %T.%L(%L.%L))",
-//                    //    genCtx.genModel(DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)).poetType,
+//                    //    genCtx.genModelFromDsl(DslRef.table(C.DEFAULT, this.modelSubElementRef.parentDslRef)).poetType,
 //                    //    DB.batchInsertMember,
 //                    //    funNameInsertOrBatch.sourceOrIt(i.sourceVarName),
 //                    //    prop.name(),
@@ -307,7 +320,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
     }
 
     private fun readBySelect(i: IntersectPropertys.CommonPropData) {
-        val tableClassModel: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
+        val tableClassModel: KotlinGenExposedTable = kotlinGenCtx.kotlinGenClass(i.targetGenModelFromDsl.modelSubElRef) as KotlinGenExposedTable
         val outgoingFKs = tableClassModel.outgoingFKs
         val incomingFKs = tableClassModel.incomingFKs
 
@@ -335,18 +348,18 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             .addStatement("val resultRowList: %T = query.toList()", List::class.asTypeName().parameterizedBy(DB.ResultRowClassName))
             .addStatement("val selected%L = mutableListOf<%T>()", i.sourcePoetType.simpleName, i.sourcePoetType)
             .beginControlFlow("for (rr in resultRowList)")
-            .addStatement("val %L = %T.%L(rr)", i.sourceGenModel.asVarName, GenClassNames.fillerFor(i.sourceGenModel.modelSubElRef, MODELREFENUM.TABLE), GenNaming.createFromTableFunName(currentCrudData, i.sourceGenModel.modelClassName))
+            .addStatement("val %L = %T.%L(rr)", i.sourceGenModelFromDsl.asVarName, GenClassNames.fillerFor(i.sourceGenModelFromDsl.modelSubElRef, MODELREFENUM.TABLE), GenNaming.createFromTableFunName(currentCrudData, i.sourceGenModelFromDsl.modelClassName))
             .addComment("one2One models")
             .readOne2OneModels(outgoingFKs, i, funName, tableClassModel)
             .addComment("many2One models")
             .readMany2OneModels(incomingFKs, i, funName, tableClassModel)
             .addComment("add")
-            .addStatement("selected%L.add(%L)", i.sourcePoetType.simpleName, i.sourceGenModel.asVarName)
+            .addStatement("selected%L.add(%L)", i.sourcePoetType.simpleName, i.sourceGenModelFromDsl.asVarName)
             .endControlFlow()
             .addStatement("return selected%L", i.sourcePoetType.simpleName)
         builder.addFunction(funSpec.build())
     }
-    private fun FunSpec.Builder.readOne2OneModels(outgoingFKs: MutableSet<FK>, i: IntersectPropertys.CommonPropData, funName: FunName, tableClassModel: KotlinClassModelTable): FunSpec.Builder {
+    private fun FunSpec.Builder.readOne2OneModels(outgoingFKs: MutableSet<FK>, i: IntersectPropertys.CommonPropData, funName: FunName, tableClassModel: KotlinGenExposedTable): FunSpec.Builder {
         var none = true
         for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
             none = false
@@ -357,11 +370,11 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
                         GenClassNames.crudFor(fk.toTableRef, CrudData.CRUD.READ),
                         funName.funName
                     )
-                    val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinClassModelTable
-                    addStatement("%T.%L eq rr[%T.%L]", toPropKotlinClassModelTable.modelClassDataFromDsl.poetType, RuntimeDefaults.UUID_PROPNAME, tableClassModel.modelClassDataFromDsl.poetType, GenNaming.fkPropVarNameUUID(fk))
+                    val toPropKotlinGenExposedTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinGenExposedTable
+                    addStatement("%T.%L eq rr[%T.%L]", toPropKotlinGenExposedTable.modelClassDataFromDsl.poetType, RuntimeDefaults.UUID_PROPNAME, tableClassModel.modelClassDataFromDsl.poetType, GenNaming.fkPropVarNameUUID(fk))
                     endControlFlow()
                     addStatement(".firstOrNull()")
-                    addStatement("%L.%L = %L!!", i.sourceGenModel.asVarName, fk.toProp.name(), fk.toProp.name())
+                    addStatement("%L.%L = %L!!", i.sourceGenModelFromDsl.asVarName, fk.toProp.name(), fk.toProp.name())
                 },
                 IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
                 ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
@@ -370,17 +383,17 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         if (none) addComment("NONE")
         return this
     }
-    private fun FunSpec.Builder.readMany2OneModels(incomingFKs: MutableSet<FK>, i: IntersectPropertys.CommonPropData, funName: FunName, tableClassModel: KotlinClassModelTable): FunSpec.Builder {
+    private fun FunSpec.Builder.readMany2OneModels(incomingFKs: MutableSet<FK>, i: IntersectPropertys.CommonPropData, funName: FunName, tableClassModel: KotlinGenExposedTable): FunSpec.Builder {
         var none = true
         for (fk in incomingFKs.filter { it.toProp.collectionType != COLLECTIONTYP.NONE }) {
             none = false
             propBoundry(fk.toProp,
                 noPropBoundry = {
                     beginControlFlow("val %L = %T.%L", fk.toProp.name(), GenClassNames.crudFor(fk.fromTableRef, CrudData.CRUD.READ), funName.funName)
-                    val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
-                    addStatement("%T.%L eq rr[%T.%L]", toPropKotlinClassModelTable.modelClassDataFromDsl.poetType, GenNaming.fkPropVarNameUUID(fk), tableClassModel.modelClassDataFromDsl.poetType, RuntimeDefaults.UUID_PROPNAME)
+                    val toPropKotlinGenExposedTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinGenExposedTable
+                    addStatement("%T.%L eq rr[%T.%L]", toPropKotlinGenExposedTable.modelClassDataFromDsl.poetType, GenNaming.fkPropVarNameUUID(fk), tableClassModel.modelClassDataFromDsl.poetType, RuntimeDefaults.UUID_PROPNAME)
                     endControlFlow()
-                    addStatement("%L.%L%L.addAll(%L)", i.sourceGenModel.asVarName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
+                    addStatement("%L.%L%L.addAll(%L)", i.sourceGenModelFromDsl.asVarName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
                 },
                 IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
                 ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
@@ -391,7 +404,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
     }
 
     private fun readByJoinDb(i: IntersectPropertys.CommonPropData) {
-        val tableClassModel: KotlinClassModelTable = kotlinGenCtx.kotlinGenClass(i.targetGenModel.modelSubElRef) as KotlinClassModelTable
+        val tableClassModel: KotlinGenExposedTable = kotlinGenCtx.kotlinGenClass(i.targetGenModelFromDsl.modelSubElRef) as KotlinGenExposedTable
         val outgoingFKs = tableClassModel.outgoingFKs
         val incomingFKs = tableClassModel.incomingFKs
 
@@ -412,7 +425,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             // ============================
             // fun simpleEntityTableJoin
             // ============================
-            funName = funNameExpanded(i.targetGenModel.asVarName + "Join", currentCrudData)
+            funName = funNameExpanded(i.targetGenModelFromDsl.asVarName + "Join", currentCrudData)
             funSpec = FunSpec.builder(funName.funName).addModifiers(KModifier.PRIVATE)
                 .returns(DB.JoinClassName)
             funSpec
@@ -429,7 +442,7 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
                 .addParameter("selectLambda", LambdaTypeName.get(receiver = DB.SqlExpressionBuilderClassName, parameters = emptyList(), returnType = DB.OpClassName.parameterizedBy(BOOLEAN)))
                 .returns(List::class.asTypeName().parameterizedBy(DB.ResultRowClassName))
             funSpec
-                .addStatement("val join: Join = %L()", funName.swapOutOriginalFunNameWith(i.targetGenModel.asVarName + "Join"))
+                .addStatement("val join: Join = %L()", funName.swapOutOriginalFunNameWith(i.targetGenModelFromDsl.asVarName + "Join"))
                 .addStatement("val query: %T = join.%M(selectLambda)", DB.QueryClassName, DB.selectMember)
                 .addComment("execute query against DB")
                 .addStatement("val resultRowList: List<%T> = query.toList()", DB.ResultRowClassName)
@@ -477,15 +490,15 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         funSpec = FunSpec.builder(funName.funName).addModifiers(KModifier.PRIVATE)
             .addParameter("resultRowList", List::class.asTypeName().parameterizedBy(DB.ResultRowClassName))
             .returns(List::class.asTypeName().parameterizedBy(i.sourcePoetType))
-            .addStatement("val read%Ls = mutableListOf<%T>()", i.sourceGenModel.poetTypeSimpleName, i.sourceGenModel.poetType)
+            .addStatement("val read%Ls = mutableListOf<%T>()", i.sourceGenModelFromDsl.poetTypeSimpleName, i.sourceGenModelFromDsl.poetType)
             .addComment("base model NULL")
-            .addStatement("var current%L: %T = %T.NULL", i.sourceGenModel.poetTypeSimpleName, i.sourcePoetType, i.sourcePoetType)
+            .addStatement("var current%L: %T = %T.NULL", i.sourceGenModelFromDsl.poetTypeSimpleName, i.sourcePoetType, i.sourcePoetType)
             .addComment("many2One models NULL")
             .addMany2OneNulls(incomingFKs)
             // unmarshall
             .addStatement("val iter = resultRowList.iterator()")
             .addModels(incomingFKs, outgoingFKs, i)
-            .addStatement("return read%Ls", i.sourceGenModel.poetTypeSimpleName)
+            .addStatement("return read%Ls", i.sourceGenModelFromDsl.poetTypeSimpleName)
         builder.addFunction(funSpec.build())
     }
 
@@ -509,17 +522,17 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
         this.beginControlFlow("while (iter.hasNext())")
             .addStatement("val rr: ResultRow = iter.next()")
         // if (rr[SimpleEntityTable.uuid] != currentSimpleEntityDto.uuid) {
-        beginControlFlow("if (rr[%T.%L] != current%L.%L)", i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, i.sourceGenModel.poetTypeSimpleName, RuntimeDefaults.UUID_PROPNAME)
+        beginControlFlow("if (rr[%T.%L] != current%L.%L)", i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, i.sourceGenModelFromDsl.poetTypeSimpleName, RuntimeDefaults.UUID_PROPNAME)
         this.addComment("base model")
-        this.addStatement("current%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, GenClassNames.fillerFor(i.sourceGenModel.modelSubElRef, MODELREFENUM.TABLE), GenNaming.createFromTableFunName(currentCrudData, i.sourceGenModel.modelClassName))
-            .addStatement("read%Ls.add(current%L)", i.sourceGenModel.poetTypeSimpleName, i.sourceGenModel.poetTypeSimpleName)
+        this.addStatement("current%L = %T.%L(rr)", i.sourceGenModelFromDsl.poetTypeSimpleName, GenClassNames.fillerFor(i.sourceGenModelFromDsl.modelSubElRef, MODELREFENUM.TABLE), GenNaming.createFromTableFunName(currentCrudData, i.sourceGenModelFromDsl.modelClassName))
+            .addStatement("read%Ls.add(current%L)", i.sourceGenModelFromDsl.poetTypeSimpleName, i.sourceGenModelFromDsl.poetTypeSimpleName)
         this.addComment("one2One models")
         var none = true
         for (fk in outgoingFKs.filter { it.toProp.collectionType == COLLECTIONTYP.NONE }) {
             none = false
             propBoundry(fk.toProp,
                 noPropBoundry = {
-                    this.addStatement("current%L.%L = %T.%L(rr)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), GenClassNames.fillerFor(fk.toTableRef, MODELREFENUM.TABLE), GenNaming.createFromTableFunName(currentCrudData, fk.toProp.eitherTypModelOrClass.modelClassName))
+                    this.addStatement("current%L.%L = %T.%L(rr)", i.sourceGenModelFromDsl.poetTypeSimpleName, fk.toProp.name(), GenClassNames.fillerFor(fk.toTableRef, MODELREFENUM.TABLE), GenNaming.createFromTableFunName(currentCrudData, fk.toProp.eitherTypModelOrClass.modelClassName))
                 },
                 IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
                 ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
@@ -533,11 +546,11 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             none = false
             propBoundry(fk.toProp,
                 noPropBoundry = {
-                    val toPropTableGenModel = genCtx.genModel(fk.fromTableRef)
-                    //val toPropDtoGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
+                    val toPropTableGenModel = genCtx.genModelFromDsl(fk.fromTableRef)
+                    //val toPropDtoGenModel = genCtx.genModelFromDsl(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
                     beginControlFlow("if (rr[%T.%L] != current%L.%L)", toPropTableGenModel.poetType, RuntimeDefaults.UUID_PROPNAME, fk.toProp.name(), RuntimeDefaults.UUID_PROPNAME)
                     addStatement("current%L = %T.%L(rr)", fk.toProp.name(), GenClassNames.fillerFor(fk.fromTableRef, MODELREFENUM.TABLE), GenNaming.createFromTableFunName(currentCrudData, fk.toProp.eitherTypModelOrClass.modelClassName))
-                    addStatement("current%L.%L%L.add(current%L)", i.sourceGenModel.poetTypeSimpleName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
+                    addStatement("current%L.%L%L.add(current%L)", i.sourceGenModelFromDsl.poetTypeSimpleName, fk.toProp.name(), if (fk.toProp.isNullable) "?" else "", fk.toProp.name())
                     endControlFlow()
                 },
                 IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
@@ -556,10 +569,10 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             none = false
             propBoundry(fk.toProp,
                 noPropBoundry = {
-                    val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinClassModelTable
-                    //val toPropTableGenModel = genCtx.genModel(fk.toTableRef)
-                    //val toPropDtoGenModel = genCtx.genModel(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
-                    addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassDataFromDsl.poetType, DB.JoinTypeClassName, i.targetPoetType, GenNaming.fkPropVarNameUUID(fk), toPropKotlinClassModelTable.modelClassDataFromDsl.poetType, RuntimeDefaults.UUID_PROPNAME)
+                    val toPropKotlinGenExposedTable = kotlinGenCtx.kotlinGenClass(fk.toTableRef) as KotlinGenExposedTable
+                    //val toPropTableGenModel = genCtx.genModelFromDsl(fk.toTableRef)
+                    //val toPropDtoGenModel = genCtx.genModelFromDsl(DslRef.dto(C.DEFAULT, toPropTableGenModel.modelSubElRef.parentDslRef))
+                    addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinGenExposedTable.modelClassDataFromDsl.poetType, DB.JoinTypeClassName, i.targetPoetType, GenNaming.fkPropVarNameUUID(fk), toPropKotlinGenExposedTable.modelClassDataFromDsl.poetType, RuntimeDefaults.UUID_PROPNAME)
                 },
                 IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
                 ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },
@@ -575,8 +588,8 @@ class KotlinCrudExposed(crudData: CrudData): AKotlinCrud(crudData) {
             none = false
             propBoundry(fk.toProp,
                 noPropBoundry = {
-                    val toPropKotlinClassModelTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinClassModelTable
-                    addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinClassModelTable.modelClassDataFromDsl.poetType, DB.JoinTypeClassName, i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, toPropKotlinClassModelTable.modelClassDataFromDsl.poetType, GenNaming.fkPropVarNameUUID(fk))
+                    val toPropKotlinGenExposedTable = kotlinGenCtx.kotlinGenClass(fk.fromTableRef) as KotlinGenExposedTable
+                    addStatement(".join(%T, %T.LEFT, %T.%L, %T.%L)", toPropKotlinGenExposedTable.modelClassDataFromDsl.poetType, DB.JoinTypeClassName, i.targetPoetType, RuntimeDefaults.UUID_PROPNAME, toPropKotlinGenExposedTable.modelClassDataFromDsl.poetType, GenNaming.fkPropVarNameUUID(fk))
                 },
                 IGNORE = { copyBoundry -> addComment("${fk.toProp.propTypeSimpleNameCap} copyBoundry ${copyBoundry.copyType} ${copyBoundry.boundryType} ${fk.toProp.name()}") },
                 ELSE = { copyBoundry -> addComment("TODO ${copyBoundry.copyType} ${fk.toProp.name()} ${fk.toProp.propTypeSimpleNameCap} of ${fk.toProp.poetType}") },

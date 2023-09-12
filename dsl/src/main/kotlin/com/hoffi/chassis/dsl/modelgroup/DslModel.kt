@@ -7,16 +7,14 @@ import com.hoffi.chassis.dsl.internal.*
 import com.hoffi.chassis.dsl.modelgroup.crud.DslCrudDelegateImpl
 import com.hoffi.chassis.dsl.modelgroup.crud.IDslApiCrudDelegate
 import com.hoffi.chassis.dsl.whereto.*
+import com.hoffi.chassis.shared.EitherTypOrModelOrPoetType
 import com.hoffi.chassis.shared.dsl.DslRef
 import com.hoffi.chassis.shared.dsl.IDslRef
 import com.hoffi.chassis.shared.parsedata.*
-import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedGatheredNameAndWheretos
+import com.hoffi.chassis.shared.parsedata.nameandwhereto.CollectedNameAndWheretos
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.SharedNameAndWhereto
 import com.hoffi.chassis.shared.parsedata.nameandwhereto.StrategyNameAndWhereto
-import com.hoffi.chassis.shared.shared.CrudData
-import com.hoffi.chassis.shared.shared.Extends
-import com.hoffi.chassis.shared.shared.FillerData
-import com.hoffi.chassis.shared.shared.GatherPropertys
+import com.hoffi.chassis.shared.shared.*
 import com.hoffi.chassis.shared.shared.reffing.MODELREFENUM
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
@@ -42,11 +40,13 @@ abstract class AProperModelSubelement(
     val gatherPropertiesImpl: DslGatherPropertiesDelegateImpl,
     val classModsImpl: DslClassModsDelegateImpl,
     val extendsImpl: DslExtendsDelegateImpl,
-    val showcaseImpl: DslShowcaseDelegateImpl
+    val showcaseImpl: DslShowcaseDelegateImpl? = null
 )
     : ADslClass()
 {
     override val selfDslRef = modelSubelementRef
+
+    var tableFor: MODELREFENUM? = null //for a real persistent(!) model-subelement it has to be some nonpersistent(!) proper subelement
 
     fun directPropertiesOf(subelementPropsImpl: DslPropsDelegate, elementPropsImpl: DslPropsDelegate): Map<String, Property> {
         return directDslPropertiesOf(subelementPropsImpl, elementPropsImpl).mapValues { it.value.toProperty(modelSubelementRef) }
@@ -60,11 +60,11 @@ abstract class AProperModelSubelement(
         return mapOfDslProps
     }
 
-    protected fun finishSharedGatheredNameAndWheretos(nameAndWheretoWithoutModelSubelementsImpl: DslNameAndWheretoOnlyDelegateImpl): SharedGatheredNameAndWheretos {
-        val sharedGatheredNameAndWheretos: SharedGatheredNameAndWheretos =
-            dslCtx.gatheredNameAndWheretos(parentDslRef as DslRef.IElementLevel)
+    protected fun finishCollectedNameAndWheretos(nameAndWheretoWithoutModelSubelementsImpl: DslNameAndWheretoOnlyDelegateImpl): CollectedNameAndWheretos {
+        val collectedNameAndWheretos: CollectedNameAndWheretos =
+            dslCtx.cloneOfCollectedBasemodelNameAndWheretos(parentDslRef as DslRef.IElementLevel)
         for (dslNameAndWhereto in nameAndWheretoWithoutModelSubelementsImpl.nameAndWheretos.values) {
-            sharedGatheredNameAndWheretos.createForSubelement(
+            collectedNameAndWheretos.createForSubelement(
                 selfDslRef, SharedNameAndWhereto(
                     dslNameAndWhereto.simpleName,
                     selfDslRef,
@@ -78,10 +78,10 @@ abstract class AProperModelSubelement(
                 )
             )
         }
-        return sharedGatheredNameAndWheretos
+        return collectedNameAndWheretos
     }
 
-    protected fun finishModelClassData(
+    protected fun finishProperModelsModelClassData(
         dslModel: DslModel,
         modelClassDataFromDsl: ModelClassDataFromDsl,
         classModifiersImpl: DslClassModifiersImpl,
@@ -89,27 +89,27 @@ abstract class AProperModelSubelement(
         gatherPropertiesImpl: DslGatherPropertiesDelegateImpl,
         propsImpl: DslPropsDelegate
     ) {
-        val sharedGatheredClassModifiers = dslCtx.gatheredClassModifiers(dslModel.selfDslRef)
-        if (sharedGatheredClassModifiers.allFromSubelements[selfDslRef]?.containsKey(selfDslRef.simpleName) ?: false) throw DslException("There is already a set of ClassModifiers in dslCtx for '${selfDslRef}")
+        val collectedClassModifiers: CollectedClassModifiers = dslCtx.cloneOfCollectedBasemodelClassModifiers(dslModel.selfDslRef)
+        if (collectedClassModifiers.allFromSubelements[selfDslRef]?.containsKey(selfDslRef.simpleName) ?: false) throw DslException("There is already a set of ClassModifiers in dslCtx for '${selfDslRef}")
         val setOfGatheredClassModifiers: MutableSet<KModifier> = mutableSetOf()
-        sharedGatheredClassModifiers.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.put(selfDslRef.simpleName, setOfGatheredClassModifiers)
+        collectedClassModifiers.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.put(selfDslRef.simpleName, setOfGatheredClassModifiers)
         setOfGatheredClassModifiers.addAll(classModifiersImpl.theClassModifiers)
-        val modelGatherClassModifiers: Set<KModifier> = StrategyGatherClassModifiers.resolve(StrategyGatherClassModifiers.STRATEGY.UNION, selfDslRef, sharedGatheredClassModifiers)
+        val modelGatherClassModifiers: Set<KModifier> = StrategyGatherClassModifiers.resolve(StrategyGatherClassModifiers.STRATEGY.UNION, selfDslRef, collectedClassModifiers)
         modelClassDataFromDsl.classModifiers.addAll(modelGatherClassModifiers)
 
-        val sharedGatheredExtends = dslCtx.gatheredExtends(dslModel.selfDslRef)
-        if (sharedGatheredExtends.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a map.entry of Extends for simpleName '${simpleName}' in dslCtx for '${selfDslRef}'")
+        val collectedExtends: CollectedExtends = dslCtx.cloneOfCollectedBasemodelExtends(dslModel.selfDslRef)
+        if (collectedExtends.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a map.entry of Extends for simpleName '${simpleName}' in dslCtx for '${selfDslRef}'")
         //val setOfGatheredExtends: MutableSet<Extends> = mutableSetOf()
-        sharedGatheredExtends.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.putAll(extendsImpl.theExtendBlocks.values.map { it.simpleName to it.extends })
-        val modelGatherExtends: MutableMap<String, Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.DEFAULT, selfDslRef, sharedGatheredExtends)
+        collectedExtends.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.putAll(extendsImpl.theExtendBlocks.values.map { it.simpleName to it.extends })
+        val modelGatherExtends: MutableMap<String, Extends> = StrategyGatherExtends.resolve(StrategyGatherExtends.STRATEGY.DEFAULT, selfDslRef, collectedExtends)
         modelClassDataFromDsl.extends.putAll(modelGatherExtends)
 
-        val sharedGatheredGatherPropertys: SharedGatheredGatherPropertys = dslCtx.gatheredGatherPropertys(parentDslRef as DslRef.IElementLevel)
-        if (sharedGatheredGatherPropertys.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a set of GatherPropertys in dslCtx for '${selfDslRef}")
+        val collectedGatherPropertys: CollectedGatherPropertys = dslCtx.cloneOfCollectedBasemodelGatherPropertys(parentDslRef as DslRef.IElementLevel)
+        if (collectedGatherPropertys.allFromSubelements[selfDslRef]?.containsKey(simpleName) ?: false) throw DslException("There is already a set of GatherPropertys in dslCtx for '${selfDslRef}")
         val setOfGatheredPropertysOfThis: MutableSet<GatherPropertys> = mutableSetOf()
-        sharedGatheredGatherPropertys.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.put(selfDslRef.simpleName, setOfGatheredPropertysOfThis)
+        collectedGatherPropertys.allFromSubelements.getOrPut(selfDslRef) { mutableMapOf() }.put(selfDslRef.simpleName, setOfGatheredPropertysOfThis)
         setOfGatheredPropertysOfThis.addAll(gatherPropertiesImpl.theGatherPropertys)
-        val modelGatherProperties: Set<GatherPropertys> = StrategyGatherProperties.resolve(StrategyGatherProperties.STRATEGY.UNION, selfDslRef, sharedGatheredGatherPropertys)
+        val modelGatherProperties: Set<GatherPropertys> = StrategyGatherProperties.resolve(StrategyGatherProperties.STRATEGY.UNION, selfDslRef, collectedGatherPropertys)
         modelClassDataFromDsl.gatheredPropsDslModelRefs.addAll(modelGatherProperties)
 
         // the gathered properties will be fetched into the model                      in Modelgroup's PASS_GENMODELSCREATED fun gatherInheritedPropertys()
@@ -134,12 +134,14 @@ interface IDslApiModel
     @DslBlockOn(DslDto::class)
     fun dto(simpleName: String = C.DEFAULT, dslBlock: IDslApiDto.() -> Unit)
     @DslBlockOn(DslTable::class)
-    fun table(simpleName: String = C.DEFAULT, dslBlock: IDslApiTable.() -> Unit)
+    fun tableFor(tableFor: MODELREFENUM, simpleName: String = C.DEFAULT, dslBlock: IDslApiTable.() -> Unit)
+    @DslBlockOn(DslDco::class)
+    fun dco(simpleName: String = C.DEFAULT, dslBlock: IDslApiDco.() -> Unit)
 }
 
 context(DslCtxWrapper)
 @ChassisDslMarker
-class DslModel constructor(
+class DslModel(
     val simpleName: String,
     val modelRef: DslRef.model,
     val classModifiersImpl: DslClassModifiersImpl             = DslClassModifiersImpl(),
@@ -181,8 +183,9 @@ class DslModel constructor(
         this@DslCtxWrapper.dslCtx.addToCtx(showcaseImpl)
     }
 
-    val dslDtos: MutableMap<String, DslDto> = mutableMapOf()
-    val dslTables: MutableMap<String, DslTable> = mutableMapOf()
+    val dslDtos: MutableMap<String, DslDto> = mutableMapOf()     // finished in DslModelgroup dslCtx.PASS_FINISHGENMODELS
+    val dslTables: MutableMap<String, DslTable> = mutableMapOf() // finished in DslModelgroup dslCtx.PASS_FINISHGENMODELS
+    val dslDcos: MutableMap<String, DslDco> = mutableMapOf()     // finished in DslModelgroup dslCtx.PASS_FINISHGENMODELS
 
     // IDslApiKindClassObjectOrInterface
     override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.UNDEFINED
@@ -194,42 +197,80 @@ globalDslCtx = dslCtx // TODO remove workaround
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
             dslCtx.PASS_1_BASEMODELS -> {
-                val dto: DslDto = dslCtx.ctxObjCreateNonDelegate { DslDto(simpleName, DslRef.dto(simpleName, selfDslRef)) }
-                dslDtos[simpleName] = dto
-                dto.apply(dslBlock)
+                val dslDto: DslDto = dslCtx.ctxObjCreateNonDelegate { DslDto(simpleName, DslRef.dto(simpleName, selfDslRef)) }
+                dslDtos[simpleName] = dslDto
+                dslDto.apply(dslBlock)
             }
             dslCtx.PASS_ERROR -> TODO()
             dslCtx.PASS_FINISH -> {
-                val dto: DslDto = dslCtx.ctxObj(DslRef.dto(simpleName, selfDslRef))
-                dto.apply(dslBlock) // first let all the subtree finish
-                dto.finish(dslCtx)
+                val dslDto: DslDto = dslCtx.ctxObj(DslRef.dto(simpleName, selfDslRef))
+                dslDto.apply(dslBlock) // first let all the subtree finish
+                dslDto.finish(dslCtx)
             }
             else -> {
-                val dto: DslDto = dslCtx.ctxObj(DslRef.dto(simpleName, selfDslRef))
-                dto.apply(dslBlock)
+                val dslDto: DslDto = dslCtx.ctxObj(DslRef.dto(simpleName, selfDslRef))
+                dslDto.apply(dslBlock)
             }
         }
     }
 
     @DslBlockOn(DslTable::class)
-    override fun table(simpleName: String, dslBlock: IDslApiTable.() -> Unit) {
+    override fun tableFor(tableFor: MODELREFENUM, simpleName: String, dslBlock: IDslApiTable.() -> Unit) {
 globalDslCtx = dslCtx // TODO remove workaround
         log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
         when (dslCtx.currentPASS) {
             dslCtx.PASS_1_BASEMODELS -> {
-                val table: DslTable = dslCtx.ctxObjCreateNonDelegate { DslTable(simpleName, DslRef.table(simpleName, selfDslRef)) }
-                dslTables[simpleName] = table
-                table.apply(dslBlock)
+                val dslTable: DslTable = dslCtx.ctxObjCreateNonDelegate { DslTable(simpleName, DslRef.table(simpleName, selfDslRef)) }
+                when (tableFor) {
+                    MODELREFENUM.MODEL -> throw DslException("tableFor was '$tableFor', but only nonpersistent MODELREFENUM are allow for tableFor(...) { }")
+                    MODELREFENUM.TABLE -> throw DslException("tableFor was '$tableFor', but only nonpersistent MODELREFENUM are allow for tableFor(...) { }")
+                    MODELREFENUM.DTO, MODELREFENUM.DCO -> {
+                        dslTable.tableFor = tableFor
+                        dslTable.kind = DslClassObjectOrInterface.OBJECT
+                        dslTable.constructorVisibility = IDslApiConstructorVisibility.VISIBILITY.PUBLIC
+                        dslTable.extendsImpl.extends { replaceSuperclass = true }
+                    }
+                }
+                dslTables[simpleName] = dslTable
+                dslTable.apply(dslBlock)
+            }
+            dslCtx.PASS_5_REFERENCING -> {
+                val dslTable: DslTable = dslCtx.ctxObj(DslRef.table(simpleName, selfDslRef))
+                dslTable.propertiesOf(tableFor, GatherPropertiesEnum.PROPERTIES_AND_SUPERCLASS_PROPERTIES, simpleName)
+                dslTable.apply(dslBlock)
             }
             dslCtx.PASS_ERROR -> TODO()
             dslCtx.PASS_FINISH -> {
-                val table: DslTable = dslCtx.ctxObj(DslRef.table(simpleName, selfDslRef))
-                table.apply(dslBlock) // first let all the subtree finish
-                table.finish(dslCtx)
+                val dslTable: DslTable = dslCtx.ctxObj(DslRef.table(simpleName, selfDslRef))
+                dslTable.apply(dslBlock) // first let all the subtree finish
+                dslTable.finish(dslCtx)
             }
             else -> {
-                val table: DslTable = dslCtx.ctxObj(DslRef.table(simpleName, selfDslRef))
-                table.apply(dslBlock)
+                val dslTable: DslTable = dslCtx.ctxObj(DslRef.table(simpleName, selfDslRef))
+                dslTable.apply(dslBlock)
+            }
+        }
+    }
+
+    @DslBlockOn(DslDco::class)
+    override fun dco(simpleName: String, dslBlock: IDslApiDco.() -> Unit) {
+globalDslCtx = dslCtx // TODO remove workaround
+        log.info("fun {}(\"{}\") { ... } in PASS {}", object{}.javaClass.enclosingMethod.name, simpleName, dslCtx.currentPASS)
+        when (dslCtx.currentPASS) {
+            dslCtx.PASS_1_BASEMODELS -> {
+                val dslDco: DslDco = dslCtx.ctxObjCreateNonDelegate { DslDco(simpleName, DslRef.dco(simpleName, selfDslRef)) }
+                dslDcos[simpleName] = dslDco
+                dslDco.apply(dslBlock)
+            }
+            dslCtx.PASS_ERROR -> TODO()
+            dslCtx.PASS_FINISH -> {
+                val dslDco: DslDco = dslCtx.ctxObj(DslRef.dco(simpleName, selfDslRef))
+                dslDco.apply(dslBlock) // first let all the subtree finish
+                dslDco.finish(dslCtx)
+            }
+            else -> {
+                val dslDco: DslDco = dslCtx.ctxObj(DslRef.dco(simpleName, selfDslRef))
+                dslDco.apply(dslBlock)
             }
         }
     }
@@ -257,52 +298,64 @@ globalDslCtx = dslCtx // TODO remove workaround
             dslCtx.genCtx.fillerDatas.getOrPut(simpleName) { mutableMapOf() }[selfDslRef] = setOfFillerDatas
         }
     }
-    fun prepareNameAndWheretos(dslCtx: DslCtx) {
-        val gatheredNameAndWheretos: SharedGatheredNameAndWheretos = dslCtx.gatheredNameAndWheretos(modelRef)
+    fun prepareNameAndWheretos(collectedNameAndWheretosOfModel: CollectedNameAndWheretos) {
         for (dslNameAndWheretoDelegateEntry: MutableMap.MutableEntry<String, DslNameAndWheretoOnSubElementsDelegateImpl> in nameAndWheretoWithSubelements.nameAndWheretos) {
-            gatheredNameAndWheretos.createFor(SharedGatheredNameAndWheretos.THINGSWITHNAMEANDWHERETOS.model, SharedNameAndWhereto(
+            collectedNameAndWheretosOfModel.createFor(CollectedNameAndWheretos.THINGSWITHNAMEANDWHERETOS.model, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
-                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
-                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
-                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.strategyClassName,    dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute,  dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute ,        dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute,  dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
                 dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
-                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
-                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,  dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,  dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
+        when (MODELREFENUM.sentinel) { MODELREFENUM.MODEL, MODELREFENUM.DTO, MODELREFENUM.TABLE, MODELREFENUM.DCO -> {} } // sentinel to check if new MODELREFENUM was added
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.dtoNameAndWheretos) {
-            gatheredNameAndWheretos.createFromElementForSubelement(MODELREFENUM.DTO, SharedNameAndWhereto(
+            collectedNameAndWheretosOfModel.createFromElementForSubelement(MODELREFENUM.DTO, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
-                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
-                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
-                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.strategyClassName,    dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute,  dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute,         dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute,  dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
                 dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
-                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
-                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,  dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,  dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
+            ))
+        }
+        for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.dcoNameAndWheretos) {
+            collectedNameAndWheretosOfModel.createFromElementForSubelement(MODELREFENUM.DCO, SharedNameAndWhereto(
+                dslNameAndWheretoDelegateEntry.value.simpleName,
+                dslNameAndWheretoDelegateEntry.value.selfDslRef,
+                dslNameAndWheretoDelegateEntry.value.strategyClassName,    dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute,  dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute,         dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute,  dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,  dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,  dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
         for (dslNameAndWheretoDelegateEntry in nameAndWheretoWithSubelements.tableNameAndWheretos) {
-            gatheredNameAndWheretos.createFromElementForSubelement(MODELREFENUM.TABLE, SharedNameAndWhereto(
+            collectedNameAndWheretosOfModel.createFromElementForSubelement(MODELREFENUM.TABLE, SharedNameAndWhereto(
                 dslNameAndWheretoDelegateEntry.value.simpleName,
                 dslNameAndWheretoDelegateEntry.value.selfDslRef,
-                dslNameAndWheretoDelegateEntry.value.strategyClassName, dslNameAndWheretoDelegateEntry.value.strategyTableName,
-                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute, dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
-                dslNameAndWheretoDelegateEntry.value.pathAbsolute , dslNameAndWheretoDelegateEntry.value.pathAddendum,
-                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute, dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
-                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute, dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
-                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
-                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
+                dslNameAndWheretoDelegateEntry.value.strategyClassName,     dslNameAndWheretoDelegateEntry.value.strategyTableName,
+                dslNameAndWheretoDelegateEntry.value.baseDirPathAbsolute,   dslNameAndWheretoDelegateEntry.value.baseDirAddendum,
+                dslNameAndWheretoDelegateEntry.value.pathAbsolute,          dslNameAndWheretoDelegateEntry.value.pathAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPrefixAbsolute,   dslNameAndWheretoDelegateEntry.value.classPrefixAddendum,
+                dslNameAndWheretoDelegateEntry.value.classPostfixAbsolute,  dslNameAndWheretoDelegateEntry.value.classPostfixAddendum,
+                dslNameAndWheretoDelegateEntry.value.basePackageAbsolute,   dslNameAndWheretoDelegateEntry.value.basePackageAddendum,
+                dslNameAndWheretoDelegateEntry.value.packageNameAbsolute,   dslNameAndWheretoDelegateEntry.value.packageNameAddendum,
             ))
         }
     }
 
     companion object {
-        val NULL: DslModel = with (dslCtxWrapperFake)
-        {
+        val NULL: DslModel = with (dslCtxWrapperFake) {
             DslModel(
                 C.NULLSTRING,
                 DslRef.model(C.NULLSTRING, IDslRef.NULL),
@@ -330,8 +383,7 @@ interface IDslApiModelAndModelSubelementsCommon
         IDslApiGatherPropertiesProp,
         IDslApiPropFuns,
         IDslApiClassModsDelegate,
-        IDslApiExtendsDelegate,
-        IDslApiShowcaseDelegate
+        IDslApiExtendsDelegate
 @ChassisDslMarker
 interface IDslApiModelOnlyCommon // TODO remove trailing Common postfix
     :   IDslApiNameAndWheretoWithSubelements
@@ -344,7 +396,8 @@ interface IDslApiSubelementsOnlyCommon
 @ChassisDslMarker
 interface IDslApiDto
     :   IDslApiModelAndModelSubelementsCommon,
-        IDslApiSubelementsOnlyCommon
+        IDslApiSubelementsOnlyCommon,
+        IDslApiShowcaseDelegate
 @ChassisDslMarker
 interface IDslApiTable
     :   IDslApiModelAndModelSubelementsCommon,
@@ -354,7 +407,6 @@ interface IDslApiTable
 // === Impl Interfaces (extend IDslApi's plus methods and props that should not be visible from the DSL ===
 
 context(DslCtxWrapper)
-@ChassisDslMarker
 class DslDto(
     simpleName: String,
     dtoRef: DslRef.dto,
@@ -403,28 +455,28 @@ class DslDto(
     override var constructorVisibility: IDslApiConstructorVisibility.VISIBILITY = IDslApiConstructorVisibility.VISIBILITY.UNSET
 
     fun finish(dslCtx: DslCtx) {
-        val sharedGatheredNameAndWheretos: SharedGatheredNameAndWheretos = finishSharedGatheredNameAndWheretos(nameAndWheretoWithoutModelSubelementsImpl)
+        val collectedNameAndWheretos: CollectedNameAndWheretos = finishCollectedNameAndWheretos(nameAndWheretoWithoutModelSubelementsImpl)
 
-        val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS, selfDslRef, sharedGatheredNameAndWheretos)
-        val dtoModel = GenModel.DtoModel(selfDslRef as DslRef.dto, modelClassName)
-        dslCtx.genCtx.putModel(selfDslRef, dtoModel)
+        val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS, selfDslRef, collectedNameAndWheretos)
+        val dtoModelFromDsl = GenModel.DtoModelFromDsl(selfDslRef as DslRef.dto, modelClassName)
+        dslCtx.genCtx.putGenModelFromDsl(selfDslRef, dtoModelFromDsl)
         val dslModel: DslModel = dslCtx.ctxObj(parentDslRef)
         val dslGroup: DslModelgroup = dslCtx.ctxObj((parentDslRef.parentDslRef))
 
         when (kind) {
-            DslClassObjectOrInterface.CLASS -> dtoModel.kind = TypeSpec.Kind.CLASS
-            DslClassObjectOrInterface.OBJECT -> dtoModel.kind = TypeSpec.Kind.OBJECT
-            DslClassObjectOrInterface.INTERFACE -> dtoModel.kind = TypeSpec.Kind.INTERFACE
+            DslClassObjectOrInterface.CLASS -> dtoModelFromDsl.kind = TypeSpec.Kind.CLASS
+            DslClassObjectOrInterface.OBJECT -> dtoModelFromDsl.kind = TypeSpec.Kind.OBJECT
+            DslClassObjectOrInterface.INTERFACE -> dtoModelFromDsl.kind = TypeSpec.Kind.INTERFACE
             DslClassObjectOrInterface.UNDEFINED -> {
                 when (dslModel.kind) {
-                    DslClassObjectOrInterface.CLASS -> dtoModel.kind = TypeSpec.Kind.CLASS
-                    DslClassObjectOrInterface.OBJECT -> dtoModel.kind = TypeSpec.Kind.OBJECT
-                    DslClassObjectOrInterface.INTERFACE -> dtoModel.kind = TypeSpec.Kind.INTERFACE
-                    DslClassObjectOrInterface.UNDEFINED -> dtoModel.kind = TypeSpec.Kind.CLASS
+                    DslClassObjectOrInterface.CLASS -> dtoModelFromDsl.kind = TypeSpec.Kind.CLASS
+                    DslClassObjectOrInterface.OBJECT -> dtoModelFromDsl.kind = TypeSpec.Kind.OBJECT
+                    DslClassObjectOrInterface.INTERFACE -> dtoModelFromDsl.kind = TypeSpec.Kind.INTERFACE
+                    DslClassObjectOrInterface.UNDEFINED -> dtoModelFromDsl.kind = TypeSpec.Kind.CLASS
                 }
             }
         }
-        dtoModel.constructorVisibility =
+        dtoModelFromDsl.constructorVisibility =
             if (constructorVisibility == IDslApiConstructorVisibility.VISIBILITY.UNSET)
                 if (dslModel.constructorVisibility == IDslApiConstructorVisibility.VISIBILITY.UNSET)
                     if (dslGroup.constructorVisibility == IDslApiConstructorVisibility.VISIBILITY.UNSET)
@@ -436,10 +488,10 @@ class DslDto(
             else
                 constructorVisibility == IDslApiConstructorVisibility.VISIBILITY.PUBLIC
 
-        dtoModel.additionalToStringMemberProps.addAll(propsImpl.additionalToStringMemberProps)
-        dtoModel.removeToStringMemberProps.addAll(propsImpl.removeToStringMemberProps)
+        dtoModelFromDsl.additionalToStringMemberProps.addAll(propsImpl.additionalToStringMemberProps)
+        dtoModelFromDsl.removeToStringMemberProps.addAll(propsImpl.removeToStringMemberProps)
 
-        finishModelClassData(dslModel, dtoModel, classModifiersImpl, extendsImpl, gatherPropertiesImpl, propsImpl)
+        finishProperModelsModelClassData(dslModel, dtoModelFromDsl, classModifiersImpl, extendsImpl, gatherPropertiesImpl, propsImpl)
     }
 
     companion object {
@@ -461,7 +513,6 @@ class DslDto(
 }
 
 context(DslCtxWrapper)
-@ChassisDslMarker
 class DslTable(
     simpleName: String,
     tableRef: DslRef.table,
@@ -472,15 +523,13 @@ class DslTable(
     classModsImpl: DslClassModsDelegateImpl               = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.classMods(simpleName, tableRef)) },
     extendsImpl: DslExtendsDelegateImpl                   = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.extends(simpleName, tableRef)) },
     val crudImpl: DslCrudDelegateImpl                     = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.crud(simpleName, tableRef)) },
-    showcaseImpl: DslShowcaseDelegateImpl                 = with (dslCtxWrapperFake) { dslCtx.ctxObjOrCreate(DslRef.showcase(simpleName, tableRef)) },
 //    val propsImpl: DslPropsDelegate                           = dslCtx.ctxObjOrCreate(DslRef.properties(simpleNameOfParentDslBlock, tableRef)),
 //    val nameAndWheretoWithoutModelSubelementsImpl: DslNameAndWheretoOnlyDelegateImpl = dslCtx.ctxObjOrCreate(DslRef.nameAndWhereto(simpleNameOfParentDslBlock, tableRef)),
 //    val gatherPropertiesImpl: DslGatherPropertiesDelegateImpl = dslCtx.ctxObjOrCreate(DslRef.propertiesOf(simpleNameOfParentDslBlock, tableRef)),
 //    val classModsImpl: DslClassModsDelegateImpl               = dslCtx.ctxObjOrCreate(DslRef.classMods(simpleNameOfParentDslBlock, tableRef)),
 //    val extendsImpl: DslExtendsDelegateImpl                   = dslCtx.ctxObjOrCreate(DslRef.extends(simpleNameOfParentDslBlock, tableRef)),
-//    val showcaseImpl: DslShowcaseDelegateImpl                 = dslCtx.ctxObjOrCreate(DslRef.showcase(simpleNameOfParentDslBlock, tableRef)),
 )
-    : AProperModelSubelement(simpleName, tableRef, classModifiersImpl, propsImpl, nameAndWheretoWithoutModelSubelementsImpl, gatherPropertiesImpl, classModsImpl, extendsImpl, showcaseImpl),
+    : AProperModelSubelement(simpleName, tableRef, classModifiersImpl, propsImpl, nameAndWheretoWithoutModelSubelementsImpl, gatherPropertiesImpl, classModsImpl, extendsImpl),
     IDslApiTable,
     IDslApiModelAndModelSubelementsCommon,
     IDslApiKindClassObjectOrInterface,
@@ -493,41 +542,95 @@ class DslTable(
     IDslImplExtendsDelegate by extendsImpl,
     IDslApiCrudDelegate by crudImpl,
 
-    IDslImplShowcaseDelegate by showcaseImpl,
-
     IDslApiNameAndWheretoOnly by nameAndWheretoWithoutModelSubelementsImpl,
     IDslApiGatherPropertiesModelAndModelSubelementsCommon by gatherPropertiesImpl,
     IDslApiGatherPropertiesElementsOnlyCommon             by gatherPropertiesImpl
 
 {
     val log = LoggerFactory.getLogger(javaClass)
-
     init {
         this@DslCtxWrapper.dslCtx.addToCtx(propsImpl)
         this@DslCtxWrapper.dslCtx.addToCtx(nameAndWheretoWithoutModelSubelementsImpl)
         this@DslCtxWrapper.dslCtx.addToCtx(gatherPropertiesImpl)
         this@DslCtxWrapper.dslCtx.addToCtx(classModsImpl)
         this@DslCtxWrapper.dslCtx.addToCtx(extendsImpl)
-        this@DslCtxWrapper.dslCtx.addToCtx(showcaseImpl)
     }
 
     override var kind: DslClassObjectOrInterface = DslClassObjectOrInterface.OBJECT
     override var constructorVisibility: IDslApiConstructorVisibility.VISIBILITY = IDslApiConstructorVisibility.VISIBILITY.UNSET
 
     fun finish(dslCtx: DslCtx) {
-        val sharedGatheredNameAndWheretos: SharedGatheredNameAndWheretos = finishSharedGatheredNameAndWheretos(nameAndWheretoWithoutModelSubelementsImpl)
+        val collectedNameAndWheretos: CollectedNameAndWheretos = finishCollectedNameAndWheretos(nameAndWheretoWithoutModelSubelementsImpl)
 
-        val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS, selfDslRef, sharedGatheredNameAndWheretos)
-        val tableModel = GenModel.TableModel(selfDslRef as DslRef.table, modelClassName)
-        dslCtx.genCtx.putModel(selfDslRef, tableModel)
+        val modelClassName = StrategyNameAndWhereto.resolve(StrategyNameAndWhereto.STRATEGY.SPECIAL_WINS_ON_ABSOLUTE_CONCAT_ADDENDUMS, selfDslRef, collectedNameAndWheretos)
+        val tableModelFromDsl = GenModel.TableModelFromDsl(selfDslRef as DslRef.table, modelClassName)
+        dslCtx.genCtx.putGenModelFromDsl(selfDslRef, tableModelFromDsl)
         val dslModel: DslModel = dslCtx.ctxObj(parentDslRef)
         //val dslGroup: DslModelgroup = dslCtx.ctxObj(parentDslRef.parentDslRef)
 
-        tableModel.kind = TypeSpec.Kind.OBJECT
-        //tableModel.constructorVisibility = if (constructorVisibility) if (dslModel.constructorVisibility) dslGroup.constructorVisibility else dslModel.constructorVisibility else constructorVisibility
-        tableModel.constructorVisibility = true
+        tableModelFromDsl.tableFor = tableFor
+        // these have been pre-defined in override fun tableFor(tableFor: MODELREFENUM,
+        tableModelFromDsl.kind = TypeSpec.Kind.OBJECT
+        tableModelFromDsl.constructorVisibility = true
 
-        finishModelClassData(dslModel, tableModel, classModifiersImpl, extendsImpl, gatherPropertiesImpl, propsImpl)
+        finishProperModelsModelClassData(dslModel, tableModelFromDsl, classModifiersImpl, extendsImpl, gatherPropertiesImpl, propsImpl)
+        // table decides itself what its superclass is, so extends class for table will be removed later on
+        // after(!) gathered properties of the superclass the persistent proper subelement refers to have been fetched
+        // but if the extends strategy resolves to a superclass/superinterfaces from a base model, it will resolve/expand the ref to our own MODELREFENUM subelement (DslRef.table in this case)
+        // we have to correct this to the wanted tableFor proper subelement ref
+        // in modelgroupFunc dslCtx.PASS_FINISHGENMODELS
+        for (extendsEntry in tableModelFromDsl.extends) {
+            when (val eitherModel = extendsEntry.value.typeClassOrDslRef) {
+                is EitherTypOrModelOrPoetType.EitherModel -> {
+                    when (tableFor) {
+                        MODELREFENUM.MODEL -> throw DslException("should have been expanded by strategy resolution of expands")
+                        MODELREFENUM.TABLE -> throw DslException("after expanded should not point to a(nother) persistent proper subelement")
+                        MODELREFENUM.DTO -> {
+                            eitherModel.modelSubElementRefExpanded = DslRef.dto(eitherModel.modelSubElementRefExpanded?.simpleName ?: throw DslException("doesn't have a modelSubElementRefExpanded after strategy resolution of extended's { }"), eitherModel.modelSubElementRefExpanded?.parentDslRef ?: throw DslException("doesn't have a modelSubElementRefExpanded after strategy resolution of extended's { }"))
+                        }
+                        MODELREFENUM.DCO -> {
+                            eitherModel.modelSubElementRefExpanded = DslRef.dco(eitherModel.modelSubElementRefExpanded?.simpleName ?: throw DslException("doesn't have a modelSubElementRefExpanded after strategy resolution of extended's { }"), eitherModel.modelSubElementRefExpanded?.parentDslRef ?: throw DslException("doesn't have a modelSubElementRefExpanded after strategy resolution of extended's { }"))
+                        }
+                        null -> throw DslException("any persistent(!) proper subelement has to have a tableFor")
+                    }
+                }
+                is EitherTypOrModelOrPoetType.EitherPoetType, is EitherTypOrModelOrPoetType.EitherTyp, is EitherTypOrModelOrPoetType.NOTHING -> {}
+            }
+            for (ifc in extendsEntry.value.superInterfaces) {
+                when (ifc) {
+                    is EitherTypOrModelOrPoetType.EitherModel -> {
+                        when (tableFor) {
+                            MODELREFENUM.MODEL -> throw DslException("should have been expanded by strategy resolution of expands")
+                            MODELREFENUM.TABLE -> throw DslException("after expanded should not point to a(nother) persistent proper subelement")
+                            MODELREFENUM.DTO -> {
+                                ifc.modelSubElementRefExpanded = DslRef.dto(ifc.modelSubElementRefExpanded?.simpleName ?: throw DslException("doesn't have a modelSubElementRefExpanded after strategy resolution of extended's { }"), ifc.modelSubElementRefExpanded?.parentDslRef ?: throw DslException("doesn't have a modelSubElementRefExpanded after strategy resolution of extended's { }"))
+                            }
+                            MODELREFENUM.DCO -> {
+                                ifc.modelSubElementRefExpanded = DslRef.dco(ifc.modelSubElementRefExpanded?.simpleName ?: throw DslException("doesn't have a modelSubElementRefExpanded after strategy resolution of extended's { }"), ifc.modelSubElementRefExpanded?.parentDslRef ?: throw DslException("doesn't have a modelSubElementRefExpanded after strategy resolution of extended's { }"))
+                            }
+                            null -> throw DslException("any persistent(!) proper subelement has to have a tableFor")
+                        }
+                    }
+                    is EitherTypOrModelOrPoetType.EitherPoetType, is EitherTypOrModelOrPoetType.EitherTyp, is EitherTypOrModelOrPoetType.NOTHING -> {}
+                }
+            }
+            // add super interfaces of tableFor
+            when (tableFor) {
+                MODELREFENUM.MODEL -> throw DslException("tableFor MODEL not allowed")
+                MODELREFENUM.TABLE -> throw DslException("tableFor TABLE not allowed")
+                MODELREFENUM.DTO -> {
+                    val tableForGenModel: DslDto = dslCtx.ctxObj(DslRef.dto(selfDslRef.simpleName, selfDslRef.parentDslRef))
+                    val tableForExtends: Extends? = tableForGenModel.extendsImpl.theExtendBlocks[simpleName]?.extends
+                    tableModelFromDsl.extends[simpleName]!!.superInterfaces.addAll(tableForExtends?.superInterfaces ?: emptyList())
+                }
+                MODELREFENUM.DCO -> {
+                    val tableForGenModel: DslDco = dslCtx.ctxObj(DslRef.dco(selfDslRef.simpleName, selfDslRef.parentDslRef))
+                    val tableForExtends: Extends? = tableForGenModel.extendsImpl.theExtendBlocks[simpleName]?.extends
+                    tableModelFromDsl.extends[simpleName]!!.superInterfaces.addAll(tableForExtends?.superInterfaces ?: emptyList())
+                }
+                null -> { throw DslException("tableFor should never  be null here")}
+            }
+        }
 
         finishCrudDatas()
     }
@@ -568,7 +671,6 @@ class DslTable(
                 DslClassModsDelegateImpl(C.NULLSTRING, IDslRef.NULL),
                 DslExtendsDelegateImpl(C.NULLSTRING, IDslRef.NULL),
                 DslCrudDelegateImpl(C.NULLSTRING, IDslRef.NULL),
-                DslShowcaseDelegateImpl(C.NULLSTRING, IDslRef.NULL),
             )
         }
     }
