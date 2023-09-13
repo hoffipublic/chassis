@@ -45,13 +45,14 @@ sealed class TYP(val kClass: KClass<*>, val defaultInitializer: Initializer, val
 
     //class CLASS : TYP(KClass::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_CLASS)
     //class MODEL : TYP(Any::class.asClassName(), RuntimeDefaults.DEFAULT_INITIALIZER_MODEL)
-    class INT : TYP(Integer::class, RuntimeDefaults.DEFAULT_INITIALIZER_INT, RuntimeDefaults.NULL_INITIALIZER_INT)
-    class LONG : TYP(Long::class, RuntimeDefaults.DEFAULT_INITIALIZER_LONG, RuntimeDefaults.NULL_INITIALIZER_LONG)
-    class STRING : TYP(String::class, RuntimeDefaults.DEFAULT_INITIALIZER_STRING, RuntimeDefaults.NULL_INITIALIZER_STRING)
-    class BOOL : TYP(Boolean::class, RuntimeDefaults.DEFAULT_INITIALIZER_BOOL, RuntimeDefaults.NULL_INITIALIZER_BOOL)
-    class UUID : TYP(java.util.UUID::class, RuntimeDefaults.DEFAULT_INITIALIZER_UUID, RuntimeDefaults.NULL_INITIALIZER_UUID)
-    class INSTANT : TYP(Instant::class, RuntimeDefaults.DEFAULT_INITIALIZER_INSTANT, RuntimeDefaults.NULL_INITIALIZER_INSTANT)
-    class LOCALDATETIME : TYP(LocalDateTime::class, RuntimeDefaults.DEFAULT_INITIALIZER_LOCALDATETIME, RuntimeDefaults.NULL_INITIALIZER_LOCALDATETIME)
+    class INT :           TYP(Integer::class,        RuntimeDefaults.DEFAULT_INITIALIZER_INT,           RuntimeDefaults.NULL_INITIALIZER_INT)
+    class LONG :          TYP(Long::class,           RuntimeDefaults.DEFAULT_INITIALIZER_LONG,          RuntimeDefaults.NULL_INITIALIZER_LONG)
+    class STRING :        TYP(String::class,         RuntimeDefaults.DEFAULT_INITIALIZER_STRING,        RuntimeDefaults.NULL_INITIALIZER_STRING)
+    class BOOL :          TYP(Boolean::class,        RuntimeDefaults.DEFAULT_INITIALIZER_BOOL,          RuntimeDefaults.NULL_INITIALIZER_BOOL)
+    class UUID :          TYP(java.util.UUID::class, RuntimeDefaults.DEFAULT_INITIALIZER_UUID,          RuntimeDefaults.NULL_INITIALIZER_UUID)
+    class INSTANT :       TYP(Instant::class,        RuntimeDefaults.DEFAULT_INITIALIZER_INSTANT,       RuntimeDefaults.NULL_INITIALIZER_INSTANT)
+    class LOCALDATETIME : TYP(LocalDateTime::class,  RuntimeDefaults.DEFAULT_INITIALIZER_LOCALDATETIME, RuntimeDefaults.NULL_INITIALIZER_LOCALDATETIME)
+
     companion object {
         val DEFAULT = STRING()
         //val CLASS = CLASS()
