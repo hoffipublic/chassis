@@ -51,6 +51,14 @@
     - name: Chassis codegen
       link: /codegen/codegen.html
       items:
+        - name: Strategies (modelname, props, tables, columns, paths, packages)
+          link: #
+        - name: non-persistent models (DTO, DCO, ...)
+          link: #
+        - name: persistent models (Jetbrains Exposed RDBMS tables, CRUDS)
+          link: #
+        - name: generated helpers (Universe)
+          link: #
         - name: tbd
           link: #
     - name: Developer Documentation

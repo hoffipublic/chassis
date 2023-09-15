@@ -1,23 +1,28 @@
 # Project Chassis (a Kotlin Code Generator)
 
+[![Kotlin](https://img.shields.io/badge/kotlin-1.9.10-blue.svg?logo=kotlin)](http://kotlinlang.org)
+![GitHub Repo stars](https://img.shields.io/github/stars/hoffipublic/chassis?style=social)
+
 from a custom Kotlin DSL using <https://square.github.io/kotlinpoet>, you're able to generate (Kotlin) source code.
 
 to see examples of the DSL see [examples/src/main/kotlin/com/hoffi/chassis/examples/basic/](https://github.com/hoffipublic/chassis/tree/master/examples/src/main/kotlin/com/hoffi/chassis/examples/basic/)
 
 to see the generated code of these DSL's see [https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/)
 
+An official documentation is early alpha work in progress on: <https://hoffipublic.github.io/chassis/>
+
 ## This is what you're (currently) able to generate
 
 - **Dto** classes/interfaces/objects (Data-Transfer-Objects)
   - properties with "known" types
-    - mutable and immutable (currently `Integer`,`Long`,`String`,`Boolean`,`java.util.uuid`,`kotlinx.datetime.Instant`,`kotlinx.datetime.LocalDateTime` (see `chassismodel/src/main/kotlin/com/hoffi/chassis/chassismodel/typ/TYP.kt`))
+    - mutable and immutable (currently `Integer`, `Long`, `String`, `Boolean`, `java.util.uuid`, `kotlinx.datetime.Instant`, `kotlinx.datetime.LocalDateTime` (see `chassismodel/src/main/kotlin/com/hoffi/chassis/chassismodel/typ/TYP.kt`))
     - mutable and immutable collection types (currently `List`, `Set`, `Collection`, `Iterable`) 
     - nullable, default initializers or initializers specified in DSL 
   - properties by referencing their KClass<...>, mutable and immutable (also for collection generic-type)
     - nullable or initializers specified in DSL
   - properties by referencing other `model` types defined somewhere else in (other) chassis DSLs
   - by Tagging properties in the Dsl, they can "contribute" to generated things e.g. `toString()`, `equals()`, `hashCode()`
-  - primary `constructor` (via Tag on props)
+  - primary (public/protected) `constructor` (via Tag on props)
   - `companion` `create()` and `createWithUuid()`
   - `companion` `val NULL` for each defined DSL model instance
   - ***no*** generic types yet (TBD)
@@ -64,8 +69,8 @@ to see the generated code of these DSL's see [https://github.com/hoffipublic/gen
   - just switch the strategies and get "your corporate design governance" compliant code
 <br/>
 
-<big><bold> This is a personal ***"pet project"*** and on top still <big>***very alpha and very work in progress!!!***</big></bold></big>
-<div style="text-align: center;">(although it is already a complete rewrite of the initial version)</div>
+<big><bold> This is a personal ***pet project***<br/>and on top still <big>***very alpha and very work in progress!!!***</big></bold></big>
+<div style="text-align: center;">*(although it is already a complete rewrite of the initial version)</div>
 
 ## Known Limitations
 
@@ -78,13 +83,13 @@ to see the generated code of these DSL's see [https://github.com/hoffipublic/gen
 - many loose ends which are not implemented yet
 - many corner cases that will explode as by now I was concentrating on the "how-to"s and "architecture" instead of feature-completeness and robustness
 
-## TODO <!--- // TODO -->
+## TODO
 
 current ToDos:
 
 - implementing COLLECTION, ITERABLE prop types
 - 
-- (additional|remove)ToString members on `DslModelgroup`
+- (additional/remove)ToString members on `DslModelgroup`
 - Primary Keys and FK Constraints on Database Tables (if not UuidTable)
 - Cascading delete
 
