@@ -1,0 +1,65 @@
+- label: Chassis Docs
+  items:
+    - name: Home
+      link: /
+    - name: Introduction
+      link: /intro/intro.html
+    - name: Chassis DSL
+      link: /dsl/dsl.html
+      items:
+        - name: model reffing
+          link: /dsl/dsl.html
+    - name: dsl run
+      link: #
+      items:
+        - name: name and whereto
+          link: #
+    - name: modelgroup
+      link: /dsl/dsl.html
+      items:
+        - name: model
+          link: /dsl/dsl.html
+        - name: model.dto
+          link: /ds/dsl.html
+        - name: model.dco
+          link: /dsl/dco.html
+        - name: model.filler
+          link: #
+        - name: model.tableFor
+          link: /dsl/dsl.html
+        - name: model.tableFor.crud
+          link: /dsl/dsl.html
+        - name: model.tableFor.crud.prefixed CopyBoundrys
+          link: /ds/dsl.html
+    - name: model crosscutting elements
+      link: #
+      items:
+        - name: name and whereto
+          link: #
+        - name: showcase
+          link: #
+        - name: class mods
+          link: #
+        - name: props and properties
+          link: #
+        - name: gather propertiesOf other (sub)model
+          link: #
+        - name: extends super classes and interfaces
+          link: #
+
+
+    - name: Chassis codegen
+      link: /codegen/codegen.html
+      items:
+        - name: tbd
+          link: #
+    - name: Developer Documentation
+      link: #
+      items:
+        - name: tbd
+          link: #
+    - name: Pages
+      link: #
+    - name: Blog
+      link: /blog/
+

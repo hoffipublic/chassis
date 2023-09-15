@@ -11,7 +11,9 @@ awkScript='/^#(.*)# CREATE.SH *$/ { print substr($0, 2) } /^[^#](.*)# CREATE.SH 
 gawk -i inplace "$awkScript" "$SCRIPTDIR/_config.yml"
 gawk -i inplace "$awkScript" "$SCRIPTDIR/Gemfile"
 
-bundle exec jekyll serve
+echo "./$(basename "$SCRIPTDIR")/${0##*/}"
+echo bundle exec jekyll serve "$@"
+bundle exec jekyll serve "$@"
 
 gawk -i inplace "$awkScript" "$SCRIPTDIR/_config.yml"
 gawk -i inplace "$awkScript" "$SCRIPTDIR/Gemfile"

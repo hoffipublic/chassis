@@ -1,0 +1,12 @@
+title: The series title
+description: The series description text
+sections:
+  - label: The first section
+    items:
+      - title: Why use a static site generator
+      - title: Getting started with Bulma Clean Theme for Jekyll
+  - label: Another section
+    items:
+      - title: Introducing some new layouts to Bulma Clean Theme
+      - title: Creating a docs site with Bulma Clean Theme
+      - title: Creating a post series

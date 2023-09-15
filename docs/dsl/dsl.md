@@ -8,7 +8,7 @@ hero_image: ../assets/image/Chassis.png
 ---
 # The Chassis DSL for generating Code
 
-content of subpage 1
+content of dsl 1
 
 ## dsl page level 2
 

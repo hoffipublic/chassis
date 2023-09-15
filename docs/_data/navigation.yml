@@ -1,0 +1,16 @@
+# navigation.yml included in topmost menu
+- name: Docs
+  link: /#
+  dropdown:
+    - name: Introduction
+      link: /intro/intro.html
+    - name: Chassis DSL
+      link: /dsl/dsl.html
+    - name: Chassis codegen
+      link: /codegen/codegen.html
+    - name: Developer Docs
+      link: /developers/devs.html
+- name: DeveloperDocs
+  link: /developers/devs.html
+- name: Blog
+  link: /blog/
