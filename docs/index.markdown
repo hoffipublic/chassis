@@ -4,7 +4,7 @@ layout: page
 title: Chassis Home
 subtitle: The Kotlin Code-Generator
 description: Chassis Kotlin Code-Generator for DTO classes, objects, interfaces, api and RDBMS insert update read delete CRUD
-hero_image: assets/imgage/Chassis.png
+hero_image: assets/image/Chassis.png
 show_sidebar: true
 ---
 
@@ -15,8 +15,8 @@ some introducing text.
 ## level 2
 
 [comment]: # https://jekyllrb.com/docs/liquid/tags/#links
-- [subpage1]({{ site.baseurl }}{% link subpage1.md %})
-- [subpage2]({{ site.baseurl }}{% link subpage2.md %})
+- [Chassis DSL]({{ site.baseurl }}{% link dsl/dsl.md %})
+- [Chassis codegen]({{ site.baseurl }}{% link codegen/codegen.md %})
 
 ### level 3
 
