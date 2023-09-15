@@ -20,10 +20,10 @@
 
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 # Build settings
-#baseurl: "" # for local testing
-baseurl: "/chassis" # for github pages the project name
-#theme: bulma-clean-theme # for local testing
-remote_theme: chrisrhymes/bulma-clean-theme # for github pages
+#baseurl: ""                                # for local testing                 # CREATE.SH
+baseurl: "/chassis"                         # for github pages the project name # CREATE.SH
+#theme: bulma-clean-theme                   # for local testing                 # CREATE.SH
+remote_theme: chrisrhymes/bulma-clean-theme # for github pages                  # CREATE.SH
 
 plugins:
   - jekyll-feed
