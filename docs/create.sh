@@ -37,9 +37,13 @@ if [[ $cmd == "local" ]]; then
   gawk -i inplace "$awkScriptToLocal" "$SCRIPTDIR/_config.yml"
   gawk -i inplace "$awkScriptToLocal" "$SCRIPTDIR/Gemfile"
 
+  ln -s ../../../drawiochassis/assets/drawio ./assets/
+
   echo "./$(basename "$SCRIPTDIR")/${0##*/}"
   echo bundle exec jekyll serve "$@"
   bundle exec jekyll serve "$@"
+
+  rm ./assets/drawio
 
   gawk -i inplace "$awkScriptToPages" "$SCRIPTDIR/_config.yml"
   gawk -i inplace "$awkScriptToPages" "$SCRIPTDIR/Gemfile"
