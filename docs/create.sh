@@ -15,7 +15,7 @@ awkScriptToLocal='match($0, /^(# *)?gem "jekyll"(.*# CREATE.SH) *$/, m)         
                   match($0, /^(# *)?baseurl: ?"\/chassis"(.*# CREATE.SH) *$/, m)    { print "#baseurl: \"/chassis\"" m[2] }
                   match($0, /^(# *)?theme: bulma-clean-theme(.*# CREATE.SH) *$/, m) { print "theme: bulma-clean-theme" m[2] }
                   match($0, /^(# *)?remote_theme: chrisrhymes\/bulma-clean-theme(.*# CREATE.SH) *$/, m) { print "#remote_theme: chrisrhymes/bulma-clean-theme" m[2] }
-                  match($0, /^(# *)?chassisimages: ?"file(.*# CREATE.SH) *$/, m)    { print "chassisimages: \"file" m[2] }
+                  match($0, /^(# *)?chassisimages: ?"\/(.*# CREATE.SH) *$/, m)    { print "chassisimages: \"/" m[2] }
                   match($0, /^(# *)?chassisimages: ?"http(.*# CREATE.SH) *$/, m)    { print "#chassisimages: \"http" m[2] }
                   !/# CREATE.SH *$/ { print $0 }
                  '
@@ -27,7 +27,7 @@ awkScriptToPages='match($0, /^(# *)?gem "jekyll"(.*# CREATE.SH) *$/, m)         
                   match($0, /^(# *)?baseurl: ?"\/chassis"(.*# CREATE.SH) *$/, m)    { print "baseurl: \"/chassis\"" m[2] }
                   match($0, /^(# *)?theme: bulma-clean-theme(.*# CREATE.SH) *$/, m) { print "#theme: bulma-clean-theme" m[2] }
                   match($0, /^(# *)?remote_theme: chrisrhymes\/bulma-clean-theme(.*# CREATE.SH) *$/, m) { print "remote_theme: chrisrhymes/bulma-clean-theme" m[2] }
-                  match($0, /^(# *)?chassisimages: ?"file(.*# CREATE.SH) *$/, m)    { print "#chassisimages: \"file" m[2] }
+                  match($0, /^(# *)?chassisimages: ?"\/(.*# CREATE.SH) *$/, m)    { print "#chassisimages: \"/" m[2] }
                   match($0, /^(# *)?chassisimages: ?"http(.*# CREATE.SH) *$/, m)    { print "chassisimages: \"http" m[2] }
                   !/# CREATE.SH *$/ { print $0 }
                  '

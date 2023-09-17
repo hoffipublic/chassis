@@ -27,8 +27,8 @@ baseurl: "/chassis"                         # for github pages the project name 
 remote_theme: chrisrhymes/bulma-clean-theme # for github pages                  # CREATE.SH
 
 # custom:
-#chassisimages: "file:///Users/hoffi/gitRepos/generators/drawiochassis/assets/drawio"   # CREATE.SH
-chassisimages: "https://hoffimuc.com/html/assets/drawio" # CREATE.SH
+#chassisimages: "/assets/drawio"   # CREATE.SH
+chassisimages: "https://hoffimuc.com/assets/drawio" # CREATE.SH
 
 plugins:
   - jekyll-feed
