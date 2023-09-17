@@ -5,7 +5,7 @@ source "https://rubygems.org"
 #
 #     bundle exec jekyll serve
 #
-#gem "jekyll", "~> 4.3.2"                 # for local testing # CREATE.SH
+#gem "jekyll", "~> 4.3.2"                  # for local testing # CREATE.SH
 gem "github-pages", group: :jekyll_plugins # for github pages  # CREATE.SH
 
 # This is the default theme for new Jekyll sites. You may change this to anything you like.
@@ -19,7 +19,7 @@ gem "jekyll-remote-theme"
 # If you have any plugins, put them here!
 group :jekyll_plugins do
   gem "jekyll-feed", "~> 0.12"
-  gem "jekyll-drawio"
+  gem "jekyll-drawio", "~> 1.1.0"
 end
 
 # Windows and JRuby does not include zoneinfo files, so bundle the tzinfo-data gem

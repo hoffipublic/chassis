@@ -97,7 +97,7 @@ DEPENDENCIES
   bulma-clean-theme (~> 0.13)
   http_parser.rb (~> 0.6.0)
   jekyll (~> 4.3.2)
-  jekyll-drawio
+  jekyll-drawio (~> 1.1.0)
   jekyll-feed (~> 0.12)
   jekyll-remote-theme
   tzinfo (>= 1, < 3)

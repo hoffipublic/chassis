@@ -19,7 +19,7 @@ Over and over and over again...
 ***TL;DR***
 
 - have a look at the DSL [chassis DSL examples](https://github.com/hoffipublic/chassis/tree/master/examples/src/main/kotlin/com/hoffi/chassis/examples/basic)
-- find generated kotlin code in [github generatedchassis](https://github.com/hoffipublic/generatedchassis)/examples 
+- find generated kotlin code in [github generatedchassis](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/examples)
 
 current example DSL (4 DTOs, 1 DCO with Fillers and DB CRUDs plus 4 abstract DTOs Base-Classes):
 
