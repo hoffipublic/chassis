@@ -12,12 +12,7 @@ hero_image: ../../assets/Chassis.png
 
 {{ site.chassisassetsgit }}/arch/drawio/Arch_Overview.drawio.png
 
-as jekyll-drawio rendered:
-
-{% drawio path="assets/arch/drawio/Arch_Overview.drawio" page_number=0 height=650 %}
-
-as png image:
-
+[comment]: # {% drawio path="assets/arch/drawio/Arch_Overview.drawio" page_number=0 height=650 %}
 ![Arch_Overview]({{ site.chassisassetsgit }}/arch/drawio/Arch_Overview.drawio.png)
 
 
