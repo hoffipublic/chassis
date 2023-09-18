@@ -7,8 +7,8 @@
     - name: Chassis DSL
       link: /dsl/dsl.html
       items:
-        - name: model reffing
-          link: /dsl/dsl.html
+        - name: DslRef model reffing
+          link: /dsl/DslRef.html
     - name: dsl run
       link: #
       items:
@@ -31,6 +31,8 @@
           link: /dsl/dsl.html
         - name: model.tableFor.crud.prefixed CopyBoundrys
           link: /ds/dsl.html
+    - name: api (not implemented yet)
+      link: /dsl/dsl.html
     - name: model crosscutting elements
       link: #
       items:

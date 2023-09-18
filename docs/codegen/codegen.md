@@ -4,7 +4,7 @@ title: Chassis codegen
 subtitle: Generating Code
 toc: true
 show_sidebar: false
-hero_image: ../assets/image/Chassis.png
+hero_image: ../assets/Chassis.png
 ---
 # using DSL outcome to generate Code
 

@@ -8,7 +8,7 @@ androidx-appcompat = "1.6.1"
 androidx-core-ktx = "1.10.1"
 antlr = "4.13.0"
 apache-poi = "5.2.3"
-arrow = "1.2.0"
+arrow = "1.2.1"
 benasher44-uuid = "0.7.0"
 clikt = "4.2.0"
 # global https://github.com/JetBrains/compose-jb/releases
@@ -25,10 +25,10 @@ jsoup = "1.16.1"
 junit-jupiter = "5.9.3"
 kermit = "2.0.0-RC4"
 kodein = "7.20.1"
-koin = "3.4.3"
-kointest = "3.4.3"
+koin = "3.5.0"
+kointest = "3.5.0"
 koodies = "1.9.7"
-kotest = "5.7.0"
+kotest = "5.7.2"
 kotest-extensions-koin = "1.2.0"
 kotest-plugin = "0.4.10"
 # global
@@ -54,7 +54,7 @@ resilience4j = "2.0.2"
 retrofit = "2.9.0"
 # plugin
 shadow = "8.1.1"
-slf4j = "2.0.7"
+slf4j = "2.0.9"
 snakeyaml = "2.0"
 sqldelight = "2.0.0-alpha05"
 sslcontext-kickstart = "8.0.0"
@@ -86,10 +86,10 @@ kodein = { module = "org.kodein.di:kodein-di", version.ref = "kodein" }
 koin = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 kointest = { module = "io.insert-koin:koin-test", version.ref = "kointest" }
 koodies = { module = "com.bkahlert.koodies:koodies", version.ref = "koodies" }
-kotest-extensions-koin = { module = "io.kotest.extensions:kotest-extensions-koin", version.ref = "kotest-extensions-koin" }
-kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
-kotest-framework-dataset = { module = "io.kotest:kotest-framework-datatest", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-extensions-koin = { module = "io.kotest.extensions:kotest-extensions-koin", version.ref = "kotest-extensions-koin" }
+kotest-framework-dataset = { module = "io.kotest:kotest-framework-datatest", version.ref = "kotest" }
+kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-logging = { module = "io.github.microutils:kotlin-logging", version.ref = "kotlin-logging" }
@@ -121,6 +121,15 @@ sqldelight-native-driver = { module = "com.squareup.sqldelight:native-driver", v
 sqldelight-sqlite-driver = { module = "com.squareup.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 sslcontext-kickstart = { module = "io.github.hakky54:sslcontext-kickstart", version.ref = "sslcontext-kickstart" }
 
+[bundles]
+testJunitKotestKoin = [
+    "kointest",
+    "kotest-assertions-core",
+    "kotest-extensions-koin",
+    "kotest-framework-dataset",
+    "kotest-framework-engine",
+]
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "android" }
 android-library = { id = "com.android.library", version.ref = "android" }
@@ -129,6 +138,3 @@ shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 versions-catalogupdate = { id = "nl.littlerobots.version-catalog-update", version.ref = "gradle-versions-catalogUpdate" }
 versions-filter = { id = "se.ascp.gradle.gradle-versions-filter", version.ref = "gradle-versions-filter" }
 versions-plugin = { id = "com.github.ben-manes.versions", version.ref = "gradle-versions-plugin" }
-
-[bundles]
-testJunitKotestKoin = ["kointest", "kotest-extensions-koin", "kotest-framework-engine", "kotest-framework-engine", "kotest-framework-dataset", "kotest-assertions-core"]

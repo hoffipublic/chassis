@@ -4,7 +4,7 @@ layout: page
 title: Chassis Home
 subtitle: The Kotlin Code-Generator
 description: Chassis Kotlin Code-Generator for DTO classes, objects, interfaces, api and RDBMS insert update read delete CRUD
-hero_image: assets/image/Chassis.png
+hero_image: assets/Chassis.png
 menubar: data_menu_chassis
 show_sidebar: false
 ---
@@ -18,8 +18,8 @@ Over and over and over again...
 
 ***TL;DR***
 
-- have a look at the DSL [chassis DSL examples](https://github.com/hoffipublic/chassis/tree/master/examples/src/main/kotlin/com/hoffi/chassis/examples/basic)
-- find generated kotlin code in [github generatedchassis](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/examples)
+- have a look at the DSL [chassis DSL examples](https://github.com/hoffipublic/chassis/tree/master/examples/src/main/kotlin/com/hoffi/chassis/examples/basic){:target="_blank"}
+- find generated kotlin code in [github generatedchassis](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/examples){:target="_blank"}
 
 current example DSL (4 DTOs, 1 DCO with Fillers and DB CRUDs plus 4 abstract DTOs Base-Classes):
 
@@ -50,9 +50,9 @@ in other cases with "a little bit" of contained objects and sometimes all the ob
 
 While code generation with text templates ever was a pain in the arse (and ever will be), since the last century frameworks evolved that are really "usable" for the purpose of code-generation.
 
-[KotlinPoet](https://square.github.io/kotlinpoet/) is one of these really nice frameworks.
+[KotlinPoet](https://square.github.io/kotlinpoet/){:target="_blank"} is one of these really nice frameworks.
 
-And as Kotlin also has a nice feature that [trailing lambda parameters](https://kotlinlang.org/docs/lambdas.html#passing-trailing-lambdas) of functions
+And as Kotlin also has a nice feature that [trailing lambda parameters](https://kotlinlang.org/docs/lambdas.html#passing-trailing-lambdas){:target="_blank"} of functions
 can be placed outside of the function call parentheses, we can use **pure kotlin code as DSL**<br/>
 <br/>
 (no json, no yaml, no toml, just code).<br/>
@@ -110,7 +110,7 @@ So the DSL "definition" of an entity dto and an entity dco that share some prope
 ```
 
 - You get static "Fillers" to copy recursively any object to any(!) other object (as long as the prop names and datatypes are compatible)
-- Database CRUD (insert, select, update, delete) static methods to operate towards and from the RDBMS (currently only via [JetBrains exposed](https://github.com/JetBrains/Exposed))
+- Database CRUD (insert, select, update, delete) static methods to operate towards and from the RDBMS (currently only via [JetBrains exposed](https://github.com/JetBrains/Exposed){:target="_blank"})
   - read all contained objects in one SQL (via JOIN)
   - read via separate selects
 - via DSL specification of CopyBoundrys you can generate variants for each of these operations
@@ -223,7 +223,7 @@ coming up:
     - further CRUD DB operations with "own function names" for each CopyBoundry
 - Exposed Extensions
     - upsert ?
-    - insert/delete if not exists [stackoverflow: how-can-i-do-insert-if-not-exists-in-mysql](https://stackoverflow.com/questions/1361340/how-can-i-do-insert-if-not-exists-in-mysql)
+    - insert/delete if not exists [stackoverflow: how-can-i-do-insert-if-not-exists-in-mysql](https://stackoverflow.com/questions/1361340/how-can-i-do-insert-if-not-exists-in-mysql){:target="_blank"}
 
 - **many to many relations**
 - Properties with generic types
