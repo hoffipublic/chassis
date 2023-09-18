@@ -9,7 +9,7 @@ cmd="local"
 if [[ -n $0 && $0 == "github" ]]; then cmd=github ; fi
 
 # shellcheck disable=SC2016
-awkScriptToLocal='match($0, /^(# *)?gem "jekyll"(.*# CREATE.SH) *$/, m)             { print "gem \"jekyll\"" m[2] }
+awkScriptToLocal='match($0, /^(# *)?gem "jekyll(.*# CREATE.SH) *$/, m)              { print "gem \"jekyll" m[2] }
                   match($0, /^(# *)?gem "github-pages"(.*# CREATE.SH) *$/, m)       { print "#gem \"github-pages\"" m[2] }
                   match($0, /^(# *)?baseurl: ?""(.*# CREATE.SH) *$/, m)             { print "baseurl: \"\"" m[2] }
                   match($0, /^(# *)?baseurl: ?"\/chassis"(.*# CREATE.SH) *$/, m)    { print "#baseurl: \"/chassis\"" m[2] }
@@ -21,7 +21,7 @@ awkScriptToLocal='match($0, /^(# *)?gem "jekyll"(.*# CREATE.SH) *$/, m)         
                  '
 
 # shellcheck disable=SC2016
-awkScriptToPages='match($0, /^(# *)?gem "jekyll"(.*# CREATE.SH) *$/, m)             { print "#gem \"jekyll\"" m[2] }
+awkScriptToPages='match($0, /^(# *)?gem "jekyll(.*# CREATE.SH) *$/, m)              { print "#gem \"jekyll" m[2] }
                   match($0, /^(# *)?gem "github-pages"(.*# CREATE.SH) *$/, m)       { print "gem \"github-pages\"" m[2] }
                   match($0, /^(# *)?baseurl: ?""(.*# CREATE.SH) *$/, m)             { print "#baseurl: \"\"" m[2] }
                   match($0, /^(# *)?baseurl: ?"\/chassis"(.*# CREATE.SH) *$/, m)    { print "baseurl: \"/chassis\"" m[2] }
@@ -37,13 +37,17 @@ if [[ $cmd == "local" ]]; then
   gawk -i inplace "$awkScriptToLocal" "$SCRIPTDIR/_config.yml"
   gawk -i inplace "$awkScriptToLocal" "$SCRIPTDIR/Gemfile"
 
-  ln -s ../../../drawiochassis/assets/imagebinary ./assets/
+  if [[ $1 == "install" ]]; then
+    bundle install --redownload
+  else
+    ln -s ../../../drawiochassis/assets/imagebinary ./assets/
 
-  echo "./$(basename "$SCRIPTDIR")/${0##*/}"
-  echo bundle exec jekyll serve "$@"
-  bundle exec jekyll serve "$@"
+    echo "./$(basename "$SCRIPTDIR")/${0##*/}"
+    echo bundle exec jekyll serve "$@"
+    bundle exec jekyll serve "$@"
 
-  rm ./assets/imagebinary
+    rm ./assets/imagebinary
+  fi
 
   gawk -i inplace "$awkScriptToPages" "$SCRIPTDIR/_config.yml"
   gawk -i inplace "$awkScriptToPages" "$SCRIPTDIR/Gemfile"
