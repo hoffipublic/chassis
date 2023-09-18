@@ -12,7 +12,7 @@ hero_image: ../../assets/Chassis.png
 
 {{ site.chassisassetsgit }}/arch/drawio/Arch_Overview.drawio.png
 
-[//]: #  {% drawio path="assets/arch/drawio/Arch_Overview.drawio" page_number=0 height=650 %}
+[//]: # curlypercentopen drawio path="assets/arch/drawio/Arch_Overview.drawio" page_number=0 height=650 curlypercentclose
 ![Arch_Overview]({{ site.chassisassetsgit }}/arch/drawio/Arch_Overview.drawio.png)
 
 
