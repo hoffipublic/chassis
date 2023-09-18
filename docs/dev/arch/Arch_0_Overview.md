@@ -8,11 +8,11 @@ hero_image: ../../assets/Chassis.png
 ---
 # The Chassis DSL for generating Code
 
-[subpage1]({{ site.baseurl }}{% link dsl/dsl.md %})
+[link to DSL docs]({{ site.baseurl }}{% link dsl/dsl.md %})
 
 {{ site.chassisassetsgit }}/arch/drawio/Arch_Overview.drawio.png
 
-[//]: # curlypercentopen drawio path="assets/arch/drawio/Arch_Overview.drawio" page_number=0 height=650 curlypercentclose
+[comment]: # curlypercentopen drawio path="assets/arch/drawio/Arch_Overview.drawio" page_number=0 height=650 curlypercentclose
 ![Arch_Overview]({{ site.chassisassetsgit }}/arch/drawio/Arch_Overview.drawio.png)
 
 
