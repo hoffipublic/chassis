@@ -19,6 +19,7 @@ gem "jekyll-remote-theme"
 # gem "github-pages", group: :jekyll_plugins
 # If you have any plugins, put them here!
 group :jekyll_plugins do
+  gem "jekyll-github-metadata"
   gem "jekyll-feed", "~> 0.12"
   gem "jekyll-drawio", "~> 1.1.1"
   #gem 'nokogiri', '~> 1.6', '>= 1.6.8' # used by _plugins/lib/jekyll-drawio.rb
