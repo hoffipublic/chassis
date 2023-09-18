@@ -28,7 +28,7 @@ remote_theme: chrisrhymes/bulma-clean-theme # for github pages                  
 
 # custom:
 #chassisassetsgit: "/assets/imagebinary"   # CREATE.SH
-chassisassetsgit: "https://hoffimuc.com/assets" # CREATE.SH
+chassisassetsgit: "https://hoffimuc.com/assets/imagebinary" # CREATE.SH
 
 plugins:
   - jekyll-feed
