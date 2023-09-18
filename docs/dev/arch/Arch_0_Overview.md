@@ -24,4 +24,4 @@ none
 
 image direct:
 
-![hero](/assets/Chassis.png)
+![hero](../../assets/Chassis.png)
