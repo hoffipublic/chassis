@@ -6,9 +6,9 @@ source "https://rubygems.org"
 #     bundle exec jekyll serve
 #
 #gem "jekyll", "~> 4.3.2"                  # for local testing # CREATE.SH
-#gem "jekyll-drawio", "~> 1.1.1"     # using from _plugins/jekyll-drawio.rb
-gem 'nokogiri', '~> 1.6', '>= 1.6.8' # used by    _plugins/jekyll-drawio.rb
-gem 'erb', '~> 2.2'                  # used by    _plugins/jekyll-drawio.rb
+#gem "jekyll-drawio", "~> 1.1.1"           # for local testing # CREATE.SH
+#gem 'nokogiri', '~> 1.6', '>= 1.6.8' # used by    _plugins/jekyll-drawio.rb
+#gem 'erb', '~> 2.2'                  # used by    _plugins/jekyll-drawio.rb
 gem "github-pages", group: :jekyll_plugins # for github pages  # CREATE.SH
 
 # This is the default theme for new Jekyll sites. You may change this to anything you like.

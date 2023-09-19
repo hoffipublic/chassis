@@ -12,12 +12,7 @@ hero_image: ../../assets/Chassis.png
 
 {{ site.chassisassetsgit }}/arch/drawio/Arch_Overview.drawio.png
 
-as drawio from _plugins/
-
-{% drawio path="assets/arch/drawio/Arch_Overview.drawio" page_number=0 height=650 %}
-
-as image svg:
-
+[comment]: # curlypercent  drawio path="assets/arch/drawio/Arch_Overview.drawio" page_number=0 height=650 percentcurly
 ![Arch_Overview]({{ site.chassisassetsgit }}/arch/drawio/Arch_Overview.drawio.svg)
 
 image direct:
