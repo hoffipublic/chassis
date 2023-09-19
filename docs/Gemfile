@@ -7,6 +7,7 @@ source "https://rubygems.org"
 #
 #gem "jekyll", "~> 4.3.2"                  # for local testing # CREATE.SH
 #gem "jekyll-drawio", "~> 1.1.1"           # for local testing # CREATE.SH
+#gem "jekyll-plantuml"                     # for local testing # CREATE.SH
 #gem 'nokogiri', '~> 1.6', '>= 1.6.8' # used by    _plugins/jekyll-drawio.rb
 #gem 'erb', '~> 2.2'                  # used by    _plugins/jekyll-drawio.rb
 gem "github-pages", group: :jekyll_plugins # for github pages  # CREATE.SH
@@ -24,6 +25,7 @@ group :jekyll_plugins do
   gem "jekyll-github-metadata"
   gem "jekyll-feed", "~> 0.12"
   gem "jekyll-drawio", "~> 1.1.1"
+  gem "jekyll-plantuml"
   #gem 'nokogiri', '~> 1.6', '>= 1.6.8' # used by    _plugins/jekyll-drawio.rb
   #gem 'erb', '~> 2.2'                  # used by    _plugins/jekyll-drawio.rb
 end

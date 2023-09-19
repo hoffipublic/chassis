@@ -15,4 +15,6 @@ hero_image: ../../assets/Chassis.png
 [comment]: # curlypercent  drawio path="assets/arch/drawio/Arch_Overview.drawio" page_number=0 height=650 percentcurly
 ![Arch_Overview]({{ site.chassisassetsgit }}/arch/drawio/Arch_Overview.drawio.svg)
 
+![ShowcaseClassUML]({{ site.chassisassetsgit }}/arch/plantuml/Showcase.svg)
+
 ![hero](../../assets/Chassis.png)

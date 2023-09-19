@@ -49,7 +49,8 @@ function main() {
     if [[ $cmd == "local" ]]; then return 0 ; fi
 
     echo "generating png and svg from *.drawio files in ../../drawiochassis/assets" ...
-    drawio "../../drawiochassis/assets"
+    drawio       "../../drawiochassis/assets"
+    plantumlFunc "../../drawiochassis/assets"
 
     # as we softlink assets/imagebinary
     # to have the *.png|*svg files in the linked (local) git repo
@@ -61,8 +62,8 @@ function main() {
     echo "ln -s ../../../drawiochassis/assets/imagebinary ./assets/"
     ln -s ../../../drawiochassis/assets/imagebinary ./assets/
     # the (back) softlinks of drawiochassis git repo to this repo cause trouble for jekyll so we remove them from the generated _site
-    echo "find _site/assets/imagebinary -type l -name '*drawio' -exec rm {} \;"
-    find _site/assets/imagebinary -type l -name '*drawio' -exec rm {} \;
+    echo "find _site/assets/imagebinary -type l \\( -name '*.drawio' -o -name '*.plantuml' \\) -exec rm {} \;"
+    find _site/assets/imagebinary -type l \( -name '*.drawio' -o -name '*.plantuml' \) -exec rm {} \;
 
     echo bundle exec jekyll serve "$@"
     bundle exec jekyll serve "$@"
@@ -79,8 +80,8 @@ function main() {
 
     # the (back) softlinks of drawiochassis git repo to this repo cause trouble for jekyll so we remove them from the generated _site
     # here also, so that we don't rsync/scp it to somewhere it shouldn't be (e.g. a webserver)
-    echo "find _site/assets/imagebinary -type l -name '*drawio' -exec rm {} \;"
-    find _site/assets/imagebinary -type l -name '*drawio' -exec rm {} \;
+    echo "find _site/assets/imagebinary -type l \\( -name '*.drawio' -o -name '*.plantuml' \\) -exec rm {} \;"
+    find _site/assets/imagebinary -type l \( -name '*.drawio' -o -name '*.plantuml' \) -exec rm {} \;
     return 0
   fi
 
@@ -119,6 +120,16 @@ function drawio() {
   for file in "${paths[@]}"; do
       "$DRAWIOEXE" "$file" --crop --export --format png --embed-diagram --output "${file}.png" | awk '{m=match($0, $2); print "      " substr($0,m)}'
       "$DRAWIOEXE" "$file" --crop --export --format svg --embed-diagram --output "${file}.svg" | awk '{m=match($0, $2); print "      " substr($0,m)}'
+  done
+}
+function plantumlFunc() {
+  local chassisassetsgit="$1"
+  mapfile -d $'\0' paths < <(find -L "$chassisassetsgit" -type d \( -name public -o -name tmp -o -name resources -o -name vendor -o -name node_modules -o -name dist \) -prune \
+      -o -type f -name '*.plantuml' -print0)
+  for file in "${paths[@]}"; do
+      echo "      -> $file"
+      plantuml -tpng "$file"
+      plantuml -tsvg "$file"
   done
 }
 

@@ -24,11 +24,11 @@ Over and over and over again...
 current example DSL (4 DTOs, 1 DCO with Fillers and DB CRUDs plus 4 abstract DTOs Base-Classes):
 
 ```
-|           | lines | #files |
-|:---------:|------:|-------:|
-|    DSL    |   319 |      3 |
-| generated |  2190 |     43 |
-|     %     | ~700% |        |
+|           |  lines |  #files |
+|:---------:|-------:|--------:|
+|    DSL    |    319 |       3 |
+| generated |   2190 |      43 |
+|     %     | ~700 % | ~1400 % |
 ```
 
 <hr/>
@@ -42,24 +42,25 @@ and then back again towards the internet. Every little adding of a model or even
 
 Consistently also means: in your backend, in your middle-services, in your frontend(s) ... so in several independant repositories ... (btw: openAPI sucks)
 
-All so often I saw those changes being the cause of production takeouts even with regression testing and CICD pipelines in place.
+All so often I saw those changes being the cause for broken tests, CICD pipelines (or even production takeouts).
 
-Also over time you have several variants of each (de)serialization and CRUD operation to your persistent store, because in one case you want to load an object "flat",
-in other cases with "a little bit" of contained objects and sometimes all the object tree (loading half of the database redundantly) or some subObjects ran through different transformations
-(because business domains are always just "almost" operating on "similar" information.
+Also, over time any project evolves several variants for each (un)marshalling and CRUD operation.
+In one case you may want to load an object "flat", in another cases with "a little bit" of contained objects,
+sometimes all the object tree (loading half of the database redundantly) and sometimes some (sub)Objects need some nasty inner transformations
+(because business (sub)domains often differ in just "nasty tiny details").
+
+***Code Generation***
 
 While code generation with text templates ever was a pain in the arse (and ever will be), since the last century frameworks evolved that are really "usable" for the purpose of code-generation.
 
 [KotlinPoet](https://square.github.io/kotlinpoet/){:target="_blank"} is one of these really nice frameworks.
 
-And as Kotlin also has a nice feature that [trailing lambda parameters](https://kotlinlang.org/docs/lambdas.html#passing-trailing-lambdas){:target="_blank"} of functions
-can be placed outside of the function call parentheses, we can use **pure kotlin code as DSL**<br/>
-<br/>
-(no json, no yaml, no toml, just code).<br/>
-(security is no issue here ... we're in our code-project anyways)<br/>
+And as Kotlin also has the nice feature of [trailing lambda parameters](https://kotlinlang.org/docs/lambdas.html#passing-trailing-lambdas){:target="_blank"} (the function-implementation
+can be placed outside of the function call parentheses), we can use **pure kotlin code as DSL** (no json, no yaml, no toml, just code).<br/>
+(good thing: security is no issue in code generation ... as we're in our code-project anyways)<br/>
 (BTW: Chassis DSL can reference any DSL Subelement from any other DSL Subelement,<br/>
 &nbsp;no more xml/yml/json referencing hell...<br/>
-&nbsp;and as the DSL is pure Kotlin code, you get syntax highlighting, code formatting and coloring<br/>
+&nbsp;and as the DSL is pure Kotlin code, we get syntax highlighting, code formatting and coloring<br/>
 &nbsp;*for free* in the IDE of your choice)
 
 ***Chassis CodeGenerator to the rescue***
@@ -109,14 +110,16 @@ So the DSL "definition" of an entity dto and an entity dco that share some prope
     }
 ```
 
-- You get static "Fillers" to copy recursively any object to any(!) other object (as long as the prop names and datatypes are compatible)
-- Database CRUD (insert, select, update, delete) static methods to operate towards and from the RDBMS (currently only via [JetBrains exposed](https://github.com/JetBrains/Exposed){:target="_blank"})
-  - read all contained objects in one SQL (via JOIN)
-  - read via separate selects
-- via DSL specification of CopyBoundrys you can generate variants for each of these operations
-  - omiting subtrees or types or prop-names, or replacing them or transforming them
+On generating Code from above's Chassis DSL
 
-Your business code can (recursively &#x1F609;) concentrate on what there is to solve for business:
+- you get static "Fillers" to recursively copy any object to any(!) other object (as long as the prop names and their types are compatible)
+- database CRUD (insert, select, update, delete) static methods to operate towards and from the RDBMS (currently only via [JetBrains exposed](https://github.com/JetBrains/Exposed){:target="_blank"})
+  - read all contained objects in one SQL (via JOIN)
+  - read via separate selects (for contained models)
+- via DSL specification of CopyBoundrys you can generate variants for each of these operations
+  - omiting subtrees or types or prop-names, or replacing them or transforming them ...
+
+Your **business code** can (recursively &#x1F609;) concentrate on what there is to solve for business:
 
 ```kotlin
     transaction {
@@ -136,21 +139,36 @@ Your business code can (recursively &#x1F609;) concentrate on what there is to s
 
 - **Dto** classes/interfaces/objects (Data-Transfer-Objects)
     - properties with "known" types
-        - mutable and immutable (currently `Integer`, `Long`, `String`, `Boolean`, `java.util.uuid`, `kotlinx.datetime.Instant`, `kotlinx.datetime.LocalDateTime` (see `chassismodel/src/main/kotlin/com/hoffi/chassis/chassismodel/typ/TYP.kt`))
+        - mutable and immutable (currently `Integer`, `Long`, `String`, `Boolean`, `java.util.uuid`, `kotlinx.datetime.Instant`, `kotlinx.datetime.LocalDateTime` (see [TYP.kt](https://github.com/hoffipublic/chassis/blob/db67b34c9ae78f8b975111bd378708b2c7b9c1e9/chassismodel/src/main/kotlin/com/hoffi/chassis/chassismodel/typ/TYP.kt#L40))
         - mutable and immutable collection types (currently `List`, `Set`, `Collection`, `Iterable`)
         - nullable, default initializers or initializers specified in DSL
     - properties by referencing their KClass<...>, mutable and immutable (also for collection generic-type)
         - nullable or initializers specified in DSL
     - properties by referencing other `model` types defined somewhere else in (other) chassis DSLs
-    - by Tagging properties in the Dsl, they can "contribute" to generated things e.g. `toString()`, `equals()`, `hashCode()`
+    - by Tagging properties in the Dsl, they can "contribute" to generated things e.g.
+      - `toString()`
+      - `equals()`
+      - `hashCode()`
     - primary (public/protected) `constructor` (via Tag on props)
-    - `companion` `create()` and `createWithUuid()`
-    - `companion` `val NULL` for each defined DSL model instance
+    - `companion object`
+      - `create()`
+      - `createWithUuid()`
+      - `val NULL = ...` (therefore, no need to have nullable model variables anymore!)
     - ***no*** generic types yet (TBD)
     - extending super classes and interfaces
         - also by referencing other DSL model instances as super type or interfaces
         - ability to specify "common" super classes/interfaces for all models in a modelgroup or all model instances in a model
-    - gather (add) all properties (or/and of that ones super classes) by just saying e.g.: `propertiesOf(DTO inModelgroup "PERSISTENTGROUP" withModelName "SomeModelName")`
+    - gather (add) all properties (or/and of that ones super classes) by just saying e.g.:
+      - `propertiesOf(DTO inModelgroup "PERSISTENTGROUP" withModelName "SomeModelName")`
+      - use this to define an abstract model (code generation might be suppressed for that one)
+        and reference its props from models in your DSL which should also have exactly THAT set of props (DRY).
+- ***Fillers***
+    - generate static copy methods to fill any DSL model from any other DSL model<br/>
+      (as long as the prop names and their types are compatible)
+    - specifying CopyBoundrys to specify in DSL how "deep" to copy model objects (or e.g. instead do not recurse but give fresh initialized model instances to a prop)
+        - Dto <--> Dto
+        - Dto <--> Dco
+        - Table (SQL resultRow) <--> Dto
 - ***Table*** RDBMS Objects (currently for <https://github.com/JetBrains/Exposed>)
     - by just specifying `tableFor(DTO)` in the DSL model
         - ***no*** many2many mappings yet
@@ -159,12 +177,6 @@ Your business code can (recursively &#x1F609;) concentrate on what there is to s
         - if the model has a property named `uuid` with TYP `java.util.Uuid`
             - generate PRIMARY KEY to Table and enable FOREIGN KEY integrity on generated jetbrain exposed Tables
             - DSL enable to set DB related property stuff, like `PK`, `nullable`, `index`, etc.
-- ***Fillers***
-    - generate static copy methods to fill any DSL model from any other DSL model<br/>
-      (as long as the prop names and their types are compatible)
-    - specifying CopyBoundrys to specify in DSL how "deep" to copy model objects (or e.g. instead do not recurse but give fresh initialized model instances to a prop)
-        - Dto <--> Dto
-        - Table (SQL resultRow) <--> Dto
 - ***CRUD DB access*** methods (CREATE/insert, READ/select, UPDATE/update, DELETE/delete)
     - either via DB `joins` of all (recursive) contained DSL model objects<br/>(inside the DSL model object you want to "CRUD")<br/>model instance has to have a `PK named 'uuid' for join's to work`
     - or via distinct `select`s to the db for each (recursive) contained DSL model object
