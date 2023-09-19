@@ -23,7 +23,7 @@ gem "jekyll-remote-theme"
 group :jekyll_plugins do
   gem "jekyll-github-metadata"
   gem "jekyll-feed", "~> 0.12"
-  #gem "jekyll-drawio", "~> 1.1.1"
+  gem "jekyll-drawio", "~> 1.1.1"
   #gem 'nokogiri', '~> 1.6', '>= 1.6.8' # used by    _plugins/jekyll-drawio.rb
   #gem 'erb', '~> 2.2'                  # used by    _plugins/jekyll-drawio.rb
 end

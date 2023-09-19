@@ -5,8 +5,8 @@
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "$SCRIPTDIR" || exit 1
 
-cmd="local"
-if [[ -n $0 && $0 == "github" ]]; then cmd=github ; fi
+cmd="default"
+if [[ -n $1 ]]; then cmd=$1 ; fi
 
 # shellcheck disable=SC2016
 awkScriptToLocal='match($0, /^(# *)?gem "jekyll(.*# CREATE.SH) *$/, m)              { print "gem \"jekyll" m[2] }
@@ -33,27 +33,33 @@ awkScriptToPages='match($0, /^(# *)?gem "jekyll(.*# CREATE.SH) *$/, m)          
                  '
 
 
-if [[ $cmd == "local" ]]; then
+if [[ $cmd == "default" || $cmd == "local" ]]; then
   gawk -i inplace "$awkScriptToLocal" "$SCRIPTDIR/_config.yml"
   gawk -i inplace "$awkScriptToLocal" "$SCRIPTDIR/Gemfile"
 
-  if [[ $1 == "install" ]]; then
-    bundle install --redownload
-  else
+  if [[ $cmd == "local" ]]; then exit 0 ; fi
+
     ln -s ../../../drawiochassis/assets/imagebinary ./assets/
-    find _site/assets/imagebinary -type l -name '*drawio' -exec rm {} \;
+    #find _site/assets/imagebinary -type l -name '*drawio' -exec rm {} \;
 
     echo "./$(basename "$SCRIPTDIR")/${0##*/}"
     echo bundle exec jekyll serve "$@"
     bundle exec jekyll serve "$@"
 
     rm ./assets/imagebinary
-  fi
 
   gawk -i inplace "$awkScriptToPages" "$SCRIPTDIR/_config.yml"
   gawk -i inplace "$awkScriptToPages" "$SCRIPTDIR/Gemfile"
+  exit 0
+fi
 
-elif [[ $cmd == "github" ]]; then
+if [[ $cmd == "github" ]]; then
   gawk -i inplace "$awkScriptToPages" "$SCRIPTDIR/_config.yml"
   gawk -i inplace "$awkScriptToPages" "$SCRIPTDIR/Gemfile"
+  exit 0
+fi
+
+if [[ $cmd == "install" ]]; then
+  bundle install --redownload
+  exit 0
 fi
