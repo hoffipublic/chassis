@@ -41,6 +41,7 @@ if [[ $cmd == "local" ]]; then
     bundle install --redownload
   else
     ln -s ../../../drawiochassis/assets/imagebinary ./assets/
+    find _site/assets/imagebinary -type l -name '*drawio' -exec rm {} \;
 
     echo "./$(basename "$SCRIPTDIR")/${0##*/}"
     echo bundle exec jekyll serve "$@"
