@@ -62,7 +62,7 @@ fun baseModelsPersistent() {
 //            }
             dto {
                 extends { +PERSISTENT__Abstract } // TODO this@model
-                classMods { }
+                classMods { /* currently no op */ }
                 nameAndWhereto {
                     classPostfix("Base")
                 }

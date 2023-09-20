@@ -22,7 +22,7 @@ interface IDslApiInitializer {
     fun initializer(name: String, replaceAppendOrModify: ReplaceAppendOrModify, format: String, vararg args: Any, modifyInitializerBlock: Initializer.() -> Unit = {}) }
 
 @ChassisDslMarker
-interface IDslApiPropFuns {
+    interface IDslApiPropFuns {
     fun addToStringMembers(vararg propName: String)
     fun removeToStringMembers(vararg propName: String)
     // ===================================================================================================================================

@@ -9,4 +9,5 @@ hero_image: ../assets/Chassis.png
 ---
 # Chassis Code Generator gentle introduction
 
-tbd
+currently to intro story is directly on the [Chassis Homepage](..))
+

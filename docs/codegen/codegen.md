@@ -2,6 +2,7 @@
 layout: page
 title: Chassis codegen
 subtitle: Generating Code
+menubar: data_menu_chassis
 toc: true
 show_sidebar: false
 hero_image: ../assets/Chassis.png

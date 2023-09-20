@@ -9,9 +9,14 @@ import com.hoffi.chassis.chassismodel.typ.mutable
 import com.hoffi.chassis.dsl.internal.DslClassObjectOrInterface.INTERFACE
 import com.hoffi.chassis.dsl.internal.DslCtxWrapper
 import com.hoffi.chassis.dsl.modelgroup
+import com.hoffi.chassis.dsl.modelgroup.*
 import com.hoffi.chassis.dsl.modelgroup.IDslApiConstructorVisibility.VISIBILITY.PROTECTED
 import com.hoffi.chassis.dsl.modelgroup.IDslApiConstructorVisibility.VISIBILITY.PUBLIC
+import com.hoffi.chassis.dsl.modelgroup.crud.IDslApiOuterCrudBlock
+import com.hoffi.chassis.dsl.modelgroup.crud.IDslApiPrefixedCrudScopeBlock
 import com.hoffi.chassis.dsl.scratchdslEXAMPLES.COMMON__PERSISTENT_OPTIMISTIC
+import com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoOnSubElements
+import com.hoffi.chassis.shared.helpers.See
 import com.hoffi.chassis.shared.shared.COPYTYPE.IGNORE
 import com.hoffi.chassis.shared.shared.COPYTYPE.NEW
 import com.hoffi.chassis.shared.shared.CrudData.CRUD.Companion.CREATE
@@ -35,7 +40,9 @@ fun entitiesFunc() {
 //
 //    }
     modelgroup(ENTITYGROUP) {
+        See(DslModelgroup::class)
         nameAndWhereto {
+            See(IDslApiNameAndWheretoOnSubElements::class)
             classPrefix("Simple")
             packageName("entity")
             dtoNameAndWhereto {
@@ -53,6 +60,7 @@ fun entitiesFunc() {
         // ================================================================================================================================
 
         model(ENTITY__BASE) {
+            See(IDslApiModel::class)
             kind = INTERFACE
             dto {}
         }
@@ -60,14 +68,16 @@ fun entitiesFunc() {
         // ================================================================================================================================
 
         model(ENTITY__ENTITY) {
+            See(IDslApiModel::class)
             extends {
+                See(IDslApiExtendsBlock::class)
                 + (MODEL inModelgroup PERSISTENTGROUP withModelName COMMON__PERSISTENT_OPTIMISTIC)
                 //- ENTITY__BASE
                 // NEXT WILL BREAK for Table
                 //+ ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT) ) // withName COMMON__PERSISTENT) //
                 //+ com.hoffi.chassis.shared.Dummy::class // special models overwrite non-Interface super classes
             }
-
+            See(IDslApiPropFuns::class)
             property("name", TYP.STRING, mutable, Tag.CONSTRUCTOR, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
             property("value", TYP.STRING, mutable, length = 4096, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER, Tag.HASH_MEMBER, Tag.TO_STRING_MEMBER)
             property("prio", TYP.INT, mutable, Tag.TO_STRING_MEMBER)
@@ -86,15 +96,19 @@ fun entitiesFunc() {
             addToStringMembers("aLocalDateTime", "updatedAt")
 
             dto {
+                See(IDslApiDto::class)
                 extends {
+                    See(IDslApiExtendsBlock::class)
                     + (MODEL inModelgroup PERSISTENTGROUP withModelName COMMON__PERSISTENT_OPTIMISTIC)
                     //replaceSuperclass = true
                     - ENTITY__BASE
                     //+ ( (MODEL inModelgroup COMMON withModelName COMMON__PERSISTENT_OPTIMISTIC) ) // withName COMMON__PERSISTENT) //
                 }
+                See(IDslApiPropFuns::class)
 //                annotateProperty("someObject", AnnotationSpec.builder(Contextual::class))
                 property("dtoSpecificProp", TYP.STRING, mutable, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER)
                 //propertiesOf( (MODEL inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) )
+                See(IDslApiInitializer::class)
                 initializer("dtoSpecificProp", APPEND, "/* some dto specific comment */")
                 initializer("prio", APPEND, "/* some dto prio comment */")
 
@@ -103,14 +117,18 @@ fun entitiesFunc() {
             }
 
             tableFor(DTO) {
+                See(IDslApiTable::class)
+                See(IDslApiInitializer::class)
                 initializer("name", APPEND, ".uniqueIndex()")
                 initializer("prio", APPEND, "/* some table prio comment */")
 
                 crud {
+                    See(IDslApiOuterCrudBlock::class)
                     STANDARD FOR DTO
                     +DTO
                     CRUDALL FOR DTO
                     prefixed("somePrefix") {
+                        See(IDslApiPrefixedCrudScopeBlock::class)
                         (READ.viaAllVariants FOR DTO) deepRestrictions  {
                             IGNORE propName "someModelObject"
                             IGNORE("someModelObject", "prefix1")
@@ -144,6 +162,7 @@ fun entitiesFunc() {
             }
 
             filler {
+                See(IDslApiOuterFillerBlock::class)
                 +DTO // DTO filled by a DTO
                 DTO mutual TABLE
                 DTO mutual TABLE
@@ -153,6 +172,7 @@ fun entitiesFunc() {
                 (DTO of ENTITY__SUBENTITY) from TABLE
                 //(DTO inModelgroup PERSISTENTGROUP withModelName PERSISTENT__PERSISTENT) from DTO
                 prefixed("withoutModels") {
+                    See(IDslApiPrefixedCrudScopeBlock::class)
                     (DTO mutual TABLE) shallowRestrictions {
                         IGNORE propName "someModelObject∆" // TODO XXX ∆ check if prop exists!!!
                         IGNORE("dtoSpecificProp", "someObject", "aLocalDateTime")

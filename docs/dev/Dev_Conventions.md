@@ -2,6 +2,7 @@
 layout: page
 title: Dev Conventions
 subtitle: Naming is one of the most important thing<br/>in SW Development
+menubar: data_menu_chassis
 toc: true
 show_sidebar: false
 hero_image: ../../assets/Chassis.png

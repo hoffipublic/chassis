@@ -4,9 +4,9 @@ SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "$SCRIPTDIR" || exit 1
 
 cmd="default"
-if [[ -n $1 && $1 =~ ^default|local|github|install|-h|--help|help$ ]]; then cmd=$1 ; shift ; fi
+if [[ -n $1 && $1 =~ ^default|fast|local|github|install|-h|--help|help$ ]]; then cmd=$1 ; shift ; fi
 if [[ $cmd =~ ^-h|--help|help$ ]]; then
-  echo "synopsis: ${0##*/} [local|github|install|-h|--help|help]"
+  echo "synopsis: ${0##*/} [fast|local|github|install|-h|--help|help]"
   exit 0
 fi
 
@@ -40,7 +40,7 @@ awkScriptToPages='match($0, /^(# *)?gem "jekyll(.*# CREATE.SH) *$/, m)          
 # don't forget to do source ~/.bash_configs/bash_ruby
 
 function main() {
-  if [[ $cmd == "default" || $cmd == "local" ]]; then
+  if [[ $cmd == "default" || $cmd == "local" || $cmd == "fast" ]]; then
     echo "switching _config.yml to local jekyll values"
     gawk -i inplace "$awkScriptToLocal" "$SCRIPTDIR/_config.yml"
     echo "switching Gemfile     to local jekyll values"
@@ -48,9 +48,13 @@ function main() {
 
     if [[ $cmd == "local" ]]; then return 0 ; fi
 
-    echo "generating png and svg from *.drawio files in ../../drawiochassis/assets" ...
-    drawio       "../../drawiochassis/assets"
-    plantumlFunc "../../drawiochassis/assets"
+    if [[ $cmd == "fast" ]]; then
+        echo "skipping generation of drawio and plantuml svg|png"
+    else
+        echo "generating png and svg from *.drawio files in ../../drawiochassis/assets" ...
+        drawio       "../../drawiochassis/assets"
+        plantumlFunc "../../drawiochassis/assets"
+    fi
 
     # as we softlink assets/imagebinary
     # to have the *.png|*svg files in the linked (local) git repo

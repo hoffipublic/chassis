@@ -8,63 +8,55 @@
       link: /dsl/dsl.html
       items:
         - name: DslRef model reffing
-          link: /dsl/DslRef.html
-    - name: dsl run
-      link: #
+          link: /notDocumentedYet.html
+    - name: dsl and codegen run
+      link: /dsl/dslRun.html
+    - name: modelgroup model dto, tableFor with crud
+      link: /dsl/modelgroup.html
       items:
-        - name: name and whereto
-          link: #
-    - name: modelgroup
-      link: /dsl/dsl.html
-      items:
-        - name: model
-          link: /dsl/dsl.html
-        - name: model.dto
-          link: /ds/dsl.html
-        - name: model.dco
-          link: /dsl/dco.html
-        - name: model.filler
-          link: #
-        - name: model.tableFor
-          link: /dsl/dsl.html
-        - name: model.tableFor.crud
-          link: /dsl/dsl.html
         - name: model.tableFor.crud.prefixed CopyBoundrys
-          link: /ds/dsl.html
-    - name: api (not implemented yet)
-      link: /dsl/dsl.html
+          link: /notDocumentedYet.html
     - name: model crosscutting elements
-      link: #
+      link: /dsl/modelCrosscutting.html
       items:
         - name: name and whereto
-          link: #
-        - name: showcase
-          link: #
+          link: /dsl/modelNameAndWhereto.html
+        - name: showcase (DSL Block Delegation)
+          link: /dev/arch/Arch_2_DslDelegation.html
         - name: class mods
-          link: #
+          link: /dsl/modelCrosscutting.html
         - name: props and properties
-          link: #
+          link: /dsl/modelProps.html
         - name: gather propertiesOf other (sub)model
-          link: #
+          link: /dsl/modelProps.html
         - name: extends super classes and interfaces
-          link: #
+          link: /dsl/modelExtends.html
+    - name: api (not implemented yet)
+      link: /notDocumentedYet.html
+    - name: Strategies
+      link: /notDocumentedYet.html
+      items:
+        - name: Naming Strategies
+          link: /notDocumentedYet.html
+        - name: Path Strategies
+          link: /notDocumentedYet.html
 
 
     - name: Chassis codegen
       link: /codegen/codegen.html
       items:
         - name: Strategies (modelname, props, tables, columns, paths, packages)
-          link: #
+          link: /notDocumentedYet.html
         - name: non-persistent models (DTO, DCO, ...)
-          link: #
+          link: /notDocumentedYet.html
         - name: persistent models (Jetbrains Exposed RDBMS tables, CRUDS)
-          link: #
+          link: /notDocumentedYet.html
         - name: generated helpers (Universe)
-          link: #
+          link: /notDocumentedYet.html
         - name: tbd
-          link: #
+          link: /notDocumentedYet.html
     - name: Developer Documentation
-      link: #
+      link: /dev/Dev_Conventions.html
       items:
         - name: Code Architecture
           link: /dev/arch/Arch_0_Overview.html
@@ -78,10 +70,12 @@
           link: /dev/arch/Arch_3_DslRef.html
         - name: DSL Context (DslCtx)
           link: /dev/arch/Arch_4_DslCtx.html
+        - name: Chassis Universe
+          link: /dev/Universe.html
         - name: tbd
-          link: #
+          link: /notDocumentedYet.html
     - name: Pages
-      link: #
+      link: /notDocumentedYet.html
     - name: Blog
       link: /blog/
 
