@@ -140,7 +140,6 @@ interface IDslApiModel
 }
 
 context(DslCtxWrapper)
-@ChassisDslMarker
 class DslModel(
     val simpleName: String,
     val modelRef: DslRef.model,

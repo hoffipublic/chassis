@@ -11,63 +11,72 @@ to see the generated code of these DSL's see [https://github.com/hoffipublic/gen
 
 An official documentation is early alpha work in progress on: <https://hoffipublic.github.io/chassis/>
 
-## This is what you're (currently) able to generate
+## This is what you're (currently) able to generate (all kotlin)
 
 - **Dto** classes/interfaces/objects (Data-Transfer-Objects)
   - properties with "known" types
-    - mutable and immutable (currently `Integer`, `Long`, `String`, `Boolean`, `java.util.uuid`, `kotlinx.datetime.Instant`, `kotlinx.datetime.LocalDateTime` (see `chassismodel/src/main/kotlin/com/hoffi/chassis/chassismodel/typ/TYP.kt`))
-    - mutable and immutable collection types (currently `List`, `Set`, `Collection`, `Iterable`) 
-    - nullable, default initializers or initializers specified in DSL 
+    - mutable and immutable (currently `Integer`, `Long`, `String`, `Boolean`, `java.util.uuid`, `kotlinx.datetime.Instant`, `kotlinx.datetime.LocalDateTime` (see [TYP.kt](https://github.com/hoffipublic/chassis/blob/db67b34c9ae78f8b975111bd378708b2c7b9c1e9/chassismodel/src/main/kotlin/com/hoffi/chassis/chassismodel/typ/TYP.kt#L40))
+      - mutable and immutable collection types (currently `List`, `Set`, `Collection`, `Iterable`)
+      - nullable, default initializers or initializers specified in DSL
   - properties by referencing their KClass<...>, mutable and immutable (also for collection generic-type)
     - nullable or initializers specified in DSL
   - properties by referencing other `model` types defined somewhere else in (other) chassis DSLs
-  - by Tagging properties in the Dsl, they can "contribute" to generated things e.g. `toString()`, `equals()`, `hashCode()`
+  - by Tagging properties in the Dsl, they can "contribute" to generated things e.g.
+    - `toString()`
+    - `equals()`
+    - `hashCode()`
   - primary (public/protected) `constructor` (via Tag on props)
-  - `companion` `create()` and `createWithUuid()`
-  - `companion` `val NULL` for each defined DSL model instance
+  - `companion object`
+    - `create()`
+    - `createWithUuid()`
+    - `val NULL = ...` (therefore, no need to have nullable model variables anymore!)
   - ***no*** generic types yet (TBD)
   - extending super classes and interfaces
     - also by referencing other DSL model instances as super type or interfaces
-    - ability to specify "common" super classes/interfaces for all models in a modelgroup or all model instances in a model
-  - gather (add) all properties (or/and of that ones super classes) by just saying e.g.: `propertiesOf(DTO inModelgroup "PERSISTENTGROUP" withModelName "SomeModelName")`
-- ***Table*** RDBMS Objects (currently for <https://github.com/JetBrains/Exposed>)
-  - by just specifying `tableFor(DTO)` in the DSL model
-    - ***no*** many2many mappings yet
-    - one2one to another DSL Model
-    - one2many, many2one to another DSL Model
-    - if the model has a property named `uuid` with TYP `java.util.Uuid`
-      - generate PRIMARY KEY to Table and enable FOREIGN KEY integrity on generated jetbrain exposed Tables
-      - DSL enable to set DB related property stuff, like `PK`, `nullable`, `index`, etc.
+      - ability to specify "common" super classes/interfaces for all models in a modelgroup or all model instances in a model
+  - gather (add) all properties (or/and of that ones super classes) by just saying e.g.:
+    - `propertiesOf(DTO inModelgroup "PERSISTENTGROUP" withModelName "SomeModelName")`
+    - use this to define an abstract model (code generation might be suppressed for that one)
+      and reference its props from models in your DSL which should also have exactly THAT set of props (DRY).
 - ***Fillers***
   - generate static copy methods to fill any DSL model from any other DSL model<br/>
     (as long as the prop names and their types are compatible)
-  - specifying CopyBoundrys to specify in DSL how "deep" to copy model objects (or e.g. instead do not recurse but give fresh initialized model instances to a prop)
-    - Dto <--> Dto
-    - Table (SQL resultRow) <--> Dto
+    - specifying CopyBoundrys to specify in DSL how "deep" to copy model objects (or e.g. instead do not recurse but give fresh initialized model instances to a prop)
+      - Dto <--> Dto
+        - Dto <--> Dco
+        - Table (SQL resultRow) <--> Dto
+- ***Table*** RDBMS Objects (currently for <https://github.com/JetBrains/Exposed>)
+  - by just specifying `tableFor(DTO)` in the DSL model
+    - ***no*** many2many mappings yet
+      - one2one to another DSL Model
+      - one2many, many2one to another DSL Model
+      - if the model has a property named `uuid` with TYP `java.util.Uuid`
+        - generate PRIMARY KEY to Table and enable FOREIGN KEY integrity on generated jetbrain exposed Tables
+          - DSL enable to set DB related property stuff, like `PK`, `nullable`, `index`, etc.
 - ***CRUD DB access*** methods (CREATE/insert, READ/select, UPDATE/update, DELETE/delete)
   - either via DB `joins` of all (recursive) contained DSL model objects<br/>(inside the DSL model object you want to "CRUD")<br/>model instance has to have a `PK named 'uuid' for join's to work`
-  - or via distinct `select`s to the db for each (recursive) contained DSL model object
-  - specifying CopyBoundrys to specify in DSL how deep to "CRUD" from DB
-    - this will generate separate `filler` and `CRUD` Methods for each "set/prefix/businessCase" that needs its own CopyBoundrys
+    - or via distinct `select`s to the db for each (recursive) contained DSL model object
+    - specifying CopyBoundrys to specify in DSL how deep to "CRUD" from DB
+        - this will generate separate `filler` and `CRUD` Methods for each "set/prefix/businessCase" that needs its own CopyBoundrys
 
 **using:**
 
 - ability to use/references other defined models and modelinstances to construct your code class
   - reference another DSL model/instance as super-class, super interface, prop type, prop collection type
-  - specify abstract base classes and use their properties and super-class/interfaces to "include" directly (without extending class inheritance)<br/>
-    (`propertiesOf(DTO inModelgroup "PERSISTENTGROUP" withModelName "SomeModelName")`)
+    - specify abstract base classes and use their properties and super-class/interfaces to "include" directly (without extending class inheritance)<br/>
+      (`propertiesOf(DTO inModelgroup "PERSISTENTGROUP" withModelName "SomeModelName")`)
 - flexible ***naming strategies*** for
-  - naming props, classes/interfaces/objects, methods, table_names, column_names,<br/>(CamelCase, snake_case, kebab-case, capitalized, decapitalized, prefixed, postfixed, replace pre/postfix, add to current pre/postfix, etc.)
+    - naming props, classes/interfaces/objects, methods, table_names, column_names,<br/>(CamelCase, snake_case, kebab-case, capitalized, decapitalized, prefixed, postfixed, replace pre/postfix, add to current pre/postfix, etc.)
 - flexible destination spec in DSL
   - absolute package, addendum pre/postfix to package, same for classe names and same for destination path of generated classes
     - either in DSL run or
-    - modelgroup (for all models and model instances (dto/table/...))
-    - model (for all model instances of that model (dto/table))
-    - model instance
-    - implement your own strategy like `SPECIAL_WINS_ON_ABSOLUTE_STUFF_BUT_CONCAT_ADDENDUMS`
+      - modelgroup (for all models and model instances (dto/table/...))
+      - model (for all model instances of that model (dto/table))
+      - model instance
+      - implement your own strategy like `SPECIAL_WINS_ON_ABSOLUTE_STUFF_BUT_CONCAT_ADDENDUMS`
 - take preferred defaults without having to specify too much in the DSL
   - just switch the strategies and get "your corporate design governance" compliant code
-<br/>
+    <br/>
 
 <big><bold> This is a personal ***pet project***<br/>and on top still <big>***very alpha and very work in progress!!!***</big></bold></big>
 <div style="text-align: center;">*(although it is already a complete rewrite of the initial version)</div>
@@ -88,7 +97,7 @@ An official documentation is early alpha work in progress on: <https://hoffipubl
 current ToDos:
 
 - implementing COLLECTION, ITERABLE prop types
-- 
+- &nbsp;
 - (additional/remove)ToString members on `DslModelgroup`
 - Primary Keys and FK Constraints on Database Tables (if not UuidTable)
 - Cascading delete
@@ -99,10 +108,10 @@ coming up:
 
 - DB access: SQL UPDATE and DELETE Functions (honouring contained model instances and CopyBoundrys)
   - custom jetbrain exposed lambda parameters to "tweak stuff" on DB CRUD operations from Table's with CopyBoundries (eager/lazy loading via different generated functions)
-  - further CRUD DB operations with "own function names" for each CopyBoundry
+    - further CRUD DB operations with "own function names" for each CopyBoundry
 - Exposed Extensions
   - upsert ?
-  - insert/delete if not exists [stackoverflow: how-can-i-do-insert-if-not-exists-in-mysql](https://stackoverflow.com/questions/1361340/how-can-i-do-insert-if-not-exists-in-mysql)
+    - insert/delete if not exists [stackoverflow: how-can-i-do-insert-if-not-exists-in-mysql](https://stackoverflow.com/questions/1361340/how-can-i-do-insert-if-not-exists-in-mysql){:target="_blank"}
 
 - **many to many relations**
 - Properties with generic types

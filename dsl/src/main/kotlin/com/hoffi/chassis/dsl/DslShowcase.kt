@@ -146,7 +146,7 @@ class DslShowcaseBlockImpl(
 {
     override fun toString() = "${this::class.simpleName}(${dslShowcasePropsData})"
     val log = LoggerFactory.getLogger(javaClass)
-
+    // back reference to own DelegateImpl (from context or as function parameter)
     val showcaseDelegate: DslShowcaseDelegateImpl = dslCtx.ctxObj(selfDslRef)
 
     override var dslProp: Int = -1

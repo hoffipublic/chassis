@@ -68,6 +68,16 @@
       items:
         - name: Code Architecture
           link: /dev/arch/Arch_0_Overview.html
+        - name: Dev Conventions
+          link: /dev/Dev_Conventions.html
+        - name: Chassis DSL Conventions (DslApi..., DslImpl, Dsl...DelegateImpl, Dsl...BlockImpl)
+          link: /dev/arch/Arch_1_DslConventions.html
+        - name: DSL Delegation
+          link: /dev/arch/Arch_2_DslDelegation.html
+        - name: DSL Referencing (DslRef)
+          link: /dev/arch/Arch_3_DslRef.html
+        - name: DSL Context (DslCtx)
+          link: /dev/arch/Arch_4_DslCtx.html
         - name: tbd
           link: #
     - name: Pages

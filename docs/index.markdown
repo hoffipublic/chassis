@@ -19,7 +19,8 @@ Over and over and over again...
 ***TL;DR***
 
 - have a look at the DSL [chassis DSL examples](https://github.com/hoffipublic/chassis/tree/master/examples/src/main/kotlin/com/hoffi/chassis/examples/basic){:target="_blank"}
-- find generated kotlin code in [github generatedchassis](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/examples){:target="_blank"}
+- find generated (non persistence related) DTO kotlin code in [github generatedchassis DTO](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/examples){:target="_blank"}
+- find generated (persistence related) exposed tables and CRUD operations in [github generated TABLE](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/examples/table){:target="_blank"}
 
 current example DSL (4 DTOs, 1 DCO with Fillers and DB CRUDs plus 4 abstract DTOs Base-Classes):
 
@@ -32,19 +33,19 @@ current example DSL (4 DTOs, 1 DCO with Fillers and DB CRUDs plus 4 abstract DTO
 ```
 
 <hr/>
-
+<hr/>
 ***The Story***
 
-Whilst my extensive career in SW consulting and development I realized ... 80% of your work is marshalling and unmarshalling data structures and copying properties between hierarchies of related but independent datastructures consistently.
+Whilst my extensive career in SW consulting and development I realized ... 80% of the work is marshalling and unmarshalling data structures and copying properties between hierarchies of related but independent (sub)datastructures consistently.
 
 From the Internet (json, gRPC, XML, you name it) to your deserialized object, split up to x business objects, recursively copied to your persistent objects to be written to a database,
 and then back again towards the internet. Every little adding of a model or even a property to some object causes a gazillion of files to be changed consistently.
 
-Consistently also means: in your backend, in your middle-services, in your frontend(s) ... so in several independant repositories ... (btw: openAPI sucks)
+Consistently also means: in your backend, in your middle-services, in your frontend(s) in your API specs ... (this also means in several *independent* repositories ... (btw: openAPI sucks)
 
 All so often I saw those changes being the cause for broken tests, CICD pipelines (or even production takeouts).
 
-Also, over time any project evolves several variants for each (un)marshalling and CRUD operation.
+Also - over time - any project evolves several variants for each (un)marshalling and CRUD operation.
 In one case you may want to load an object "flat", in another cases with "a little bit" of contained objects,
 sometimes all the object tree (loading half of the database redundantly) and sometimes some (sub)Objects need some nasty inner transformations
 (because business (sub)domains often differ in just "nasty tiny details").
