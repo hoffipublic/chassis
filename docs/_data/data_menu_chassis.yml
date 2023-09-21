@@ -8,14 +8,14 @@
       link: /dsl/dsl.html
       items:
         - name: DslRef model reffing
-          link: /notDocumentedYet.html
+          link: /dsl/DslReffing.html
     - name: dsl and codegen run
       link: /dsl/dslRun.html
     - name: modelgroup model dto, tableFor with crud
       link: /dsl/modelgroup.html
       items:
         - name: model.tableFor.crud.prefixed CopyBoundrys
-          link: /notDocumentedYet.html
+          link: /dsl/modelgroup.html
     - name: model crosscutting elements
       link: /dsl/modelCrosscutting.html
       items:
@@ -24,7 +24,7 @@
         - name: showcase (DSL Block Delegation)
           link: /dev/arch/Arch_2_DslDelegation.html
         - name: class mods
-          link: /dsl/modelCrosscutting.html
+          link: /notDocumentedYet.html
         - name: props and properties
           link: /dsl/modelProps.html
         - name: gather propertiesOf other (sub)model

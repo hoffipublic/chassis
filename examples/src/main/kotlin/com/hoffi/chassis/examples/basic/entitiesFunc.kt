@@ -39,9 +39,9 @@ fun entitiesFunc() {
 //    apigroup(SIMPLE) {
 //
 //    }
-    modelgroup(ENTITYGROUP) {
+    modelgroup(ENTITYGROUP) {               /** @see com.hoffi.chassis.dsl.modelgroup.DslModelgroup */
         See(DslModelgroup::class)
-        nameAndWhereto {
+        nameAndWhereto { /** @see com.hoffi.chassis.dsl.whereto.IDslApiNameAndWheretoOnSubElements */
             See(IDslApiNameAndWheretoOnSubElements::class)
             classPrefix("Simple")
             packageName("entity")
@@ -54,6 +54,10 @@ fun entitiesFunc() {
                 packageName("table")
             }
         }
+        // TODO let modelgroup also have extends Delegate
+        //extends {
+        //
+        //}
 
         constructorVisibility = PROTECTED
 
@@ -69,7 +73,7 @@ fun entitiesFunc() {
 
         model(ENTITY__ENTITY) {
             See(IDslApiModel::class)
-            extends {
+            extends {  /** @see com.hoffi.chassis.dsl.modelgroup.IDslApiExtendsBlock */
                 See(IDslApiExtendsBlock::class)
                 + (MODEL inModelgroup PERSISTENTGROUP withModelName COMMON__PERSISTENT_OPTIMISTIC)
                 //- ENTITY__BASE
@@ -89,6 +93,7 @@ fun entitiesFunc() {
             property("subentitys", "modelgroup:$ENTITYGROUP|model:$ENTITY__SUBENTITY", DTO, COLLECTIONTYP.SET, Tag.CONSTRUCTOR, Tag.DEFAULT_INITIALIZER, Tag.NULLABLE)
             property("listOfStrings", TYP.STRING, COLLECTIONTYP.LIST, Tag.COLLECTION_IMMUTABLE, Tag.CONSTRUCTOR)
 
+            //propertiesOf("...")
 //            manyToMany(SIMPLE__SUBENTITY) {
 //                // not implemented yet, and not sure if an own clause or via property(...)
 //            }
@@ -96,7 +101,7 @@ fun entitiesFunc() {
             addToStringMembers("aLocalDateTime", "updatedAt")
 
             dto {
-                See(IDslApiDto::class)
+                See(IDslApiDto::class, IDslApiSubelementsOnlyCommon::class)
                 extends {
                     See(IDslApiExtendsBlock::class)
                     + (MODEL inModelgroup PERSISTENTGROUP withModelName COMMON__PERSISTENT_OPTIMISTIC)
@@ -117,8 +122,7 @@ fun entitiesFunc() {
             }
 
             tableFor(DTO) {
-                See(IDslApiTable::class)
-                See(IDslApiInitializer::class)
+                See(IDslApiTable::class, IDslApiInitializer::class)
                 initializer("name", APPEND, ".uniqueIndex()")
                 initializer("prio", APPEND, "/* some table prio comment */")
 
@@ -133,7 +137,7 @@ fun entitiesFunc() {
                             IGNORE propName "someModelObject"
                             IGNORE("someModelObject", "prefix1")
                         }
-                        (CREATE FOR DTO) deepRestrictions  {
+                        CREATE FOR DTO deepRestrictions  {
                             IGNORE propName "subentitys"
                             IGNORE("subentitys", "someModelObject", "prefix2")
                         }

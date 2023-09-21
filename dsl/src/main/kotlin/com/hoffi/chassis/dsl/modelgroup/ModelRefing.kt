@@ -21,7 +21,7 @@ interface IDslApiModelReffing {
 }
 
 /** delegate IDslApiModelReffing to this */
-class DslImplModelReffing constructor(val dslClass: ADslClass) : IDslApiModelReffing {
+class DslImplModelReffing(val dslClass: ADslClass) : IDslApiModelReffing {
 
     fun fakeOf(modelelement: MODELREFENUM, thisModelgroupSubElementRef: IDslRef): DslRef.IModelOrModelSubelement = modelelement of thisModelgroupSubElementRef
 
