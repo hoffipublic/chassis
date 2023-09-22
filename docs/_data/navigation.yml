@@ -9,9 +9,9 @@
     - name: Chassis codegen
       link: /codegen/codegen.html
     - name: Developer Docs
-      link: /developers/devs.html
+      link: /dev/arch/Arch_0_Overview.html
 - name: DeveloperDocs
-  link: /developers/devs.html
+  link: /dev/arch/Arch_0_Overview.html
 - name: Blog
   link: /blog/
 - name: github
