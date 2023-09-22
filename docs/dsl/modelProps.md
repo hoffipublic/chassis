@@ -3,7 +3,7 @@ layout: page
 title: class properties of models and model elements
 subtitle: class props
 menubar: data_menu_chassis
-toc: true
+toc: false
 show_sidebar: false
 hero_image: ../assets/Chassis.png
 ---

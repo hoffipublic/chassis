@@ -14,7 +14,8 @@ see [DSL block delegation showcase]({{ site.baseurl }}{% link dev/arch/Arch_2_Ds
 
 Crosscutting nodes are nodes that can appear under multiple different other nodes.
 
-Crosscutting nodes are implemented via Kotlin interface delegation.
+Crosscutting nodes are implemented via Kotlin interface delegation to be able to stay "DRY"<br/>
+(DRY = Don't Repeat Yourself)
 
 - [DSL block delegation showcase]({{ site.baseurl }}{% link dev/arch/Arch_2_DslDelegation.md %})
 - [name and whereto]({{ site.baseurl }}{% link dsl/modelNameAndWhereto.md %})

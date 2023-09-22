@@ -3,7 +3,7 @@ layout: page
 title: node modelgroup { ... }
 subtitle: Things that you define for all models<br/>and model elements (DTO, DCO, TABLEFOR)
 menubar: data_menu_chassis
-toc: true
+toc: false
 show_sidebar: false
 hero_image: ../assets/Chassis.png
 ---

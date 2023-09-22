@@ -3,7 +3,7 @@ layout: page
 title: Universe
 subtitle: Things that are generated for you upfront
 menubar: data_menu_chassis
-toc: true
+toc: false
 show_sidebar: false
 hero_image: ../../assets/Chassis.png
 ---

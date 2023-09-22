@@ -3,7 +3,7 @@ layout: page
 title: Chassis DSL
 subtitle: Specifying what to generate
 menubar: data_menu_chassis
-toc: true
+toc: false
 show_sidebar: false
 hero_image: ../assets/Chassis.png
 ---
@@ -35,21 +35,7 @@ But as Chassis and its DSL solely is used at development time (and CICD) this di
 
 At the moment there is implemented only one toplevel DSL method:
 
-## toplevel: modelgroup { }
-
-subpage content
-
-### dsl page level 3
-
-content
-
-## toplevel: api { }
-
-not implemented yet
-
-## DslRef
-
-tbd
+continue with [Chassis top-level modelgroup]({{ site.baseurl }}{% link dsl/modelgroup.md %}) ...
 
 ### DslCtx PASS'es
 

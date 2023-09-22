@@ -3,7 +3,7 @@ layout: page
 title: Chassis DSL and codegen RUN
 subtitle: actually generating something from your Chassis DSL
 menubar: data_menu_chassis
-toc: true
+toc: false
 show_sidebar: false
 hero_image: ../assets/Chassis.png
 ---

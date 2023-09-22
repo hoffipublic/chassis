@@ -3,7 +3,7 @@ layout: page
 title: nameAndWhereto
 subtitle: deciding how things are named<br/>and where generated files go to 
 menubar: data_menu_chassis
-toc: true
+toc: false
 show_sidebar: false
 hero_image: ../assets/Chassis.png
 ---

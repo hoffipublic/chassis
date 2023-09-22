@@ -3,7 +3,7 @@ layout: page
 title: super classes and interfaces
 subtitle: class extends
 menubar: data_menu_chassis
-toc: true
+toc: false
 show_sidebar: false
 hero_image: ../assets/Chassis.png
 ---

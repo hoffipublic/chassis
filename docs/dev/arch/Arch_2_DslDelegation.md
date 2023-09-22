@@ -3,7 +3,7 @@ layout: page
 title: DSL Block Delegation showcase
 subtitle: IDslApi by dslSomethingDelegateImpl
 menubar: data_menu_chassis
-toc: true
+toc: false
 show_sidebar: false
 hero_image: ../../assets/Chassis.png
 ---
