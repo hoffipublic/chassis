@@ -1,0 +1,148 @@
+@startuml
+header Chassis Code Generator (https://github.com/hoffipublic/chassis)
+<style>
+  title {
+      HorizontalAlignment right
+      FontSize 24
+      FontColor blue
+    }
+</style>
+title Chassis Code Generator : Deployment Diagram
+skinparam linetype polyline /' ortho '/
+top to bottom direction /' left to right direction '/
+node node_chassis #Red/Yellow [
+  root-project: chassis
+  ----
+  chassis root project
+  ====
+  nothing in here yet
+  ....
+  depends only on chassismodel yet
+]
+node node_chassismodel [
+  subproject: chassismodel
+  ----
+  thought as the "public" api
+  ====
+  stuff also used outside chassis
+  ....
+  depends on nothing
+]
+node node_codegen #MediumSpringGreen/GreenYellow [
+  subproject: codegen
+  ----
+  generating code from `GenCtx`
+  ====
+  DTO like objects
+  Exposed Table like objects
+  ....
+  depends
+]
+rectangle "<U+0000>" as dbwrappers {
+    node node_dbwrappers #GhostWhite [
+      subproject: dbwrappers
+      ----
+      common abstract DB definitions
+      ====
+      independent of specific used DB Framework
+      e.g. kotlinPoet Member-/ClassNames ...
+      ....
+      depends
+    ]
+    node node_dbwrappers_exposed #GhostWhite [
+      subproject: dbwrappers/exposed
+      ----
+      specific definitions for used DB Framework
+      ====
+      Exposed specific
+      ....
+      depends
+    ]
+}
+node node_docs [
+  subproject: docs
+  ----
+  markdown based docs website
+  ....
+  ruby, jekyll, ...
+]
+node node_dsl #MediumSpringGreen/DarkGreen [
+  subproject: dsl
+  ----
+  def&parsing of chassis DSL
+  ====
+  uses `DslCtx`
+  eventually produces `GenCtx`
+  ....
+  depends
+]
+node node_examples [
+  subproject: examples
+  ----
+  examples of Chassis DSLs
+  ====
+  main methods for examples
+  ....
+  depends
+]
+node node_shared #LightSteelBlue [
+  subproject: shared
+  ----
+  internally shared stuff
+  ====
+  used by multiple subprojects
+  ....
+  depends
+]
+
+node node_external_projects [
+    external git repos:
+    ====
+    binaryImages from plantuml/drawio
+    ----
+    generated code: from suproject examples
+]
+
+
+node_chassis .. node_chassismodel
+node_chassis .down. node_dsl
+node_chassis .down. node_codegen
+node_chassis .. node_shared
+node_chassis .. dbwrappers
+node_dbwrappers .down. node_dbwrappers_exposed
+node_dbwrappers_exposed ..[hidden]right.. node_chassismodel
+node_chassis .down. node_examples
+node_chassis ..left.. node_docs
+
+/' layout variant
+node_chassis -[norank]-> node_chassismodel
+node_dsl -[norank]-> node_chassismodel
+'/
+node_chassis --> node_chassismodel
+node_dsl --> node_chassismodel
+node_dsl --> node_shared
+node_codegen --> node_chassismodel
+node_codegen --> node_shared
+node_codegen --> dbwrappers
+node_shared --> node_chassismodel
+node_shared -left-> dbwrappers
+dbwrappers --> node_chassismodel
+node_examples --> node_chassismodel
+node_examples --> node_shared
+node_examples --> node_dsl
+node_examples --> node_codegen
+
+note "no direct dependency to codegen \n(only populating shared GenCtx\n within DslCtx in PASS.FINISH...)" as comment_independent_for_dsl
+note "no direct dependency to dsl \n(only using shared GenCtx)" as comment_independent_for_codegen
+node_dsl <-[dotted]up-> comment_independent_for_dsl
+node_codegen <-[dotted]up-> comment_independent_for_codegen
+
+node_dsl <-[dotted,hidden]left-> node_codegen : NO(!!!) direct dependency\l(only using shared GenCtx)
+
+legend right
+Legend:
+---- subproject
+<U+23AF><U+23AF> dependency
+end legend
+
+@enduml

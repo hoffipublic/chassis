@@ -11,7 +11,11 @@ hero_image: ../../assets/Chassis.png
 
 [link to DSL docs]({{ site.baseurl }}{% link dsl/dsl.md %})
 
-{{ site.chassisassetsgit }}/arch/drawio/Arch_Overview.drawio.svg
+## Deployment Diagram (Chassis subprojects):
+
+![Chassis Deployment]({{ site.chassisassetsgit }}/arch/plantuml/arch_projectStructure.svg)
+
+path: {{ site.chassisassetsgit }}/arch/drawio/Arch_Overview.drawio.svg
 
 [comment]: # curlypercent  drawio path="assets/arch/drawio/Arch_Overview.drawio" page_number=0 height=650 percentcurly
 ![Arch_Overview]({{ site.chassisassetsgit }}/arch/drawio/Arch_Overview.drawio.svg)
