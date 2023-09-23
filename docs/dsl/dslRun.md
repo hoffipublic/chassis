@@ -32,6 +32,8 @@ object MainExamples {
             entitiesFunc()         // contains Chassis DSL top-level func
             dcosFunc()             // contains Chassis DSL top-level func
         }
+        
+        // GenRun operates on the GenCtx, which was populated inside a DslRun's DslCtx
         val examplesCodegenRun = GenRun(examplesDslRun.dslCtx.genCtx, examplesRunName)
 
         examplesCodegenRun.start {

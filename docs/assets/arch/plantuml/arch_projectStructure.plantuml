@@ -10,7 +10,7 @@ header Chassis Code Generator (https://github.com/hoffipublic/chassis)
 title Chassis Code Generator : Deployment Diagram
 skinparam linetype polyline /' ortho '/
 top to bottom direction /' left to right direction '/
-node node_chassis #Red/Yellow [
+node node_chassis #Red-Khaki [
   root-project: chassis
   ----
   chassis root project
@@ -28,7 +28,7 @@ node node_chassismodel [
   ....
   depends on nothing
 ]
-node node_codegen #MediumSpringGreen/GreenYellow [
+node node_codegen #MediumSpringGreen/Yellow [
   subproject: codegen
   ----
   generating code from `GenCtx`
@@ -58,6 +58,7 @@ rectangle "<U+0000>" as dbwrappers {
       ....
       depends
     ]
+    node_dbwrappers_exposed -up-> node_dbwrappers
 }
 node node_docs [
   subproject: docs
@@ -66,7 +67,7 @@ node node_docs [
   ....
   ruby, jekyll, ...
 ]
-node node_dsl #MediumSpringGreen/DarkGreen [
+node node_dsl #Yellow\MediumSpringGreen [
   subproject: dsl
   ----
   def&parsing of chassis DSL
@@ -85,7 +86,7 @@ node node_examples [
   ....
   depends
 ]
-node node_shared #LightSteelBlue [
+node node_shared #Yellow-MediumSlateBlue [
   subproject: shared
   ----
   internally shared stuff
@@ -141,8 +142,8 @@ node_dsl <-[dotted,hidden]left-> node_codegen : NO(!!!) direct dependency\l(only
 
 legend right
 Legend:
----- subproject
-<U+23AF><U+23AF> dependency
+- - - subproject
+<U+23AF><U+23AF>  dependency
 end legend
 
 @enduml

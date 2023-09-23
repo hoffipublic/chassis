@@ -49,6 +49,7 @@ object MainExamples {
             dcosFunc()
         }
 
+        // GenRun operates on the GenCtx, which was populated inside a DslRun's DslCtx
         val examplesCodegenRun = GenRun(examplesDslRun.dslCtx.genCtx, examplesRunName)
 
         examplesCodegenRun.start {

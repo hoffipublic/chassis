@@ -50,8 +50,8 @@
           link: /notDocumentedYet.html
         - name: persistent models (Jetbrains Exposed RDBMS tables, CRUDS)
           link: /notDocumentedYet.html
-        - name: generated helpers (Universe)
-          link: /notDocumentedYet.html
+        - name: generated helpers (Chassis Universe)
+          link: /dev/Universe.html
         - name: tbd
           link: /notDocumentedYet.html
 
