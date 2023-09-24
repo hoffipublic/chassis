@@ -4,6 +4,8 @@
       link: /
     - name: Introduction
       link: /intro/intro.html
+    - name: All of this as a single HTML page
+      link: /singlePageChassisDocs.html
     - name: Chassis DSL
       link: /dsl/dsl.html
     - name: RUNNING DSL parsing and codegeneration
