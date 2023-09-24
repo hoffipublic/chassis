@@ -5,7 +5,7 @@ subtitle: basic classes to work with for code generation
 menubar: data_menu_chassis
 toc: true
 show_sidebar: false
-hero_image: ../../assets/Chassis.png
+hero_image: ../assets/Chassis.png
 ---
 # bite-sized immutable Chassis DSL parsing result
 

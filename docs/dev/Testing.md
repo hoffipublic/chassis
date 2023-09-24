@@ -5,7 +5,7 @@ subtitle: implementing new features and refactoring
 menubar: data_menu_chassis
 toc: true
 show_sidebar: false
-hero_image: ../../assets/Chassis.png
+hero_image: ../assets/Chassis.png
 ---
 # Regression Testing
 

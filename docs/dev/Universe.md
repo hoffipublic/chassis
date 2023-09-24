@@ -5,7 +5,7 @@ subtitle: Things that are generated for you upfront
 menubar: data_menu_chassis
 toc: false
 show_sidebar: false
-hero_image: ../../assets/Chassis.png
+hero_image: ../assets/Chassis.png
 ---
 # Universe: Things that are generated for you upfront
 
