@@ -1,7 +1,7 @@
 ---
 layout: page
-title: GenModel, ModelClassDataFromDsl,<br/>ModelClassName and EitherTypOrModelOrPoetTyp
-subtitle: basic classes to work with for code generation
+title: GenModel, ModelClassDataFromDsl,<br/>ModelClassName and<br/>EitherTypOrModelOrPoetTyp
+subtitle: basic things to work with for code generation
 menubar: data_menu_chassis
 toc: true
 show_sidebar: false
