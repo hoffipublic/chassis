@@ -44,10 +44,14 @@
     - name: Chassis codegen
       link: /codegen/codegen.html
       items:
+        - name: sealed class GenModel
+          link: /dev/GenModel.html
+        - name: sealed class EitherTypOrModelOrPoetType
+          link: /dev/GenModel.html
         - name: Strategies (modelname, props, tables, columns, paths, packages)
-          link: /notDocumentedYet.html
+          link: /codegen/codegen.html
         - name: non-persistent models (DTO, DCO, ...)
-          link: /notDocumentedYet.html
+          link: /codegen/codegen.html
         - name: persistent models (Jetbrains Exposed RDBMS tables, CRUDS)
           link: /notDocumentedYet.html
         - name: generated helpers (Chassis Universe)
