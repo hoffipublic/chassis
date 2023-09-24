@@ -5,11 +5,29 @@
 
 from a custom Kotlin DSL using <https://square.github.io/kotlinpoet>, you're able to generate (Kotlin) source code.
 
-to see examples of the DSL see [examples/src/main/kotlin/com/hoffi/chassis/examples/basic/](https://github.com/hoffipublic/chassis/tree/master/examples/src/main/kotlin/com/hoffi/chassis/examples/basic/)
+Over and over and over again...
 
-to see the generated code of these DSL's see [https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/)
+***TL;DR***
 
-An official documentation is early alpha work in progress on: <https://hoffipublic.github.io/chassis/>
+- have a look at the DSL [chassis DSL examples](https://github.com/hoffipublic/chassis/tree/master/examples/src/main/kotlin/com/hoffi/chassis/examples/basic)
+- find generated (non persistence related) DTO kotlin code in [github generated DTO](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/examples)
+- find generated (persistence related) exposed tables and CRUD operations in [github generated TABLE](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/examples/table)
+
+current example DSL (4 DTOs, 1 DCO with Fillers and DB CRUDs plus 4 abstract DTOs Base-Classes):
+
+```
+|           |  lines |  #files |
+|:---------:|-------:|--------:|
+|    DSL    |    319 |       3 |
+| generated |   2190 |      43 |
+|     %     | ~700 % | ~1400 % |
+```
+
+<hr/><hr/>
+
+<big>**Chassis Docs:**</big> Docs (in early alpha state - work in progress) is available at: <big><https://hoffipublic.github.io/chassis/></big>
+
+<hr/><hr/>
 
 ## This is what you're (currently) able to generate (all kotlin)
 

@@ -19,7 +19,7 @@ Over and over and over again...
 ***TL;DR***
 
 - have a look at the DSL [chassis DSL examples](https://github.com/hoffipublic/chassis/tree/master/examples/src/main/kotlin/com/hoffi/chassis/examples/basic){:target="_blank"}
-- find generated (non persistence related) DTO kotlin code in [github generatedchassis DTO](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/examples){:target="_blank"}
+- find generated (non persistence related) DTO kotlin code in [github generated DTO](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/examples){:target="_blank"}
 - find generated (persistence related) exposed tables and CRUD operations in [github generated TABLE](https://github.com/hoffipublic/generatedchassis/tree/master/examples/src/main/kotlin/com/hoffi/generated/examples/table){:target="_blank"}
 
 current example DSL (4 DTOs, 1 DCO with Fillers and DB CRUDs plus 4 abstract DTOs Base-Classes):
