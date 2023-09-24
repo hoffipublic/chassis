@@ -31,7 +31,7 @@ class GenCtxWrapper(val genCtx: GenCtx) {
 }
 ```
 
-## implemented code generations
+## implemented code generators
 
 - `abstract class KotlinGenClassNonPersristent`
   - base class for e.g. `DTO` and `DCO`, unrelated to persistent or other stuff (kind of `pojo`'s)

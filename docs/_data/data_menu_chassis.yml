@@ -73,6 +73,8 @@
           link: /dev/arch/Arch_4_DslCtx.html
         - name: Chassis Universe
           link: /dev/Universe.html
+        - name: Regression Testing
+          link: /dev/Testing.html
         - name: tbd
           link: /notDocumentedYet.html
     - name: Pages
